@@ -9,6 +9,8 @@ VideoCoin can use the zkSNARKs for proof-of-transcode. zkSNARKs facilitates to m
 
 zkSNARKs uses Elliptic curve pairing for homomorphic hiding / encoding / encryption. Elliptic curve pairings are a recent addition to cryptography and fuelling advancements in the blockchain technologies. There are several blockchain applications of elliptic curve pairings that include Identity Based Encryption, Non-interactive Zero Knowledge proofs, Short Signatures etc. Refer [1],[2],[3] for detailed description of Elliptic Curve Pairing. In addition to elliptic curve pairing, a stage in the zk-SNARKS involves translation of computations into polynomials called a Quadratic Arithmetic Program (QAP). Computations are first converted to an Arithmetic circuit. An arithmetic circuit consists of gates computing arithmetic operations like addition and multiplication, with wires connecting the gates.
 
+![Blockdiagram showing VideoCoin Proof-of-transcode verification](./documents/zkproofoftranscode.png)
+
 The proof-of-transcode includes three modules that includes the following:
 ### (A) A library that runs in the context of VideoCoin client that performs the following:
 (i)  Extracts pHash of a frame for each video segment at predetermined offset,\
@@ -21,7 +23,7 @@ The proof-of-transcode includes three modules that includes the following:
 
 ### C) An Ethereum smart contract that performs the following:
 (i)  Maintains escrow records for video segment transcode requests. Each escrow record contains the precomputed challenge supplied by the client library along with mining reward amount,\
-(ii) Smart-contract also contains the zkSNARKS verification keys and algorithm embedded (which uses Ethereum precompiled contracts)
+(ii) Smart-contract also contains the zkSNARKS verification keys and algorithm embedded (which uses Ethereum precompiled contracts)\
 (iii) The call from the miner(prover) assembles the input&witness from the supplied arguments and retrieving the encrypted hash values from the escrow records corresponding to the segment. If the verification is successful, it transfers the reward to miner's account.
 
 ## Attack analysis of proof-of-transcode and advantages of zkSNARks
@@ -38,7 +40,7 @@ An Ethereum Smartcontract supporting zkSNARKs based verification is developed us
 TODO:
 The zkSNARKs proof libraries needs to be integrated with the transcode miner and VideoCoin client libraries.
 
-![Blockdiagram showing VideoCoin Proof-of-transcode verification](./documents/zkproofoftranscode.png)
+
 ### References
 [1. Exploring Elliptic Curve Pairings,by Vitalik Buterin](https://medium.com/@VitalikButerin/exploring-elliptic-curve-pairings-c73c1864e627)
 
