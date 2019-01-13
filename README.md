@@ -26,9 +26,6 @@ The proof-of-transcode includes three modules that includes the following:
 (ii) Smart-contract also contains the zkSNARKS verification keys and algorithm embedded (which uses Ethereum precompiled contracts)\
 (iii) The call from the miner(prover) assembles the input&witness from the supplied arguments and retrieving the encrypted hash values from the escrow records corresponding to the segment. If the verification is successful, it transfers the reward to miner's account.
 
-
-![Blockdiagram showing VideoCoin Proof-of-transcode verification](./documents/zkproofoftranscode.png)
-
 ## Attack analysis of proof-of-transcode and advantages of zkSNARks
 The proof-of-transcode could have been implemented in simple steps that inlcude (i) the VideoCoin client can register a hashed pHash with the smart-contract and (ii) transcode miner can submit the pHash(key) and smart-contract can create a hash of this and verify the claim. Used directly like this is insecure: Once the transaction is published, another verifier node could just drop the original transaction and create a new transaction that pays to it instead. zkSNARKs hides the details using elliptic curve homo-morphing and verifier can not learn the original solution of the proof.
 
