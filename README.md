@@ -26,6 +26,9 @@ The proof-of-transcode includes three modules that includes the following:
 (ii) Smart-contract also contains the zkSNARKS verification keys and algorithm embedded (which uses Ethereum precompiled contracts)\
 (iii) The call from the miner(prover) assembles the input&witness from the supplied arguments and retrieving the encrypted hash values from the escrow records corresponding to the segment. If the verification is successful, it transfers the reward to miner's account.
 
+
+![Blockdiagram showing VideoCoin Proof-of-transcode verification](./documents/zkproofoftranscode.png)
+
 ## Attack analysis of proof-of-transcode and advantages of zkSNARks
 The proof-of-transcode could have been implemented in simple steps that inlcude (i) the VideoCoin client can register a hashed pHash with the smart-contract and (ii) transcode miner can submit the pHash(key) and smart-contract can create a hash of this and verify the claim. Used directly like this is insecure: Once the transaction is published, another verifier node could just drop the original transaction and create a new transaction that pays to it instead. zkSNARKs hides the details using elliptic curve homo-morphing and verifier can not learn the original solution of the proof.
 
@@ -33,6 +36,22 @@ zkSNARKs integration with Ethereum is very new and in its initial phase. There m
 
 ## Performance and scalability proof-of-transcode
 The zero-knowledge feature of zkSNARKS property allows the prover to hide details about the computation from the verifier in the process, and so they are useful for both privacy and performance. This enables a embedding verifier in a smart-contract and offload most of the computation to prover. As the smart-contract runs on all the blockchain nodes and prover runs only on one client, this helps achieve scalability.
+
+## PCD (Proof Carrying Data): key concept of zkSnarks
+![Blockdiagram showing Proof Carrying Data](./documents/zkproof_5.png)
+
+## Description of usage of zkSnarks for Video Transcode Verification
+
+### Key generation, proof and verification
+![Blockdiagram showing zkSnarks Mains Steps](./documents/zkproof_2.png)
+
+### Details of Elliptic Curve Pairing Computations used in Video Transcode Verification
+![Blockdiagram showing zkSnarks Mains Steps](./documents/zkproof_3.png)
+
+## Proposed enhancements of Video Transcode Verification
+![Blockdiagram showing zkSnarks Proof derived from Encode Process](./documents/zkproof_4.png)
+
+### Tight association of proof generation with encode process 
 
 ## Status
 An Ethereum Smartcontract supporting zkSNARKs based verification is developed using a tool called Zokrates[17]. This tool allows definitin of zkSNARKs verification system using DSL(Domain Specific Language) and generates smart contract for Ethereum. While generating the zkSNARKs proofs, the parameters can be partitioned to two sets called inputs and witness. Moving the parameters to witness protects them from verifier. Currently all the parameters are under inputs and needs to be changed as witness. 
