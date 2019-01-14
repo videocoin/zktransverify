@@ -42,15 +42,6 @@ The zero-knowledge feature of zkSNARKS property allows the prover to hide detail
 zkSnarks involves an important concept of  Proof Carrying Data(PCD) that requires data processing occuring at different nodes  generates a proof and it flows along with the data. Refer [18] for more details. The following diagram is an excerpt from the this lecture notes. 
 ![Blockdiagram showing Proof Carrying Data](./documents/zkproof_5.png) 
 
-Key Points and motivation of PCD (excerpt from Ref[18]:
-* Diverse network, containing untrustworthy parties and unreliable components.
-* Impractical to verify internals of each node, so give up.
-* Enforce only correctness of the messages and ultimate results.
-
-* Every message is augmented with a proof attesting to its compliance” with a prescribed policy.
-* Compliance can express any property that can be verified by locally checking every node.
-* Proofs can be verified efficiently and retroactively
-
 ### Review of Video Coin Transcode Verify with respect to PCD
 In the implementation of Video Coin transcode verification, we deviate from PCD:
 * Proof is passed through Ethereum Smart Contract, instead of associationg with the data
@@ -92,9 +83,20 @@ We use elliptic curve homomorphing to encypt the pHash from the source stream th
 Please note that the elliptic curve based computaion used in the Transcode Verification gadget is independent of elliptic curve based zkSnarks proof/verification system.
 
 ## <a name="enhancements1">Proposed enhancements of Video Transcode Verification
+This section cotains a proposal for hardening the proof generation such that encode process is involved rather than performing it as process operation. 
+
+The zkSnarks proof is expected to satisfy a compliance predicate: 
+C(input, code, output) 
+Incase of Transcode Verification, input is source bitstream, output is transcoded bit stream and code is transcode operation. The representation of the above compliance predicate requires huge computation power on the part of prover. There are  attempts such as in ref[21] to apply it for image transformation.
+
+The current implementation of Transcode Verification uses a simplified proof generation where input is replaced with source stream pHash and output is replaced with pHash obtained from transcoded stream and code is a EC homomorphic comparision operation. pHash is a simple, but powerful datastructure that represents a frame in the stream that simplifies frame matching operation.
+
+
+
 ![Blockdiagram showing zkSnarks Proof derived from Encode Process](./documents/zkproof_4.png)
 
 ### Tight association of proof generation with encode process 
+The proposed enhancement still includes a proof generation based in pHashes from source and transcoded streams. However, the pHash correspoding to the output is obtained at various stages of the encoded process i.e. from reconstructed frame and residue after ME subtraction and fed as separate private inputs to the proof generation. In addition we also includes metrics such as targeted PSNR, quantization parameters, target bitrates and predicted PSNR form encode process to tighten the proof generation closer to encode process.
 
 ## Status
 The zkSNARKs proof libraries needs to be split and integrated with the transcode miner and VideoCoin client libraries.
@@ -140,3 +142,5 @@ The zkSNARKs proof libraries needs to be split and integrated with the transcode
 [19.A scalable verification solution for blockchains, by Jason Teutsch et al ](https://people.cs.uchicago.edu/~teutsch/papers/truebit.pdf)
 
 [20.WIP PoC verification system for the Livepeer protocol using Truebit ](https://github.com/livepeer/verification-truebit)
+
+[21. PhotoProof: Cryptographic Image Authentication for Any Set of Permissible Transformations, by Assa Naveh et al ](https://www.cs.tau.ac.il/~tromer/papers/photoproof-oakland16.pdf)
