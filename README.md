@@ -35,17 +35,42 @@ zkSNARKs integration with Ethereum is very new and in its initial phase. There m
 The zero-knowledge feature of zkSNARKS property allows the prover to hide details about the computation from the verifier in the process, and so they are useful for both privacy and performance. This enables a embedding verifier in a smart-contract and offload most of the computation to prover. As the smart-contract runs on all the blockchain nodes and prover runs only on one client, this helps achieve scalability.
 
 ## PCD (Proof Carrying Data): key concept of zkSnarks
-![Blockdiagram showing Proof Carrying Data](./documents/zkproof_5.png)
+zkSnarks involves an important concept of  Proof Carrying Data(PCD) that requires data processing occuring at different nodes  generates a proof and it flows along with the data. Refer [18] for more details. The following diagram is an excerpt from the this lecture notes. 
+![Blockdiagram showing Proof Carrying Data](./documents/zkproof_5.png) 
 
-## Description of usage of zkSnarks for Video Transcode Verification
+Key Points and motivation of PCD (excerpt from Ref[18]:
+* Diverse network, containing untrustworthy parties and unreliable components.
+* Impractical to verify internals of each node, so give up.
+* Enforce only correctness of the messages and ultimate results.
+
+* Every message is augmented with a proof attesting to its compliance” with a prescribed policy.
+* Compliance can express any property that can be verified by locally checking every node.
+* Proofs can be verified efficiently and retroactively
+
+### Review of Video Coin Transcode Verify with respect to PCD
+In the implementation of Video Coin transcode verification, we deviate from PCD:
+* Proof is passed through Ethereum Smart Contract, instead of associationg with the data
+* We rely on pHash extracted from the data (to represent both source and transcoded data) instead of actual stream data.
+* The usage of same pHash values to represent both source and transcoded data may lead to attacks that a miner can use to fake transcode operation and claim the associated reward. There are two possible ways that this may be handled:
+* Using a down-stream node such as Storage-Miner to generate the proof from transcoded and committed stream. Verification will be done by the Smart Contract.
+* An alternate approach is to augment the pHash generation with transcode metrics such as PSNR and integrate the proof generation with encode process as explined the section [Tight association of proof generation with encode process](#enhancements1) 
+
+## Implementation details of video Transcode Verification using zkSnarks
 
 ### Key generation, proof and verification
-![Blockdiagram showing zkSnarks Mains Steps](./documents/zkproof_2.png)
+zkSnarks consists of a setup process where it generates a proving key and verification key.
+
+![Blockdiagram showing zkSnarks Main Steps](./documents/zkproof_2.png)
+
+The implementation consists of creation of a zkSnarks gadget which in turn makes use of other gadgets from gadget library. This facilitates ciruitizing complex computations with a small c++ program. The source code for the gadget is located at: 
+
+![Transcode Verification Gadget source code](./src/videocoin.cpp)
+
 
 ### Details of Elliptic Curve Pairing Computations used in Video Transcode Verification
 ![Blockdiagram showing zkSnarks Mains Steps](./documents/zkproof_3.png)
 
-## Proposed enhancements of Video Transcode Verification
+## <a name="enhancements1">Proposed enhancements of Video Transcode Verification
 ![Blockdiagram showing zkSnarks Proof derived from Encode Process](./documents/zkproof_4.png)
 
 ### Tight association of proof generation with encode process 
@@ -91,3 +116,9 @@ The zkSNARKs proof libraries needs to be integrated with the transcode miner and
 [16. zk-SNARK explained: Basic Principles, by Hartwig Mayer ](https://www.researchgate.net/profile/Hartwig_Mayer/publication/321124635_zk-SNARK_explained_Basic_Principles/links/5a0e4a810f7e9b7d4dba61eb/zk-SNARK-explained-Basic-Principles.pdf)
 
 [17.ZoKrates Opensource tool for zkSNARKs, by Sean Bowe et al ](https://github.com/Zokrates/ZoKrates)
+
+[18.Verified computation and its applications,course conclusion, by Eran Tromer](http://www.cs.tau.ac.il/~tromer/istvr1516-files/lecture12-verified-computation.pdf)
+
+[19.A scalable verification solution for blockchains, by Jason Teutsch et al ](https://people.cs.uchicago.edu/~teutsch/papers/truebit.pdf)
+
+[20.WIP PoC verification system for the Livepeer protocol using Truebit ](https://github.com/livepeer/verification-truebit)
