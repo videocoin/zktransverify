@@ -29,7 +29,11 @@ The proof-of-transcode includes three modules that includes the following:
 ## Attack analysis of proof-of-transcode and advantages of zkSNARks
 The proof-of-transcode could have been implemented in simple steps that inlcude (i) the VideoCoin client can register a hashed pHash with the smart-contract and (ii) transcode miner can submit the pHash(key) and smart-contract can create a hash of this and verify the claim. Used directly like this is insecure: Once the transaction is published, another verifier node could just drop the original transaction and create a new transaction that pays to it instead. zkSNARKs hides the details using elliptic curve homo-morphing and verifier can not learn the original solution of the proof.
 
-zkSNARKs integration with Ethereum is very new and in its initial phase. There may be security issues because of this, but it is expected to be hardened expected to be in good shape. 
+zkSNARKs integration with Ethereum is very new and in its initial phase. There may be security issues because of this, but it is expected to be hardened and evloves to  a good shape.
+
+### List of possible attacks that will be addressed in future enhancements: 
+* A transcode miner may generate a proof based on source stream instead of transcoded stream.
+* A client submitting a transcode request may provide a challenge data that may never be satisfied by transcode miner.
 
 ## Performance and scalability proof-of-transcode
 The zero-knowledge feature of zkSNARKS property allows the prover to hide details about the computation from the verifier in the process, and so they are useful for both privacy and performance. This enables a embedding verifier in a smart-contract and offload most of the computation to prover. As the smart-contract runs on all the blockchain nodes and prover runs only on one client, this helps achieve scalability.
@@ -55,20 +59,37 @@ In the implementation of Video Coin transcode verification, we deviate from PCD:
 * Using a down-stream node such as Storage-Miner to generate the proof from transcoded and committed stream. Verification will be done by the Smart Contract.
 * An alternate approach is to augment the pHash generation with transcode metrics such as PSNR and integrate the proof generation with encode process as explined the section [Tight association of proof generation with encode process](#enhancements1) 
 
+ 
 ## Implementation details of video Transcode Verification using zkSnarks
-
-### Key generation, proof and verification
-zkSnarks consists of a setup process where it generates a proving key and verification key.
-
-![Blockdiagram showing zkSnarks Main Steps](./documents/zkproof_2.png)
 
 The implementation consists of creation of a zkSnarks gadget which in turn makes use of other gadgets from gadget library. This facilitates ciruitizing complex computations with a small c++ program. The source code for the gadget is located at: 
 
 ![Transcode Verification Gadget source code](./src/videocoin.cpp)
 
+This implementation of the Transcode Verification based on [libsnarks](https://github.com/scipr-lab/libsnark). The implementation actually uses an older version of libsnarks that is being used by the github project [libsnark tutorial](https://github.com/christianlundkvist/libsnark-tutorial). 
+
+A snapshot of the code base inlcuding libsnarks and dependent libraries are located at: [libsnarkswrap](./src/libsnarkwrap.tgz). This snapshot inlcudes the Transcode Verification gadget code along with the libsnarks and dependent libraries. 
+
+
+### Key generation, proof and verification
+zkSnarks includes three steps:
+* A one-time setup phase where required Computation is transformed to zkSnarks proover key and verification key throw several internal steps that include Algebraic circuit generation, R1CS and QAP. It also includes generation of random values that are used in generation of the keys and discarded (anyone accessing these random values, if not properly discarded, can create attacks).
+* Proof generation that uses proving key generated in the previous phase, public input and private secret that prover knows as part of performing computation. This proof is sent to the verifier.
+* Verification processes uses verification key, proof and public input and performs verification based Elliptic Curve homomorphing. 
+
+As shown in the following diagram, pHash obtained from the source stream play the role of public input. pHash obtained from the transcoded stream forms the private secret of the miner.  
+
+![Blockdiagram showing zkSnarks Main Steps](./documents/zkproof_2.png)
+
 
 ### Details of Elliptic Curve Pairing Computations used in Video Transcode Verification
+Ideally the whole transcode process needs to be used for generating zkSnarks keys. The current implementaion uses only comparision of pHashes generated from source and transcoded streams instead. 
+
 ![Blockdiagram showing zkSnarks Mains Steps](./documents/zkproof_3.png)
+
+We use elliptic curve homomorphing to encypt the pHash from the source stream that acts as a public key. The pHash(x) is encrypted as a relation P2=xP1 on cureve G1. The miner encrypts the pHash from transcoded stream as relation Q1=yQ2 on curve G2. If the pairing check e(P1,Q1) == e(P2,Q2) satisfies on GT, then it pHashes should match.
+
+Please note that the elliptic curve based computaion used in the Transcode Verification gadget is independent of elliptic curve based zkSnarks proof/verification system.
 
 ## <a name="enhancements1">Proposed enhancements of Video Transcode Verification
 ![Blockdiagram showing zkSnarks Proof derived from Encode Process](./documents/zkproof_4.png)
@@ -76,10 +97,7 @@ The implementation consists of creation of a zkSnarks gadget which in turn makes
 ### Tight association of proof generation with encode process 
 
 ## Status
-An Ethereum Smartcontract supporting zkSNARKs based verification is developed using a tool called Zokrates[17]. This tool allows definitin of zkSNARKs verification system using DSL(Domain Specific Language) and generates smart contract for Ethereum. While generating the zkSNARKs proofs, the parameters can be partitioned to two sets called inputs and witness. Moving the parameters to witness protects them from verifier. Currently all the parameters are under inputs and needs to be changed as witness. 
-
-TODO:
-The zkSNARKs proof libraries needs to be integrated with the transcode miner and VideoCoin client libraries.
+The zkSNARKs proof libraries needs to be split and integrated with the transcode miner and VideoCoin client libraries.
 
 
 ### References
