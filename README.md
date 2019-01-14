@@ -34,6 +34,7 @@ zkSNARKs integration with Ethereum is very new and in its initial phase. There m
 ### List of possible attacks that will be addressed in future enhancements: 
 * A transcode miner may generate a proof based on source stream instead of transcoded stream.
 * A client submitting a transcode request may provide a challenge data that may never be satisfied by transcode miner.
+* Network bandwidth may influence bitrate quality and may reduce verification probability.
 
 ## Performance and scalability proof-of-transcode
 The zero-knowledge feature of zkSNARKS property allows the prover to hide details about the computation from the verifier in the process, and so they are useful for both privacy and performance. This enables a embedding verifier in a smart-contract and offload most of the computation to prover. As the smart-contract runs on all the blockchain nodes and prover runs only on one client, this helps achieve scalability.
