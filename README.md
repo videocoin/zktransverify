@@ -39,16 +39,17 @@ zkSNARKs integration with Ethereum is very new and in its initial phase. There m
 The zero-knowledge feature of zkSNARKS property allows the prover to hide details about the computation from the verifier in the process, and so they are useful for both privacy and performance. This enables a embedding verifier in a smart-contract and offload most of the computation to prover. As the smart-contract runs on all the blockchain nodes and prover runs only on one client, this helps achieve scalability.
 
 ## PCD (Proof Carrying Data): key concept of zkSnarks
-zkSnarks involves an important concept of  Proof Carrying Data(PCD) that requires data processing occuring at different nodes  generates a proof and it flows along with the data. Refer [18] for more details. The following diagram is an excerpt from the this lecture notes. 
+zkSnarks involves an important concept of  Proof Carrying Data(PCD) that requires data processing occurring at different nodes  generates a proof confirming processing of the data. The data carries the proof as it moves between nodes. Refer [18] for more details. The following diagram is an excerpt from the this lecture notes. 
+
 ![Blockdiagram showing Proof Carrying Data](./documents/zkproof_5.png) 
 
 ### Review of Video Coin Transcode Verify with respect to PCD
 In the implementation of Video Coin transcode verification, we deviate from PCD:
-* Proof is passed through Ethereum Smart Contract, instead of associationg with the data
+* Proof is passed through Ethereum Smart Contract, instead of associating with the data.
 * We rely on pHash extracted from the data (to represent both source and transcoded data) instead of actual stream data.
 * The usage of same pHash values to represent both source and transcoded data may lead to attacks that a miner can use to fake transcode operation and claim the associated reward. There are two possible ways that this may be handled:
-* Using a down-stream node such as Storage-Miner to generate the proof from transcoded and committed stream. Verification will be done by the Smart Contract.
-* An alternate approach is to augment the pHash generation with transcode metrics such as PSNR and integrate the proof generation with encode process as explined the section [Tight association of proof generation with encode process](#enhancements1) 
+  * Using a down-stream node such as Storage-Miner to generate the proof from transcoded and committed stream. Verification will be done by the Smart Contract.
+  * An alternate approach is to augment the pHash generation with transcode metrics such as PSNR and integrate the proof generation with encode process as explained the section [Tight association of proof generation with encode process](#enhancements1) 
 
  
 ## Implementation details of video Transcode Verification using zkSnarks
@@ -59,14 +60,14 @@ The implementation consists of creation of a zkSnarks gadget which in turn makes
 
 This implementation of the Transcode Verification based on [libsnarks](https://github.com/scipr-lab/libsnark). The implementation actually uses an older version of libsnarks that is being used by the github project [libsnark tutorial](https://github.com/christianlundkvist/libsnark-tutorial). 
 
-A snapshot of the code base inlcuding libsnarks and dependent libraries are located at: [libsnarkswrap](./src/libsnarkwrap.tgz). This snapshot inlcudes the Transcode Verification gadget code along with the libsnarks and dependent libraries. 
+A snapshot of the code base including libsnarks and dependent libraries are located at: [libsnarkswrap](./src/libsnarkwrap.tgz). This snapshot includes the Transcode Verification gadget code along with the libsnarks and dependent libraries. 
 
 
 ### Key generation, proof and verification
 zkSnarks includes three steps:
-* A one-time setup phase where required Computation is transformed to zkSnarks proover key and verification key throw several internal steps that include Algebraic circuit generation, R1CS and QAP. It also includes generation of random values that are used in generation of the keys and discarded (anyone accessing these random values, if not properly discarded, can create attacks).
+* A one-time setup phase where required Computation is transformed to zkSnarks proover key and verification key through several internal steps that include Algebraic circuit generation, R1CS and QAP. It also includes generation of random values that are used in generation of the keys and discarded (anyone accessing these random values, if not properly discarded, can create attacks).
 * Proof generation that uses proving key generated in the previous phase, public input and private secret that prover knows as part of performing computation. This proof is sent to the verifier.
-* Verification processes uses verification key, proof and public input and performs verification based Elliptic Curve homomorphing. 
+* Verification processes uses verification key, proof and public input and performs verification based Elliptic Curve homo-morphing. 
 
 As shown in the following diagram, pHash obtained from the source stream play the role of public input. pHash obtained from the transcoded stream forms the private secret of the miner.  
 
@@ -74,32 +75,34 @@ As shown in the following diagram, pHash obtained from the source stream play th
 
 
 ### Details of Elliptic Curve Pairing Computations used in Video Transcode Verification
-Ideally the whole transcode process needs to be used for generating zkSnarks keys. The current implementaion uses only comparision of pHashes generated from source and transcoded streams instead. 
+Ideally the whole transcode process needs to be used for generating zkSnarks keys. The current implementation uses only comparison of pHashes generated from source and transcoded streams instead. 
 
 ![Blockdiagram showing zkSnarks Mains Steps](./documents/zkproof_3.png)
 
-We use elliptic curve homomorphing to encypt the pHash from the source stream that acts as a public key. The pHash(x) is encrypted as a relation P2=xP1 on cureve G1. The miner encrypts the pHash from transcoded stream as relation Q1=yQ2 on curve G2. If the pairing check e(P1,Q1) == e(P2,Q2) satisfies on GT, then it pHashes should match.
+We use elliptic curve homo-morphing to encrypt the pHash from the source stream that acts as a public key. The pHash(x) is encrypted as a relation P2=xP1 on curve G1. The miner encrypts the pHash from transcoded stream as relation Q1=yQ2 on curve G2. If the pairing check e(P1,Q1) == e(P2,Q2) satisfies on GT, then it pHashes should match.
 
-Please note that the elliptic curve based computaion used in the Transcode Verification gadget is independent of elliptic curve based zkSnarks proof/verification system.
+Please note that the elliptic curve based computation used in the Transcode Verification gadget is independent of elliptic curve based zkSnarks proof/verification system.
 
 ## <a name="enhancements1">Proposed enhancements of Video Transcode Verification
-This section cotains a proposal for hardening the proof generation such that encode process is involved rather than performing it as process operation. 
+This section contains a proposal for hardening the proof generation such that encode process is involved rather than performing it as process operation. 
 
 The zkSnarks proof is expected to satisfy a compliance predicate: 
+```
 C(input, code, output) 
-Incase of Transcode Verification, input is source bitstream, output is transcoded bit stream and code is transcode operation. The representation of the above compliance predicate requires huge computation power on the part of prover. There are  attempts such as in ref[21] to apply it for image transformation.
+```
+Incase of Transcode Verification, "input" is source bitstream, "output" is transcoded bit stream and "code" is transcode operation. The representation of the above compliance predicate requires huge computation power on the part of prover. There are  attempts such as in ref[21] to apply it for image transformation.
 
-The current implementation of Transcode Verification uses a simplified proof generation where input is replaced with source stream pHash and output is replaced with pHash obtained from transcoded stream and code is a EC homomorphic comparision operation. pHash is a simple, but powerful datastructure that represents a frame in the stream that simplifies frame matching operation.
+The current implementation of Transcode Verification uses a simplified proof generation where input is replaced with source stream pHash and output is replaced with pHash obtained from transcoded stream and code is a EC homomorphic comparison operation. pHash is a simple, but powerful data-structure that represents a frame in the stream that simplifies frame matching operation.
 
 
 
 ![Blockdiagram showing zkSnarks Proof derived from Encode Process](./documents/zkproof_4.png)
 
 ### Tight association of proof generation with encode process 
-The proposed enhancement still includes a proof generation based in pHashes from source and transcoded streams. However, the pHash correspoding to the output is obtained at various stages of the encoded process i.e. from reconstructed frame and residue after ME subtraction and fed as separate private inputs to the proof generation. In addition we also includes metrics such as targeted PSNR, quantization parameters, target bitrates and predicted PSNR form encode process to tighten the proof generation closer to encode process.
+The proposed enhancement still includes a proof generation based in pHashes from source and transcoded streams. However, the pHash corresponding to the output is obtained at various stages of the encoded process i.e. from reconstructed frame and residue after ME subtraction and fed as separate private inputs to the proof generation. In addition we also includes metrics such as targeted PSNR, quantization parameters, target bitrates and predicted PSNR form encode process to tighten the proof generation closer to encode process.
 
 ## Status
-The zkSNARKs proof libraries needs to be split and integrated with the transcode miner and VideoCoin client libraries.
+The current implementation is only tested in a simulated environment. The zkSNARKs proof libraries needs to be split and integrated with the transcode miner and VideoCoin client libraries.
 
 
 ### References
