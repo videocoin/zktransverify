@@ -149,3 +149,5 @@ The current implementation is only tested in a simulated environment. The zkSNAR
 [20.WIP PoC verification system for the Livepeer protocol using Truebit ](https://github.com/livepeer/verification-truebit)
 
 [21. PhotoProof: Cryptographic Image Authentication for Any Set of Permissible Transformations, by Assa Naveh et al ](https://www.cs.tau.ac.il/~tromer/papers/photoproof-oakland16.pdf)
+
+[22. Code performance improvement scheme for X264 based on SSIM, by Weilin Wu et al ](https://ieeexplore.ieee.org/document/6418782)
