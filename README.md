@@ -73,6 +73,8 @@ cd build/
 cmake -DCMAKE_BUILD_TYPE=Debug ..
 make
 ```
+The binary will be generated in src/videocoin
+
 ### Key generation, proof and verification
 zkSnarks includes three steps:
 * A one-time setup phase where required Computation is transformed to zkSnarks proover key and verification key through several internal steps that include Algebraic circuit generation, R1CS and QAP. It also includes generation of random values that are used in generation of the keys and discarded (anyone accessing these random values, if not properly discarded, can create attacks).
