@@ -113,6 +113,38 @@ The current implementation of Transcode Verification uses a simplified proof gen
 ### Tight association of proof generation with encode process 
 The proposed enhancement still includes a proof generation based in pHashes from source and transcoded streams. However, the pHash corresponding to the output is obtained at various stages of the encoded process i.e. from reconstructed frame and residue after ME subtraction and fed as separate private inputs to the proof generation. In addition we also includes metrics such as targeted PSNR, quantization parameters, target bitrates and predicted PSNR form encode process to tighten the proof generation closer to encode process.
 
+## TinyRAM for transcode computation
+As miner may generate fake proofs for verification based on source stream, we have to consider transcode operation as a part of verification process. To avoid fake proof generation.
+
+![Blockdiagram showing no-transcode attack](./documents/zkproof_no_transcode.png)
+
+### Macro-block decode based verification
+Macro-block decode algorithm should be used as transcoding computation proof and divided on three roles.
+* Client
+  * Decode macro-block from source stream
+  * Generate SSIM from macro-block and send it as a challenge to verifier
+* Miner
+  * Decode macro-block from transcoded stream
+  * Generate SSIM from macro-block and send it as a challenge to verifier
+  * Generate macro-block decode execution proof and commit it to verifier
+* Verifier 
+  * Compare homomorphically encrypted SSIMs
+  * Verify macro-block decode execution proof
+
+### TinyRAM 
+TinyRAM [23] is used to support general computations written in high level languages. So, we can apply macro-block decoding as timyRAM program to get computational proofs.
+To achieve this we have to go though few steps:
+* Macro-block decoding algorithm should be converted into tinyRAM assembly code. 
+* Assembly code should be generated into small circuits that checks correct execution.
+* After feeds those circuits into zkSNARK to generate the proofs.
+
+On of the key challenges right now to find the way to generate tinyRAM assembly code from hight level C program due to lack of tinyRAM compiler.
+Alternative way to implement circuits for macro-block decoding is to use pepper project [24].
+
+![TinyRAM flow](./documents/zkproof_tinyram.png)
+
+
+
 ## Status
 The current implementation is only tested in a simulated environment. The zkSNARKs proof libraries needs to be split and integrated with the transcode miner and VideoCoin client libraries.
 
@@ -161,3 +193,7 @@ The current implementation is only tested in a simulated environment. The zkSNAR
 [21. PhotoProof: Cryptographic Image Authentication for Any Set of Permissible Transformations, by Assa Naveh et al ](https://www.cs.tau.ac.il/~tromer/papers/photoproof-oakland16.pdf)
 
 [22. Code performance improvement scheme for X264 based on SSIM, by Weilin Wu et al ](https://ieeexplore.ieee.org/document/6418782)
+
+[23. Succinct Non-Interactive Zero Knowledge for a von Neumann Architecture](https://eprint.iacr.org/2013/879.pdf)
+
+[24. The Pepper Project](http://www.pepper-project.org)
