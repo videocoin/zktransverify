@@ -9,6 +9,8 @@ VideoCoin can use the zkSNARKs for proof-of-transcode. zkSNARKs facilitates to m
 
 zkSNARKs uses Elliptic curve pairing for homomorphic hiding / encoding / encryption. Elliptic curve pairings are a recent addition to cryptography and fuelling advancements in the blockchain technologies. There are several blockchain applications of elliptic curve pairings that include Identity Based Encryption, Non-interactive Zero Knowledge proofs, Short Signatures etc. Refer [1],[2],[3] for detailed description of Elliptic Curve Pairing. In addition to elliptic curve pairing, a stage in the zk-SNARKS involves translation of computations into polynomials called a Quadratic Arithmetic Program (QAP). Computations are first converted to an Arithmetic circuit. An arithmetic circuit consists of gates computing arithmetic operations like addition and multiplication, with wires connecting the gates.
 
+The following diagram shows an overview of video-coin proof-of-transcode using zkSNARKS. We use  information retrieved from the original stream by the client as public input and information retrieved from the transcoded by the miner bitstream as   encrypted pHash supplied by  client as private input to the proof-generation system. In the following diagram we used encrypted pHash to explain the proof generation and verification. But the final implementation incorporates bit-stream syntax elements such as macro-blocks and video quality metrics SSIM as explained in the following sections of this document.  
+
 ![Blockdiagram showing VideoCoin Proof-of-transcode verification](./documents/zkproofoftranscode.png)
 
 The proof-of-transcode includes three modules that includes the following:
@@ -31,12 +33,11 @@ The proof-of-transcode could have been implemented in simple steps that inlcude 
 
 zkSNARKs integration with Ethereum is very new and in its initial phase. There may be security issues because of this, but it is expected to be hardened and evloves to  a good shape.
 
-### List of possible attacks that will be addressed in future enhancements: 
-* A transcode miner may generate a proof based on source stream instead of transcoded stream.
-* A client submitting a transcode request may provide a challenge data that may never be satisfied by transcode miner.
-* Network bandwidth may influence bitrate quality and may reduce verification probability.
+### List of possible attacks with the above implementation and future enehancements
+* A transcode miner may generate a proof based on source stream instead of transcoded stream. Video Coin  proof-of-transcode will be extended to use additional parameters extracted from bitstream as described under the section “Macro-block decode based verification” to prevent this attack. 
+* A client submitting a transcode request may provide a challenge data that may never be satisfied by transcode miner. We will be researching on extending proof-of-transcode to make use of concepts discussed under  the section “Proof Carrying Data” below  to prevent this kind of attacks.
 
-## Performance and scalability proof-of-transcode
+## Performance and scalability of proof-of-transcode
 The zero-knowledge feature of zkSNARKS property allows the prover to hide details about the computation from the verifier in the process, and so they are useful for both privacy and performance. This enables a embedding verifier in a smart-contract and offload most of the computation to prover. As the smart-contract runs on all the blockchain nodes and prover runs only on one client, this helps achieve scalability.
 
 ## PCD (Proof Carrying Data): key concept of zkSnarks
