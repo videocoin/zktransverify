@@ -101,9 +101,13 @@ This section contains a proposal for hardening the proof generation such that en
 
 The zkSnarks proof is expected to satisfy a compliance predicate: 
 ```
-C(input, code, output) 
+C(input, code, output)
+
+input  - input bitstream and transcode options 
+output - output bit stream
+code   - decode and encode opertation conforming to required transcode options
 ```
-Incase of Transcode Verification, "input" is source bitstream, "output" is transcoded bit stream and "code" is transcode operation. The representation of the above compliance predicate requires huge computation power on the part of prover. There are  attempts such as in ref[21] to apply it for image transformation.
+Incase of Transcode Verification, "input" is source bitstream and transcode options, "output" is transcoded bit stream and "code" is transcode operation. The representation of the above compliance predicate requires huge computation power on the part of prover. There are  attempts such as in ref[21] to apply it for image transformation.
 
 The current implementation of Transcode Verification uses a simplified proof generation where input is replaced with source stream pHash and output is replaced with pHash obtained from transcoded stream and code is a EC homomorphic comparison operation. pHash is a simple, but powerful data-structure that represents a frame in the stream that simplifies frame matching operation.
 
@@ -112,7 +116,7 @@ The current implementation of Transcode Verification uses a simplified proof gen
 ![Blockdiagram showing zkSnarks Proof derived from Encode Process](./documents/zkproof_4.png)
 
 ### Tight association of proof generation with encode process 
-The proposed enhancement still includes a proof generation based in pHashes from source and transcoded streams. However, the pHash corresponding to the output is obtained at various stages of the encoded process i.e. from reconstructed frame and residue after ME subtraction and fed as separate private inputs to the proof generation. In addition we also includes metrics such as targeted PSNR, quantization parameters, target bitrates and predicted PSNR form encode process to tighten the proof generation closer to encode process.
+The proposed enhancement includes a proof generation based on bitstream syntax elements such as macroblocks and video quality metrics such as SSIM. We will also include pHash as an additional check, but may be dropped if we can support enough macroblocks in the proof system. The proof system is described in the following sections in more detail. Public input containing macroblocks/positions  and expected SSIM are submitted by the client. The macroblocks are selected at the near end of the video segment and signaled through the smart contract.   This ensures prior frames are encoded correctly. The number of macroblocks used in the proof should create hurdle to generate fake proofs. The SSIM generated in the proof system is compared against  the client supplied SSIM to fall with in a range. This ensures the transcode operation is carried with the specified transcode parameters. 
 
 ## TinyRAM for transcode computation
 As miner may generate fake proofs for verification based on source stream, we have to consider transcode operation as a part of verification process. To avoid fake proof generation.
