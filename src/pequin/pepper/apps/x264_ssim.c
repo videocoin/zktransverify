@@ -23,7 +23,7 @@ struct In {
 };
 
 struct Out {
-    fix_t ssim;
+    ufix_t ssim;
 };
 
 int buf[1024];
@@ -56,19 +56,19 @@ void ssim_4x4x2_core( const pixel *pix1, const pixel *pix2, int *sums )
     }
 }
 
-fix_t ssim_end1( int s1, int s2, int ss, int s12 )
+ufix_t ssim_end1( int s1, int s2, int ss, int s12 )
 {
     int vars = ss*64 - s1*s1 - s2*s2;
     int covar = s12*64 - s1*s2;
-    fix_t a = int_to_fix(2 * s1 * s2 + SSIM_C1);
-    fix_t b = int_to_fix(2 * covar + SSIM_C2);
-    fix_t c = int_to_fix(s1*s1 + s2*s2 + SSIM_C1);
-    fix_t d = int_to_fix(vars + SSIM_C2);
+    ufix_t a = uint_to_ufix(2 * s1 * s2 + SSIM_C1);
+    ufix_t b = uint_to_ufix(2 * covar + SSIM_C2);
+    ufix_t c = uint_to_ufix(s1*s1 + s2*s2 + SSIM_C1);
+    ufix_t d = uint_to_ufix(vars + SSIM_C2);
 
-    return fix_div(fix_mul(a, b), fix_mul(c, d));
+    return ufix_div(ufix_mul(a, b), ufix_mul(c, d));
 }
 
-fix_t ssim_end4( int *sum0, int *sum1, int width )
+ufix_t ssim_end4( int *sum0, int *sum1, int width )
 {
     fix_t ssim = 0;
     int i = 0;
@@ -85,13 +85,13 @@ fix_t ssim_end4( int *sum0, int *sum1, int width )
 
 void compute(struct In *input, struct Out *output) {
     int z = 0;
-    fix_t ssim = 0;
+    ufix_t ssim = 0;
 
     int *sum0 = buf;
     int *sum1 = sum0 + ((WIDTH >> 2) + 3) * 4;
 
-    int width = WIDTH >> 2;
-    int height = HEIGHT >> 2;
+    unsigned int width = WIDTH >> 2;
+    unsigned int height = HEIGHT >> 2;
 
     int y, x;
 
@@ -115,7 +115,7 @@ void compute(struct In *input, struct Out *output) {
         }
     }
 
-    fix_t cnt = int_to_fix((height - 1) * (width - 1));
+    ufix_t cnt = uint_to_ufix((height - 1) * (width - 1));
 
-    output->ssim = fix_div(ssim, cnt);
+    output->ssim = ufix_div(ssim, cnt);
 }

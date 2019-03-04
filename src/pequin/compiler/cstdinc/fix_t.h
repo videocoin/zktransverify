@@ -4,11 +4,14 @@
 #include <stdint.h>
 
 typedef int32_t fix_t;
+typedef uint32_t ufix_t;
 
 #define FIX_SCALE 0x10000
 #define FIX_SCALE_LOG2 16
 #define FIX_T_MIN -2147483648
 #define FIX_T_MAX 2147483647
+#define UFIX_T_MIN 0
+#define UFIX_T_MAX 4294967295
 
 //Arithmetic routines do not overflow, and always truncate towards zero
 fix_t fix_add(fix_t a, fix_t b){
@@ -58,6 +61,39 @@ int32_t fix_to_int(fix_t val){
 fix_t fix_ceil(fix_t val){
   val = fix_add(val, FIX_SCALE - 1);
   return int_to_fix(fix_to_int(val));
+}
+
+//Arithmetic routines do not overflow, and always truncate towards zero
+ufix_t ufix_add(ufix_t a, ufix_t b){
+  return a + b;
+}
+ufix_t ufix_mul(ufix_t a, ufix_t b){
+  uint64_t prod = ((uint64_t)a) * b;
+  return (ufix_t)(prod >> FIX_SCALE_LOG2);
+}
+ufix_t ufix_div(ufix_t a, ufix_t b){
+  uint64_t quotient = ((uint64_t)a) << FIX_SCALE_LOG2;
+  quotient /= b;
+  return (ufix_t)(quotient);
+}
+
+ufix_t ufix_sqrt(ufix_t a){
+  //A should be nonnegative.
+  uint64_t tosqrt = ((uint64_t) a) << FIX_SCALE_LOG2;
+  return (ufix_t)(uint64sqrt(tosqrt,(32 + FIX_SCALE_LOG2)/2));
+}
+
+ufix_t uint_to_ufix(uint32_t val){
+  return (ufix_t)(((uint64_t)val) << FIX_SCALE_LOG2);
+}
+
+uint32_t ufix_to_int(ufix_t val){
+  return (uint32_t)(val >> FIX_SCALE_LOG2);
+}
+
+ufix_t ufix_ceil(ufix_t val){
+  val = ufix_add(val, FIX_SCALE - 1);
+  return uint_to_ufix(ufix_to_int(val));
 }
 
 #endif //FIX_T_H

@@ -56,3 +56,36 @@ fix_t fix_sqrt(fix_t a){
   uint64_t tosqrt = ((uint64_t) a) << FIX_SCALE_LOG2;
   return (fix_t)(uint64sqrt(tosqrt,(32 + FIX_SCALE_LOG2)/2));
 }
+
+//Arithmetic routines do not overflow, and always truncate towards zero
+ufix_t ufix_add(ufix_t a, ufix_t b){
+    return a + b;
+}
+ufix_t ufix_mul(ufix_t a, ufix_t b){
+    uint64_t prod = ((uint64_t)a) * b;
+#if DEBUG_FIX_T == 1
+    std::cout << "Multiply " << a << " " << b << std::endl;
+#endif
+    return (ufix_t)(prod >> FIX_SCALE_LOG2);
+}
+ufix_t ufix_div(ufix_t a, ufix_t b){
+    if (b == 0){
+        std::cout << "ERROR: Fix_t division " << a << " by zero " << std::endl;
+        return 0;
+    }
+
+    uint64_t quotient = ((uint64_t)a) << FIX_SCALE_LOG2;
+    quotient /= b;
+
+#if DEBUG_FIX_T == 1
+    std::cout << "Integer dividing " << a << " by " << b << " result " <<
+  quotient<< std::endl;
+#endif
+    return (ufix_t)(quotient);
+}
+
+ufix_t ufix_sqrt(ufix_t a){
+    //A should be nonnegative.
+    uint64_t tosqrt = ((uint64_t) a) << FIX_SCALE_LOG2;
+    return (ufix_t)(uint64sqrt(tosqrt,(32 + FIX_SCALE_LOG2)/2));
+}
