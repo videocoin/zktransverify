@@ -11,7 +11,7 @@
 // const int ssim_c1 = (int)(.01*.01*255*255*64 + .5); = 416.66
 #define SSIM_C1 416
 // const int ssim_c2 = (int)(.03*.03*255*255*64*63 + .5); 235963.22
-#define SSIM_C2 23596322
+#define SSIM_C2 235963
 
 
 #define pixel unsigned char
