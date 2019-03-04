@@ -522,6 +522,6 @@ void x264_ssim_input_gen(mpq_t * input_q, int num_inputs, char *argv[]) {
 
     for (int i = 0; i < num_inputs / 2; i++) {
         mpq_set_ui(input_q[i], a[i], 1);
-        mpq_set_ui(input_q[num_inputs / 2 + i], 1);
+        mpq_set_ui(input_q[num_inputs / 2 + i], b[i], 1);
     }
 }
