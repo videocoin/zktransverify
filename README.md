@@ -154,6 +154,12 @@ Three separate SSIM calculation were implemented for frame sizes 16x16, 32x32 an
 
 Algorithm works with frames in YUV format. Luma component (Y) is used for SSIM calculation.
 
+| Frame | Input Variables | Proving key size | Verification key size | Proving time (VM 4CPU, 12GB RAM) | Proving time (TBD: Google Cloud instance) |
+|-------|:---------------:|:----------------:|:---------------------:|:--------------------------------:|:----------------------------------------:|
+| 16x16 |             512 |            57 MB |                121 kB |                         5.1734 s |                   |
+| 32x32 |            2048 |         277.4 MB |                180 kB |                        25.0717 s |                   |
+| 64x64 |            8192 |           1.3 GB |                420 kB |                       127.8256 s |                                   |           
+
 
 ## Status
 The current implementation is only tested in a simulated environment. The zkSNARKs proof libraries needs to be split and integrated with the transcode miner and VideoCoin client libraries.
