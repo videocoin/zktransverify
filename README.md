@@ -148,7 +148,7 @@ Alternative way to implement circuits for macro-block decoding is to use pepper 
 
 ![TinyRAM flow](./documents/zkproof_tinyram.png)
 
-### SSIM calculation using Pepper [24](http://www.pepper-project.org)
+### SSIM calculation using Pepper [24]
 Core implementation of SSIM was taken from https://github.com/mirror/x264/blob/master/common/pixel.c#L688 and adapted for Pepper compiler https://github.com/VideoCoin/zktransverify/blob/pepper/src/pequin/pepper/apps/x264_ssim_16x16.c.
 Three separate SSIM calculation were implemented for frame sizes 16x16, 32x32 and 64x64 respectively (Pepper doesn't support dynamic parameters this is the reason to have three SSIM calculations).
 
