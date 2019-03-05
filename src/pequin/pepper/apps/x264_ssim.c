@@ -24,6 +24,7 @@ struct In {
 
 struct Out {
     ufix_t ssim;
+    unsigned int counter;
 };
 
 int buf[1024];
@@ -72,7 +73,7 @@ ufix_t ssim_end4( int *sum0, int *sum1, int width )
 {
     fix_t ssim = 0;
     int i = 0;
-    int k = 4;
+//    int k = 4;
     for (i = 0; i < width; i++)
     {
         ssim += ssim_end1(sum0[i * 4 + 0] + sum0[(i + 1) * 4 + 0] + sum1[i * 4 + 0] + sum1[(i + 1) * 4 + 0],
@@ -101,7 +102,7 @@ void compute(struct In *input, struct Out *output) {
         {
             int *temp = sum0;
             sum0 = sum1;
-            sum1 = sum0;
+            sum1 = temp;
 
             for (x = 0; x < width; x+=2 )
             {
@@ -115,7 +116,6 @@ void compute(struct In *input, struct Out *output) {
         }
     }
 
-    ufix_t cnt = uint_to_ufix((height - 1) * (width - 1));
-
-    output->ssim = ufix_div(ssim, cnt);
+    output->ssim = ssim;
+    output->counter = (height - 1) * (width - 1);
 }
