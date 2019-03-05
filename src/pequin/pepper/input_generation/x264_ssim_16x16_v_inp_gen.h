@@ -1,6 +1,6 @@
 
 
-void x264_ssim_input_gen(mpq_t * input_q, int num_inputs, char *argv[]) {
+void x264_ssim_16x16_input_gen(mpq_t * input_q, int num_inputs, char *argv[]) {
     
     unsigned char a[256] = {
             118,
