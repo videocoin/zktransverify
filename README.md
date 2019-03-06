@@ -157,7 +157,7 @@ Algorithm works with frames in YUV format. Luma component (Y) is used for SSIM c
 | Frame | Input Variables | Proving key size | Verification key size | Proving time (VM 4CPU, 12GB RAM) | Proving time (TBD: Google Cloud instance) |
 |-------|:---------------:|:----------------:|:---------------------:|:--------------------------------:|:----------------------------------------:|
 | 16x16 |             512 |            57 MB |                121 kB |                         5.1734 s |           6.5778 s |
-| 32x32 |            2048 |         277.4 MB |                180 kB |                        25.0717 s |                   |
+| 32x32 |            2048 |         277.4 MB |                180 kB |                        25.0717 s |         31.7554 s |
 | 64x64 |            8192 |           1.3 GB |                420 kB |                       127.8256 s |                                   |           
 
 Verification time for all cases ~5 ms.
