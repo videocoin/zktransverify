@@ -154,7 +154,7 @@ Three separate SSIM calculation were implemented for frame sizes 16x16, 32x32 an
 
 Algorithm works with frames in YUV format. Luma component (Y) is used for SSIM calculation.
 
-| Frame | Input Variables | Proving key size | Verification key size | Proving time (VM 4CPU, 12GB RAM) | Proving time (Transcoder: Google Cloud instance) |
+| Frame | Input Variables | Proving key size | Verification key size | Proving time (Intel Core i7 2.8 GHZ VM 4CPU, 12GB RAM) | Proving time (Transcoder: Google Cloud instance) |
 |-------|:---------------:|:----------------:|:---------------------:|:--------------------------------:|:----------------------------------------:|
 | 16x16 |             512 |            57 MB |                121 kB |                         5.1734 s |           6.5778 s |
 | 32x32 |            2048 |         277.4 MB |                180 kB |                        25.0717 s |         31.7554 s |
