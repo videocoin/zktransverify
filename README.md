@@ -148,7 +148,19 @@ Alternative way to implement circuits for macro-block decoding is to use pepper 
 
 ![TinyRAM flow](./documents/zkproof_tinyram.png)
 
+### SSIM calculation using Pepper [24]
+Core implementation of SSIM was taken from https://github.com/mirror/x264/blob/master/common/pixel.c#L688 and adapted for Pepper compiler https://github.com/VideoCoin/zktransverify/blob/pepper/src/pequin/pepper/apps/x264_ssim_16x16.c.
+Three separate SSIM calculation were implemented for frame sizes 16x16, 32x32 and 64x64 respectively (Pepper doesn't support dynamic parameters this is the reason to have three SSIM calculations).
 
+Algorithm works with frames in YUV format. Luma component (Y) is used for SSIM calculation.
+
+| Frame | Input Variables | Proving key size | Verification key size | Proving time (Intel Core i7 2.8 GHz, 4vCPU 12GB RAM) | Proving time (Intel Xeon 2.2 GHz, v8CPU 16GB RAM) |
+|-------|:---------------:|:----------------:|:---------------------:|:--------------------------------:|:----------------------------------------:|
+| 16x16 |             512 |            57 MB |                121 kB |                         2.6691 s |           2.3168 s |
+| 32x32 |            2048 |         277.4 MB |                180 kB |                        11.6607 s |         11.3058 s |
+| 64x64 |            8192 |           1.3 GB |                420 kB |                       58.8939s s |    52.7337 s                      |           
+
+Verification time for all cases ~5 ms.
 
 ## Status
 The current implementation is only tested in a simulated environment. The zkSNARKs proof libraries needs to be split and integrated with the transcode miner and VideoCoin client libraries.
