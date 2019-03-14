@@ -81,6 +81,19 @@ bit_vector int_list_to_bits(const std::initializer_list<unsigned long> &l, const
     return res;
 }
 
+bit_vector int_vector_to_bits(const std::vector<unsigned long> &l, const size_t wordsize)
+{
+    bit_vector res(wordsize*l.size());
+    for (size_t i = 0; i < l.size(); ++i)
+    {
+        for (size_t j = 0; j < wordsize; ++j)
+        {
+            res[i*wordsize + j] = (*(l.begin()+i) & (1ul<<(wordsize-1-j)));
+        }
+    }
+    return res;
+}
+
 long long div_ceil(long long x, long long y)
 {
     return (x + (y-1)) / y;

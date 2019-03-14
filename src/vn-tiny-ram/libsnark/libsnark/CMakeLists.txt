@@ -688,6 +688,18 @@ target_link_libraries(
   snark
 )
 
+add_executable(
+        test_sha256_gadget_video_stream
+        EXCLUDE_FROM_ALL
+
+        gadgetlib1/gadgets/hashes/sha256/tests/test_sha256_gadget_video_stream.cpp
+)
+target_link_libraries(
+        test_sha256_gadget_video_stream
+
+        snark
+)
+
 include(CTest)
 add_test(
   NAME common_routing_algorithms_test
