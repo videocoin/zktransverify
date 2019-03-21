@@ -123,18 +123,43 @@ As miner may generate fake proofs for verification based on source stream, we ha
 
 ![Blockdiagram showing no-transcode attack](./documents/zkproof_no_transcode.png)
 
-### Macro-block decode based verification
-Macro-block decode algorithm should be used as transcoding computation proof and divided on three roles.
-* Client
-  * Decode macro-block from source stream
-  * Generate SSIM from macro-block and send it as a challenge to verifier
-* Miner
-  * Decode macro-block from transcoded stream
-  * Generate SSIM from macro-block and send it as a challenge to verifier
-  * Generate macro-block decode execution proof and commit it to verifier
-* Verifier 
-  * Compare homomorphically encrypted SSIMs
-  * Verify macro-block decode execution proof
+## Macro-block decode based verification
+### Outline of the proof generation and verification using SSIM Macro-blocks
+![Public Inputs for the proof/verification](./documents/proof_inputs.png)
+
+This section describes the public Inputs for the proof and verification:
+
+Input Stream Hash: Wallet registers a digest(hash of the input stream segment) with the smart contract along with the trancode request.
+Output Stream Hash: The miner generates a digest(hash of the transcoded stream) to be used in the proof. A storage miner can generate the digest on the received segment and update to the smart contract.
+
+A random macroblock for verification is selected based on a hash generated from hashes of input and output streams. Offset of the frame containing the macroblock and offset of the slice/macroblock in the frame is obtained from the hash value.
+
+Input Macroblock Hash: Miner will generate and inlcude hash of the input macroblock. It also stores the digest with the smart contract. 
+Output Macroblock Hash: Miner will generate and inlcude hash of the output macroblock. It also stores the digest with the smart contract.
+Compression Ratio: Used for generating expected SSIM
+
+![Overview of proof/verification](./documents/proof_verification.png)
+
+#### Operations at Miner:
+A. Validate the input stream using the digest stored by the wallet in the smart contrct
+B. Perform the transcode operation
+C. Sent the stream to the storage.
+D. Generate digest for output stream
+E. Generate proof. The proof includeds following constraint system
+E.1 Generation of hash from hashes of input stream and output stream hashes 
+E.2 Selection of input and output macrobocks based on hash in E.1
+E.3 Decode Macroblocks
+E.4 Generate SSIM
+E.5 Compare against threshold generated based on public input "compression ratio"
+
+#### Verification:
+A. Validate for public inputs: Input stream hash is supplied by Wallet. Output stream hash is supplied by Miner (and optionally retrieved by Verifier, See Note-1 below)
+B. Hasahes for input and output macroblocks are supplied by the Miner (and optionally retrieved by Verifier. , See Note-1 below ) 
+C. Generate Elliptic Curve Pairing points using proof and public inputs and check for pairing using Ethereum precompiled contracts
+
+Note-1: Automated(Smart Contract based) dispute resolution:
+Using hashes of input and output macrobocks in the proof allows automated resolution if there is a dispute between Wallet/Storage and Miner.
+
 
 ### TinyRAM 
 TinyRAM [23] is used to support general computations written in high level languages. So, we can apply macro-block decoding as timyRAM program to get computational proofs.
@@ -161,6 +186,7 @@ Algorithm works with frames in YUV format. Luma component (Y) is used for SSIM c
 | 64x64 |            8192 |           1.3 GB |                420 kB |                       58.8939s s |    52.7337 s                      |           
 
 Verification time for all cases ~5 ms.
+
 
 ## Status
 The current implementation is only tested in a simulated environment. The zkSNARKs proof libraries needs to be split and integrated with the transcode miner and VideoCoin client libraries.
