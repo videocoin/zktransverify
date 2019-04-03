@@ -20,20 +20,32 @@ int ffmpeg_videoStreamIndex;
 size_t ffmpeg_frameWidth, ffmpeg_frameHeight;
 AVBitStreamFilterContext* h264bsfc = NULL;
 
-
+int frame_offset = 0;
+int macroblock_offset = 0;
 bool ARG_QUIET, ARG_HELP;
 const char* ARG_VIDEO_PATH;
 
 void parse_options(int argc, const char* argv[])
 {
-	for(int i = 1; i < argc; i++)
+	int i = 1;
+	while(i < argc)
 	{
 		if(strcmp(argv[i], "--help") == 0 || strcmp(argv[i], "-h") == 0)
 			ARG_HELP = true;
 		else if(strcmp(argv[i], "-q") == 0 || strcmp(argv[i], "--quiet") == 0)
 			ARG_QUIET = true;
-		else
+		else if(strcmp(argv[i], "-f") == 0 || strcmp(argv[i], "--frame") == 0) {
+			if(i+1 < argc)
+				frame_offset = atoi(argv[i+1]);
+			i++;
+		} else if(strcmp(argv[i], "-m") == 0 || strcmp(argv[i], "--macroblock") == 0){
+			if(i+1 < argc)
+				macroblock_offset = atoi(argv[i+1]);
+			i++;
+		}else {
 			ARG_VIDEO_PATH = argv[i];
+		}
+		i++;
 	}
 	if(ARG_HELP || ARG_VIDEO_PATH == NULL)
 	{
@@ -115,12 +127,13 @@ int main(int argc, const char* argv[])
 	parse_options(argc, argv);
 	ffmpeg_init();
 	int frame = 0;
+	int idr_frame = -1;
 
     h264_stream_t* h = h264_new();
 
 	while(av_read_frame(fmt_ctx, avpkt) >= 0) {
 	    // decode packet and other stuff
-		printf("Stream=%d Frame=%d size=0x%x\n", avpkt->stream_index, frame, avpkt->size);
+		printf("Stream=%d frame=%d idr_frame=%d size=0x%x\n", avpkt->stream_index, frame, idr_frame, avpkt->size);
 		hexDump(avpkt->data, 16);
 		if (avpkt && avpkt->size && ffmpeg_videoStreamIndex == avpkt->stream_index) {
 			if (h264bsfc) {
@@ -129,18 +142,30 @@ int main(int argc, const char* argv[])
 				//read_debug_nal_unit(h, avpkt->data + 4, avpkt->size - 4);
 			    uint8_t* p = avpkt->data;
 			    size_t sz = avpkt->size;
-				int nal_start, nal_end;
+				int nal_start, nal_end, nalu_type;
 				while (find_nal_unit(p, sz, &nal_start, &nal_end) > 0) {
 					p += nal_start;
-					read_debug_nal_unit(h, p, nal_end - nal_start);
+					nalu_type = read_debug_nal_unit(h, p, nal_end - nal_start);
+					if(nalu_type == NAL_UNIT_TYPE_CODED_SLICE_IDR) {
+						idr_frame++;
+					}
+					if(idr_frame == frame_offset){
+						char *pMbData = malloc(1024);
+						int mb_size = get_macroblock(h, p, nal_end - nal_start, macroblock_offset, pMbData, 1024);
+						if(mb_size > 0){
+							printf("At idr_frame=%d mb=%d\n", idr_frame, macroblock_offset);
+							hexDump(pMbData, 16);
+						}
+						goto Exit;
+					}
 					p += (nal_end - nal_start);
 					sz -= nal_end;
 				}
-
 			}
 		    frame++;
 		}
 	    av_packet_unref(avpkt);
 	}
+Exit:
 	ffmpeg_deinit();
 }

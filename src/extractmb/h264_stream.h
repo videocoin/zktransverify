@@ -561,30 +561,7 @@ void read_dec_ref_pic_marking(h264_stream_t* h, bs_t* b);
 
 int more_rbsp_trailing_data(h264_stream_t* h, bs_t* b);
 
-int write_nal_unit(h264_stream_t* h, uint8_t* buf, int size);
-
-void write_seq_parameter_set_rbsp(sps_t* sps, bs_t* b);
-void write_scaling_list(bs_t* b, int* scalingList, int sizeOfScalingList, int* useDefaultScalingMatrixFlag );
-void write_vui_parameters(sps_t* sps, bs_t* b);
-void write_hrd_parameters(hrd_t* hrd, bs_t* b);
-
-void write_pic_parameter_set_rbsp(h264_stream_t* h, bs_t* b);
-
-void write_sei_rbsp(h264_stream_t* h, bs_t* b);
-void write_sei_message(h264_stream_t* h, bs_t* b);
-void write_access_unit_delimiter_rbsp(h264_stream_t* h, bs_t* b);
-void write_end_of_seq_rbsp(h264_stream_t* h, bs_t* b);
-void write_end_of_stream_rbsp(h264_stream_t* h, bs_t* b);
-void write_filler_data_rbsp(h264_stream_t* h, bs_t* b);
-
-void write_slice_layer_rbsp(h264_stream_t* h, bs_t* b);
-void write_rbsp_slice_trailing_bits(h264_stream_t* h, bs_t* b);
-void write_rbsp_trailing_bits(bs_t* b);
-void write_slice_header(h264_stream_t* h, bs_t* b);
-void write_ref_pic_list_reordering(h264_stream_t* h, bs_t* b);
-void write_pred_weight_table(h264_stream_t* h, bs_t* b);
-void write_dec_ref_pic_marking(h264_stream_t* h, bs_t* b);
-
+int get_macroblock(h264_stream_t* h, uint8_t* buf, int size, int macroblock_offset, uint8_t* pMbData, int maxMbLen);
 int read_debug_nal_unit(h264_stream_t* h, uint8_t* buf, int size);
 
 void debug_sps(sps_t* sps);

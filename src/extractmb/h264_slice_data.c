@@ -30,6 +30,7 @@
 
 
 void read_debug_slice_data( h264_stream_t* h, bs_t* b );
+int read_debug_macroblock_data( h264_stream_t* h, bs_t* b, int mbNum, uint8_t* pMbData, int maxMbLen );
 void read_debug_macroblock_layer( h264_stream_t* h, bs_t* b );
 void read_debug_mb_pred( h264_stream_t* h, bs_t* b, int mb_type );
 void read_debug_sub_mb_pred( h264_stream_t* h, bs_t* b, int mb_type );
@@ -124,7 +125,88 @@ void read_debug_slice_data(h264_stream_t* h, bs_t* b) {
 	} while (moreDataFlag);
 }
 
-
+int read_debug_macroblock_data( h264_stream_t* h, bs_t* b, int mbNum, uint8_t* pMbData, int maxMbLen )
+{
+	int nMbLen = 0;
+	macroblock_t* mb;
+	if (h->pps->entropy_coding_mode_flag) {
+		while (!bs_byte_aligned(b)) {
+			int cabac_alignment_one_bit = bs_read_u(b, 1);
+		}
+	}
+	int CurrMbAddr = h->sh->first_mb_in_slice * (1 + MbaffFrameFlag);
+	int moreDataFlag = 1;
+	int prevMbSkipped = 0;
+	do {
+		int mb_skip_flag;
+		int mb_skip_run;
+		// Ram
+		//if( h->sh->slice_type != SH_SLICE_TYPE_I && h->sh->slice_type != SH_SLICE_TYPE_SI )
+		if (h->sh->slice_type != SH_SLICE_TYPE_I
+				&& h->sh->slice_type != SH_SLICE_TYPE_EI
+				&& h->sh->slice_type != SH_SLICE_TYPE_EI
+				&& h->sh->slice_type != SH_SLICE_TYPE_SI
+				&& h->sh->slice_type != SH_SLICE_TYPE_EI_ONLY
+				&& h->sh->slice_type != SH_SLICE_TYPE_SI_ONLY) {
+			if (!h->pps->entropy_coding_mode_flag) {
+				mb_skip_run = bs_read_ue(b);
+				prevMbSkipped = (mb_skip_run > 0);
+				for (int i = 0; i < mb_skip_run; i++) {
+					CurrMbAddr = NextMbAddress(CurrMbAddr);
+				}
+				moreDataFlag = more_rbsp_data();
+			} else {
+				mb_skip_flag = bs_read_ae(b);
+				moreDataFlag = !mb_skip_flag;
+			}
+		}
+		if (moreDataFlag) {
+			if ( MbaffFrameFlag
+					&& (CurrMbAddr % 2 == 0
+							|| (CurrMbAddr % 2 == 1 && prevMbSkipped))) {
+				printf("%d.%d: ", b->p - b->start, b->bits_left);
+				if (IsCabac(h)) {
+					mb->mb_field_decoding_flag = bs_read_ae(b);
+				} else {
+					mb->mb_field_decoding_flag = bs_read_u(b, 1);
+				}
+				printf("mb->mb_field_decoding_flag: %d \n",
+						mb->mb_field_decoding_flag);
+			}
+			if(CurrMbAddr == mbNum) {
+				//read_debug_macroblock_layer(h, b);
+				nMbLen = maxMbLen;
+				nMbLen = bs_read_bytes(b, pMbData,  nMbLen);
+				break;
+			}
+		}
+		if (!h->pps->entropy_coding_mode_flag) {
+			moreDataFlag = more_rbsp_data();
+		} else {
+			// Ram
+			//if( h->sh->slice_type != SH_SLICE_TYPE_I && h->sh->slice_type != SH_SLICE_TYPE_SI )
+			if (h->sh->slice_type != SH_SLICE_TYPE_I
+					&& h->sh->slice_type != SH_SLICE_TYPE_EI
+					&& h->sh->slice_type != SH_SLICE_TYPE_EI
+					&& h->sh->slice_type != SH_SLICE_TYPE_SI
+					&& h->sh->slice_type != SH_SLICE_TYPE_EI_ONLY
+					&& h->sh->slice_type != SH_SLICE_TYPE_SI_ONLY) {
+				prevMbSkipped = mb_skip_flag;
+			}
+			if ( MbaffFrameFlag && CurrMbAddr % 2 == 0) {
+				moreDataFlag = 1;
+			} else {
+				int end_of_slice_flag;
+				printf("%d.%d: ", b->p - b->start, b->bits_left);
+				end_of_slice_flag = bs_read_ae(b);
+				printf("end_of_slice_flag: %d \n", end_of_slice_flag);
+				moreDataFlag = !end_of_slice_flag;
+			}
+		}
+		CurrMbAddr = NextMbAddress(CurrMbAddr);
+	} while (moreDataFlag);
+	return nMbLen;
+}
 //7.3.5 Macroblock layer syntax
 void read_debug_macroblock_layer( h264_stream_t* h, bs_t* b )
 {
@@ -473,19 +555,6 @@ void read_debug_sub_mb_pred(h264_stream_t* h, bs_t* b, int mb_type) {
 void read_debug_residual( h264_stream_t* h, bs_t* b )
 {
     macroblock_t* mb;
-
-/*
-    if( !h->pps->entropy_coding_mode_flag )
-    {
-        residual_block = residual_block_cavlc;
-    }
-    else
-    {
-        residual_block = residual_block_cabac;
-    }
-*/
-    // FIXME
-#define read_residual_block read_residual_block_cavlc
 
     if( MbPartPredMode( mb->mb_type, 0 ) == Intra_16x16 )
     {
