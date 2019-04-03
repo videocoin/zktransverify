@@ -164,10 +164,18 @@ int find_nal_unit(uint8_t* buf, int size, int* nal_start, int* nal_end)
     {
         i++;
         // FIXME the next line fails when reading a nal that ends exactly at the end of the data
-        if (i+3 >= size) { *nal_end = size; return -1; } // did not find nal end, stream ended first
+        //if (i+3 >= size) { *nal_end = size; return -1; } // did not find nal end, stream ended first
+        // Ram: For VideoCoin we send complete NALU obtained from libavformat
+        if (i+3 >= size)
+        	break;
     }
-    
-    *nal_end = i;
+
+    if (i+3 >= size) {
+    	// End of NALU
+    	*nal_end = size;
+    } else {
+    	*nal_end = i;
+    }
     return (*nal_end - *nal_start);
 }
 

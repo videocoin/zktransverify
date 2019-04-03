@@ -107,6 +107,7 @@ void hexDump (unsigned char *pData, int n)
 	printf("\n");
 }
 
+
 int main(int argc, const char* argv[])
 {
 	AVPacket *avpkt;
@@ -125,11 +126,21 @@ int main(int argc, const char* argv[])
 			if (h264bsfc) {
 				av_bitstream_filter_filter(h264bsfc, fmt_ctx->streams[ffmpeg_videoStreamIndex]->codec, NULL, &avpkt->data, &avpkt->size, avpkt->data, avpkt->size, 0);
 				hexDump(avpkt->data, 16);
-				read_debug_nal_unit(h, avpkt->data + 4, avpkt->size - 4);
+				//read_debug_nal_unit(h, avpkt->data + 4, avpkt->size - 4);
+			    uint8_t* p = avpkt->data;
+			    size_t sz = avpkt->size;
+				int nal_start, nal_end;
+				while (find_nal_unit(p, sz, &nal_start, &nal_end) > 0) {
+					p += nal_start;
+					read_debug_nal_unit(h, p, nal_end - nal_start);
+					p += (nal_end - nal_start);
+					sz -= nal_end;
+				}
+
 			}
+		    frame++;
 		}
 	    av_packet_unref(avpkt);
-	    frame++;
 	}
 	ffmpeg_deinit();
 }

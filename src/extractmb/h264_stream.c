@@ -3557,7 +3557,8 @@ void read_debug_slice_layer_rbsp(h264_stream_t* h,  bs_t* b)
             slice_data->rbsp_buf = (uint8_t*)malloc(slice_data->rbsp_size);
             memcpy( slice_data->rbsp_buf, sptr, slice_data->rbsp_size );
             // ugly hack: since next NALU starts at byte border, we are going to be padded by trailing_bits;
-            return;
+            // Ram
+            //return;
         }
         else
         {
@@ -3568,6 +3569,9 @@ void read_debug_slice_layer_rbsp(h264_stream_t* h,  bs_t* b)
 
     // FIXME should read or skip data
     //slice_data( ); /* all categories of slice_data( ) syntax */
+    // Ram
+    //read_slice_data(h, b);
+    read_debug_slice_data(h, b);
     read_debug_rbsp_slice_trailing_bits(h, b);
 }
 
