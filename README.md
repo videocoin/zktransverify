@@ -243,3 +243,6 @@ The current implementation is only tested in a simulated environment. The zkSNAR
 [23. Succinct Non-Interactive Zero Knowledge for a von Neumann Architecture](https://eprint.iacr.org/2013/879.pdf)
 
 [24. The Pepper Project](http://www.pepper-project.org)
+
+[25.Analysis and Implementation of the H.264 CABAC entropy decoding engine, by Martinus Johannes Pieter Berkhof ]
+(http://ce-publications.et.tudelft.nl/publications/214_analysis_and_implementation_of_the_h264_cabac_entropy_decod.pdf)
