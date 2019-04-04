@@ -280,8 +280,13 @@ void pred4x4(int direction, uint8_t *src, uint8_t  *topright, int linesize)
             pred4x4_dc_8(src, topright, linesize);
             break;
         default:
-            // TODO: Add mission predictions here
+            // TODO: Add missing predictions here
     }
+}
+
+void pred8x8l(int direction, uint8_t *src, int topleft, int topright, int linesize)
+{
+    // TODO: Add missing predictions here
 }
 
 

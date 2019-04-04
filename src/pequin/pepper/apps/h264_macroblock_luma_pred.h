@@ -57,8 +57,9 @@ void hl_decode_mb_predict_luma(struct In *in,
                 const int dir = in->intra4x4_pred_mode_cache[scan8[i]];
 
                 const int nnz = in->non_zero_count_cache[scan8[i]];
-                h->hpc.pred8x8l[dir](ptr, (in->topleft_samples_available << i) & 0x8000,
-                                     (in->topright_samples_available << i) & 0x4000, linesize);
+                pred8x8l(dir, ptr, (in->topleft_samples_available << i) & 0x8000,
+                        (in->topright_samples_available << i) & 0x4000, linesize);
+
                 if (nnz) {
                     if (nnz == 1 && dctcoef_get(in->mb, pixel_shift, i * 16))
                         idct_dc_add(ptr, in->mb + (i * 16 << pixel_shift), linesize);
