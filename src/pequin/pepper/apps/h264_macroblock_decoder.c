@@ -3,7 +3,7 @@
 //
 
 #include "h264_macroblock_decoder.h"
-#include "h264_macroblock_chroma_pred8x8.h"
+#include "h264_macroblock_prediction.h"
 #include "h264_macroblock_luma_pred.h"
 
 void hl_decode_mb_simple_8(struct In *in)

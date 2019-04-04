@@ -2,8 +2,8 @@
 // Created by taras on 04.04.19.
 //
 
-#ifndef H264_MACROBLOCK_PRED8X8_H
-#define H264_MACROBLOCK_PRED8X8_H
+#ifndef H264_MACROBLOCK_PREDICTION_H
+#define H264_MACROBLOCK_PREDICTION_H
 
 #define DC_PRED8x8             0
 #define HOR_PRED8x8            1
@@ -22,6 +22,16 @@
 #define ALZHEIMER_DC_0L0_PRED8x8 10
 
 #define PIXEL_SPLAT_X4(x)	   ((x)*0x01010101U)
+
+uint32_t AV_RN4PA(uint8_t *src)
+{
+    uint32_t v;
+    v  = src[0];
+    v |= src[1] << 8;
+    v |= src[2] << 16
+    v |= src[3] << 24;
+    return v;
+}
 
 void AV_WN4PA(uint8_t *src, uint32_t v)
 {
@@ -181,7 +191,7 @@ void pred8x8_top_dc_8(uint8_t *src, int stride)
     }
 }
 
-// TODO: Add remaining prediction methods here
+// TODO: Add remaining chroma prediction methods here
 
 void pred8x8_chroma(int chroma_pred_mode, uint8_t *src, int linesize)
 {
@@ -210,4 +220,79 @@ void pred8x8_chroma(int chroma_pred_mode, uint8_t *src, int linesize)
     }
 }
 
-#endif //H264_MACROBLOCK_PRED8X8_H
+/**
+ * Prediction types
+ */
+//@{
+#define VERT_PRED              0
+#define HOR_PRED               1
+#define DC_PRED                2
+#define DIAG_DOWN_LEFT_PRED    3
+#define DIAG_DOWN_RIGHT_PRED   4
+#define VERT_RIGHT_PRED        5
+#define HOR_DOWN_PRED          6
+#define VERT_LEFT_PRED         7
+#define HOR_UP_PRED            8
+
+void pred4x4_vertical_8(uint8_t *src, const uint8_t *topright, int stride)
+{
+    uint32_t a = AV_RN4PA(src-stride);
+
+    AV_WN4PA(src+0*stride, a);
+    AV_WN4PA(src+1*stride, a);
+    AV_WN4PA(src+2*stride, a);
+    AV_WN4PA(src+3*stride, a);
+}
+
+void pred4x4_horizontal_8(uint8_t *src, const uint8_t *topright, int stride)
+{
+    AV_WN4PA(src+0*stride, PIXEL_SPLAT_X4(src[0*stride-1]));
+    AV_WN4PA(src+1*stride, PIXEL_SPLAT_X4(src[1*stride-1]));
+    AV_WN4PA(src+2*stride, PIXEL_SPLAT_X4(src[2*stride-1]));
+    AV_WN4PA(src+3*stride, PIXEL_SPLAT_X4(src[3*stride-1]));
+}
+
+void pred4x4_dc_8(uint8_t *src, const uint8_t *topright, int stride)
+{
+    int dc= (  src[-stride] + src[1-stride] + src[2-stride] + src[3-stride]
+                     + src[0*stride-1] + src[1*stride-1] + src[2*stride-1] + src[3*stride-1] + 4) >>3;
+    uint32_t a = PIXEL_SPLAT_X4(dc);
+
+    AV_WN4PA(src+0*stride, a);
+    AV_WN4PA(src+1*stride, a);
+    AV_WN4PA(src+2*stride, a);
+    AV_WN4PA(src+3*stride, a);
+}
+
+// TODO: Add mission predictions here
+
+void pred4x4(int direction, uint8_t *src, uint8_t  *topright, int linesize)
+{
+    switch (direction)
+    {
+        case VERT_PRED:
+            pred4x4_vertical_8(src, topright, linesize);
+            break;
+        case HOR_PRED:
+            pred4x4_horizontal_8(src, topright, linesize);
+            break;
+        case DC_PRED:
+            pred4x4_dc_8(src, topright, linesize);
+            break;
+        default:
+            // TODO: Add mission predictions here
+    }
+}
+
+
+#define DC_PRED8x8             0
+#define HOR_PRED8x8            1
+#define VERT_PRED8x8           2
+#define PLANE_PRED8x8          3
+
+void pred16x16(int prediction_mode, uint8_t *src, int linesize)
+{
+    // TODO: Add prediction modes
+}
+
+#endif // H264_MACROBLOCK_PREDICTION_H

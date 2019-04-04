@@ -93,6 +93,7 @@ struct In {
     int mb_field_decoding_flag;
 
     int chroma_pred_mode;
+    int intra16x16_pred_mode;
 
     /**
      * non zero coeff count cache.

@@ -95,7 +95,7 @@ void hl_decode_mb_predict_luma(struct In *in,
                 } else
                     topright = 0;
 
-                h->hpc.pred4x4[dir](ptr, topright, linesize);
+                pred4x4(dir, ptr, topright, linesize);
                 nnz = in->non_zero_count_cache[scan8[i]];
                 if (nnz) {
                     if (nnz == 1 && dctcoef_get(sl->mb, pixel_shift, i * 16))
@@ -106,7 +106,7 @@ void hl_decode_mb_predict_luma(struct In *in,
             }
         }
     } else {
-        h->hpc.pred16x16[sl->intra16x16_pred_mode](dest_y, linesize);
+        pred16x16(in->intra16x16_pred_mode, dest_y, linesize);
         if (in->non_zero_count_cache[scan8[LUMA_DC_BLOCK_INDEX ]]) {
 
             h->h264dsp.h264_luma_dc_dequant_idct(in->mb,
