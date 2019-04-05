@@ -1685,8 +1685,15 @@ int get_macroblock(h264_stream_t* h, uint8_t* buf, int size,int  macroblock_offs
         case NAL_UNIT_TYPE_CODED_SLICE_IDR:
         case NAL_UNIT_TYPE_CODED_SLICE_NON_IDR:
         case NAL_UNIT_TYPE_CODED_SLICE_AUX:
-        	mb_size = read_debug_macroblock_data(h, b, macroblock_offset, pMbData, maxMbLen);
-            break;
+        {
+            if (h->nal->nal_unit_type != NAL_UNIT_TYPE_CODED_SLICE_SVC_EXTENSION)
+                read_debug_slice_header(h, b);
+            else
+                read_debug_slice_header_in_scalable_extension(h, b);
+
+        	mb_size = vc_read_debug_macroblock_data(h, b, macroblock_offset, pMbData, maxMbLen);
+        }
+        break;
 
         default:
             return -1;
@@ -2295,23 +2302,21 @@ void read_debug_slice_layer_rbsp(h264_stream_t* h,  bs_t* b)
 
     if ( slice_data != NULL )
     {
-        if ( slice_data->rbsp_buf != NULL ) free( slice_data->rbsp_buf ); 
-        uint8_t *sptr = b->p + (!!b->bits_left); // CABAC-specific: skip alignment bits, if there are any
-        slice_data->rbsp_size = b->end - sptr;
+		if (slice_data->rbsp_buf != NULL)
+			free(slice_data->rbsp_buf);
+		uint8_t *sptr = b->p + (!!b->bits_left); // CABAC-specific: skip alignment bits, if there are any
+		slice_data->rbsp_size = b->end - sptr;
 
-        if ( slice_data->rbsp_size > 0 )
-        {
-            slice_data->rbsp_buf = (uint8_t*)malloc(slice_data->rbsp_size);
-            memcpy( slice_data->rbsp_buf, sptr, slice_data->rbsp_size );
-            // ugly hack: since next NALU starts at byte border, we are going to be padded by trailing_bits;
-            // Ram
-            //return;
-        }
-        else
-        {
-            slice_data->rbsp_buf = NULL;
-            slice_data->rbsp_size = 0;
-        }
+		if (slice_data->rbsp_size > 0) {
+			slice_data->rbsp_buf = (uint8_t*) malloc(slice_data->rbsp_size);
+			memcpy(slice_data->rbsp_buf, sptr, slice_data->rbsp_size);
+			// ugly hack: since next NALU starts at byte border, we are going to be padded by trailing_bits;
+			// Ram
+			//return;
+		} else {
+			slice_data->rbsp_buf = NULL;
+			slice_data->rbsp_size = 0;
+		}
     }
 
     // FIXME should read or skip data
@@ -2388,9 +2393,15 @@ void read_debug_slice_header(h264_stream_t* h, bs_t* b)
 
     nal_t* nal = h->nal;
 
-    printf("%ld.%d: ", (long int)(b->p - b->start), b->bits_left); sh->first_mb_in_slice = bs_read_ue(b); printf("sh->first_mb_in_slice: %d \n", sh->first_mb_in_slice); 
-    printf("%ld.%d: ", (long int)(b->p - b->start), b->bits_left); sh->slice_type = bs_read_ue(b); printf("sh->slice_type: %d \n", sh->slice_type); 
-    printf("%ld.%d: ", (long int)(b->p - b->start), b->bits_left); sh->pic_parameter_set_id = bs_read_ue(b); printf("sh->pic_parameter_set_id: %d \n", sh->pic_parameter_set_id); 
+	printf("%ld.%d: ", (long int )(b->p - b->start), b->bits_left);
+	sh->first_mb_in_slice = bs_read_ue(b);
+	printf("sh->first_mb_in_slice: %d \n", sh->first_mb_in_slice);
+	printf("%ld.%d: ", (long int )(b->p - b->start), b->bits_left);
+	sh->slice_type = bs_read_ue(b);
+	printf("sh->slice_type: %d \n", sh->slice_type);
+	printf("%ld.%d: ", (long int )(b->p - b->start), b->bits_left);
+	sh->pic_parameter_set_id = bs_read_ue(b);
+	printf("sh->pic_parameter_set_id: %d \n", sh->pic_parameter_set_id);
 
     // TODO check existence, otherwise fail
     pps_t* pps = h->pps;
@@ -2398,98 +2409,144 @@ void read_debug_slice_header(h264_stream_t* h, bs_t* b)
     memcpy(h->pps, h->pps_table[sh->pic_parameter_set_id], sizeof(pps_t));
     memcpy(h->sps, h->sps_table[pps->seq_parameter_set_id], sizeof(sps_t));
 
-    if (sps->residual_colour_transform_flag)
-    {
-        printf("%ld.%d: ", (long int)(b->p - b->start), b->bits_left); sh->colour_plane_id = bs_read_u(b, 2); printf("sh->colour_plane_id: %d \n", sh->colour_plane_id); 
-    }
+	if (sps->residual_colour_transform_flag) {
+		printf("%ld.%d: ", (long int )(b->p - b->start), b->bits_left);
+		sh->colour_plane_id = bs_read_u(b, 2);
+		printf("sh->colour_plane_id: %d \n", sh->colour_plane_id);
+	}
 
-    printf("%ld.%d: ", (long int)(b->p - b->start), b->bits_left); sh->frame_num = bs_read_u(b, sps->log2_max_frame_num_minus4 + 4 ); printf("sh->frame_num: %d \n", sh->frame_num);  // was u(v)
-    if( !sps->frame_mbs_only_flag )
-    {
-        printf("%ld.%d: ", (long int)(b->p - b->start), b->bits_left); sh->field_pic_flag = bs_read_u1(b); printf("sh->field_pic_flag: %d \n", sh->field_pic_flag); 
-        if( sh->field_pic_flag )
-        {
-            printf("%ld.%d: ", (long int)(b->p - b->start), b->bits_left); sh->bottom_field_flag = bs_read_u1(b); printf("sh->bottom_field_flag: %d \n", sh->bottom_field_flag); 
-        }
-    }
-    if( nal->nal_unit_type == 5 )
-    {
-        printf("%ld.%d: ", (long int)(b->p - b->start), b->bits_left); sh->idr_pic_id = bs_read_ue(b); printf("sh->idr_pic_id: %d \n", sh->idr_pic_id); 
-    }
-    if( sps->pic_order_cnt_type == 0 )
-    {
-        printf("%ld.%d: ", (long int)(b->p - b->start), b->bits_left); sh->pic_order_cnt_lsb = bs_read_u(b, sps->log2_max_pic_order_cnt_lsb_minus4 + 4 ); printf("sh->pic_order_cnt_lsb: %d \n", sh->pic_order_cnt_lsb);  // was u(v)
-        if( pps->pic_order_present_flag && !sh->field_pic_flag )
-        {
-            printf("%ld.%d: ", (long int)(b->p - b->start), b->bits_left); sh->delta_pic_order_cnt_bottom = bs_read_se(b); printf("sh->delta_pic_order_cnt_bottom: %d \n", sh->delta_pic_order_cnt_bottom); 
-        }
-    }
-    if( sps->pic_order_cnt_type == 1 && !sps->delta_pic_order_always_zero_flag )
-    {
-        printf("%ld.%d: ", (long int)(b->p - b->start), b->bits_left); sh->delta_pic_order_cnt[ 0 ] = bs_read_se(b); printf("sh->delta_pic_order_cnt[ 0 ]: %d \n", sh->delta_pic_order_cnt[ 0 ]); 
-        if( pps->pic_order_present_flag && !sh->field_pic_flag )
-        {
-            printf("%ld.%d: ", (long int)(b->p - b->start), b->bits_left); sh->delta_pic_order_cnt[ 1 ] = bs_read_se(b); printf("sh->delta_pic_order_cnt[ 1 ]: %d \n", sh->delta_pic_order_cnt[ 1 ]); 
-        }
-    }
-    if( pps->redundant_pic_cnt_present_flag )
-    {
-        printf("%ld.%d: ", (long int)(b->p - b->start), b->bits_left); sh->redundant_pic_cnt = bs_read_ue(b); printf("sh->redundant_pic_cnt: %d \n", sh->redundant_pic_cnt); 
-    }
-    if( is_slice_type( sh->slice_type, SH_SLICE_TYPE_B ) )
-    {
-        printf("%ld.%d: ", (long int)(b->p - b->start), b->bits_left); sh->direct_spatial_mv_pred_flag = bs_read_u1(b); printf("sh->direct_spatial_mv_pred_flag: %d \n", sh->direct_spatial_mv_pred_flag); 
-    }
-    if( is_slice_type( sh->slice_type, SH_SLICE_TYPE_P ) || is_slice_type( sh->slice_type, SH_SLICE_TYPE_SP ) || is_slice_type( sh->slice_type, SH_SLICE_TYPE_B ) )
-    {
-        printf("%ld.%d: ", (long int)(b->p - b->start), b->bits_left); sh->num_ref_idx_active_override_flag = bs_read_u1(b); printf("sh->num_ref_idx_active_override_flag: %d \n", sh->num_ref_idx_active_override_flag); 
-        if( sh->num_ref_idx_active_override_flag )
-        {
-            printf("%ld.%d: ", (long int)(b->p - b->start), b->bits_left); sh->num_ref_idx_l0_active_minus1 = bs_read_ue(b); printf("sh->num_ref_idx_l0_active_minus1: %d \n", sh->num_ref_idx_l0_active_minus1);  // FIXME does this modify the pps?
-            if( is_slice_type( sh->slice_type, SH_SLICE_TYPE_B ) )
-            {
-                printf("%ld.%d: ", (long int)(b->p - b->start), b->bits_left); sh->num_ref_idx_l1_active_minus1 = bs_read_ue(b); printf("sh->num_ref_idx_l1_active_minus1: %d \n", sh->num_ref_idx_l1_active_minus1); 
-            }
-        }
-    }
-    read_debug_ref_pic_list_reordering(h, b);
-    if( ( pps->weighted_pred_flag && ( is_slice_type( sh->slice_type, SH_SLICE_TYPE_P ) || is_slice_type( sh->slice_type, SH_SLICE_TYPE_SP ) ) ) ||
-        ( pps->weighted_bipred_idc == 1 && is_slice_type( sh->slice_type, SH_SLICE_TYPE_B ) ) )
-    {
-        read_debug_pred_weight_table(h, b);
-    }
-    if( nal->nal_ref_idc != 0 )
-    {
-        read_debug_dec_ref_pic_marking(h, b);
-    }
-    if( pps->entropy_coding_mode_flag && ! is_slice_type( sh->slice_type, SH_SLICE_TYPE_I ) && ! is_slice_type( sh->slice_type, SH_SLICE_TYPE_SI ) )
-    {
-        printf("%ld.%d: ", (long int)(b->p - b->start), b->bits_left); sh->cabac_init_idc = bs_read_ue(b); printf("sh->cabac_init_idc: %d \n", sh->cabac_init_idc); 
-    }
-    printf("%ld.%d: ", (long int)(b->p - b->start), b->bits_left); sh->slice_qp_delta = bs_read_se(b); printf("sh->slice_qp_delta: %d \n", sh->slice_qp_delta); 
-    if( is_slice_type( sh->slice_type, SH_SLICE_TYPE_SP ) || is_slice_type( sh->slice_type, SH_SLICE_TYPE_SI ) )
-    {
-        if( is_slice_type( sh->slice_type, SH_SLICE_TYPE_SP ) )
-        {
-            printf("%ld.%d: ", (long int)(b->p - b->start), b->bits_left); sh->sp_for_switch_flag = bs_read_u1(b); printf("sh->sp_for_switch_flag: %d \n", sh->sp_for_switch_flag); 
-        }
-        printf("%ld.%d: ", (long int)(b->p - b->start), b->bits_left); sh->slice_qs_delta = bs_read_se(b); printf("sh->slice_qs_delta: %d \n", sh->slice_qs_delta); 
-    }
-    if( pps->deblocking_filter_control_present_flag )
-    {
-        printf("%ld.%d: ", (long int)(b->p - b->start), b->bits_left); sh->disable_deblocking_filter_idc = bs_read_ue(b); printf("sh->disable_deblocking_filter_idc: %d \n", sh->disable_deblocking_filter_idc); 
-        if( sh->disable_deblocking_filter_idc != 1 )
-        {
-            printf("%ld.%d: ", (long int)(b->p - b->start), b->bits_left); sh->slice_alpha_c0_offset_div2 = bs_read_se(b); printf("sh->slice_alpha_c0_offset_div2: %d \n", sh->slice_alpha_c0_offset_div2); 
-            printf("%ld.%d: ", (long int)(b->p - b->start), b->bits_left); sh->slice_beta_offset_div2 = bs_read_se(b); printf("sh->slice_beta_offset_div2: %d \n", sh->slice_beta_offset_div2); 
-        }
-    }
-    if( pps->num_slice_groups_minus1 > 0 &&
-        pps->slice_group_map_type >= 3 && pps->slice_group_map_type <= 5)
-    {
-        int v = intlog2( pps->pic_size_in_map_units_minus1 +  pps->slice_group_change_rate_minus1 + 1 );
-        printf("%ld.%d: ", (long int)(b->p - b->start), b->bits_left); sh->slice_group_change_cycle = bs_read_u(b, v); printf("sh->slice_group_change_cycle: %d \n", sh->slice_group_change_cycle);  // FIXME add 2?
-    }
+	printf("%ld.%d: ", (long int )(b->p - b->start), b->bits_left);
+	sh->frame_num = bs_read_u(b, sps->log2_max_frame_num_minus4 + 4);
+	printf("sh->frame_num: %d \n", sh->frame_num);  // was u(v)
+	if (!sps->frame_mbs_only_flag) {
+		printf("%ld.%d: ", (long int )(b->p - b->start), b->bits_left);
+		sh->field_pic_flag = bs_read_u1(b);
+		printf("sh->field_pic_flag: %d \n", sh->field_pic_flag);
+		if (sh->field_pic_flag) {
+			printf("%ld.%d: ", (long int )(b->p - b->start), b->bits_left);
+			sh->bottom_field_flag = bs_read_u1(b);
+			printf("sh->bottom_field_flag: %d \n", sh->bottom_field_flag);
+		}
+	}
+	if (nal->nal_unit_type == 5) {
+		printf("%ld.%d: ", (long int )(b->p - b->start), b->bits_left);
+		sh->idr_pic_id = bs_read_ue(b);
+		printf("sh->idr_pic_id: %d \n", sh->idr_pic_id);
+	}
+	if (sps->pic_order_cnt_type == 0) {
+		printf("%ld.%d: ", (long int )(b->p - b->start), b->bits_left);
+		sh->pic_order_cnt_lsb = bs_read_u(b,
+				sps->log2_max_pic_order_cnt_lsb_minus4 + 4);
+		printf("sh->pic_order_cnt_lsb: %d \n", sh->pic_order_cnt_lsb); // was u(v)
+		if (pps->pic_order_present_flag && !sh->field_pic_flag) {
+			printf("%ld.%d: ", (long int )(b->p - b->start), b->bits_left);
+			sh->delta_pic_order_cnt_bottom = bs_read_se(b);
+			printf("sh->delta_pic_order_cnt_bottom: %d \n",
+					sh->delta_pic_order_cnt_bottom);
+		}
+	}
+	if (sps->pic_order_cnt_type == 1
+			&& !sps->delta_pic_order_always_zero_flag) {
+		printf("%ld.%d: ", (long int )(b->p - b->start), b->bits_left);
+		sh->delta_pic_order_cnt[0] = bs_read_se(b);
+		printf("sh->delta_pic_order_cnt[ 0 ]: %d \n",
+				sh->delta_pic_order_cnt[0]);
+		if (pps->pic_order_present_flag && !sh->field_pic_flag) {
+			printf("%ld.%d: ", (long int )(b->p - b->start), b->bits_left);
+			sh->delta_pic_order_cnt[1] = bs_read_se(b);
+			printf("sh->delta_pic_order_cnt[ 1 ]: %d \n",
+					sh->delta_pic_order_cnt[1]);
+		}
+	}
+	if (pps->redundant_pic_cnt_present_flag) {
+		printf("%ld.%d: ", (long int )(b->p - b->start), b->bits_left);
+		sh->redundant_pic_cnt = bs_read_ue(b);
+		printf("sh->redundant_pic_cnt: %d \n", sh->redundant_pic_cnt);
+	}
+	if (is_slice_type(sh->slice_type, SH_SLICE_TYPE_B)) {
+		printf("%ld.%d: ", (long int )(b->p - b->start), b->bits_left);
+		sh->direct_spatial_mv_pred_flag = bs_read_u1(b);
+		printf("sh->direct_spatial_mv_pred_flag: %d \n",
+				sh->direct_spatial_mv_pred_flag);
+	}
+	if (is_slice_type(sh->slice_type, SH_SLICE_TYPE_P)
+			|| is_slice_type(sh->slice_type, SH_SLICE_TYPE_SP)
+			|| is_slice_type(sh->slice_type, SH_SLICE_TYPE_B)) {
+		printf("%ld.%d: ", (long int )(b->p - b->start), b->bits_left);
+		sh->num_ref_idx_active_override_flag = bs_read_u1(b);
+		printf("sh->num_ref_idx_active_override_flag: %d \n",
+				sh->num_ref_idx_active_override_flag);
+		if (sh->num_ref_idx_active_override_flag) {
+			printf("%ld.%d: ", (long int )(b->p - b->start), b->bits_left);
+			sh->num_ref_idx_l0_active_minus1 = bs_read_ue(b);
+			printf("sh->num_ref_idx_l0_active_minus1: %d \n",
+					sh->num_ref_idx_l0_active_minus1); // FIXME does this modify the pps?
+			if (is_slice_type(sh->slice_type, SH_SLICE_TYPE_B)) {
+				printf("%ld.%d: ", (long int )(b->p - b->start), b->bits_left);
+				sh->num_ref_idx_l1_active_minus1 = bs_read_ue(b);
+				printf("sh->num_ref_idx_l1_active_minus1: %d \n",
+						sh->num_ref_idx_l1_active_minus1);
+			}
+		}
+	}
+	read_debug_ref_pic_list_reordering(h, b);
+	if ((pps->weighted_pred_flag
+			&& (is_slice_type(sh->slice_type, SH_SLICE_TYPE_P)
+					|| is_slice_type(sh->slice_type, SH_SLICE_TYPE_SP)))
+			|| (pps->weighted_bipred_idc == 1
+					&& is_slice_type(sh->slice_type, SH_SLICE_TYPE_B))) {
+		read_debug_pred_weight_table(h, b);
+	}
+	if (nal->nal_ref_idc != 0) {
+		read_debug_dec_ref_pic_marking(h, b);
+	}
+	if (pps->entropy_coding_mode_flag
+			&& !is_slice_type(sh->slice_type, SH_SLICE_TYPE_I)
+			&& !is_slice_type(sh->slice_type, SH_SLICE_TYPE_SI)) {
+		printf("%ld.%d: ", (long int )(b->p - b->start), b->bits_left);
+		sh->cabac_init_idc = bs_read_ue(b);
+		printf("sh->cabac_init_idc: %d \n", sh->cabac_init_idc);
+	}
+	printf("%ld.%d: ", (long int )(b->p - b->start), b->bits_left);
+	sh->slice_qp_delta = bs_read_se(b);
+	printf("sh->slice_qp_delta: %d \n", sh->slice_qp_delta);
+	if (is_slice_type(sh->slice_type, SH_SLICE_TYPE_SP)
+			|| is_slice_type(sh->slice_type, SH_SLICE_TYPE_SI)) {
+		if (is_slice_type(sh->slice_type, SH_SLICE_TYPE_SP)) {
+			printf("%ld.%d: ", (long int )(b->p - b->start), b->bits_left);
+			sh->sp_for_switch_flag = bs_read_u1(b);
+			printf("sh->sp_for_switch_flag: %d \n", sh->sp_for_switch_flag);
+		}
+		printf("%ld.%d: ", (long int )(b->p - b->start), b->bits_left);
+		sh->slice_qs_delta = bs_read_se(b);
+		printf("sh->slice_qs_delta: %d \n", sh->slice_qs_delta);
+	}
+	if (pps->deblocking_filter_control_present_flag) {
+		printf("%ld.%d: ", (long int )(b->p - b->start), b->bits_left);
+		sh->disable_deblocking_filter_idc = bs_read_ue(b);
+		printf("sh->disable_deblocking_filter_idc: %d \n",
+				sh->disable_deblocking_filter_idc);
+		if (sh->disable_deblocking_filter_idc != 1) {
+			printf("%ld.%d: ", (long int )(b->p - b->start), b->bits_left);
+			sh->slice_alpha_c0_offset_div2 = bs_read_se(b);
+			printf("sh->slice_alpha_c0_offset_div2: %d \n",
+					sh->slice_alpha_c0_offset_div2);
+			printf("%ld.%d: ", (long int )(b->p - b->start), b->bits_left);
+			sh->slice_beta_offset_div2 = bs_read_se(b);
+			printf("sh->slice_beta_offset_div2: %d \n",
+					sh->slice_beta_offset_div2);
+		}
+	}
+	if (pps->num_slice_groups_minus1 > 0 && pps->slice_group_map_type >= 3
+			&& pps->slice_group_map_type <= 5) {
+		int v = intlog2(
+				pps->pic_size_in_map_units_minus1
+						+ pps->slice_group_change_rate_minus1 + 1);
+		printf("%ld.%d: ", (long int )(b->p - b->start), b->bits_left);
+		sh->slice_group_change_cycle = bs_read_u(b, v);
+		printf("sh->slice_group_change_cycle: %d \n",
+				sh->slice_group_change_cycle);  // FIXME add 2?
+	}
 }
 
 //7.3.3.1 Reference picture list reordering syntax

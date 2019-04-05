@@ -30,7 +30,7 @@
 
 
 void read_debug_slice_data( h264_stream_t* h, bs_t* b );
-int read_debug_macroblock_data( h264_stream_t* h, bs_t* b, int mbNum, uint8_t* pMbData, int maxMbLen );
+int vc_read_debug_macroblock_data( h264_stream_t* h, bs_t* b, int mbNum, uint8_t* pMbData, int maxMbLen );
 void read_debug_macroblock_layer( h264_stream_t* h, bs_t* b );
 void read_debug_mb_pred( h264_stream_t* h, bs_t* b, int mb_type );
 void read_debug_sub_mb_pred( h264_stream_t* h, bs_t* b, int mb_type );
@@ -125,7 +125,7 @@ void read_debug_slice_data(h264_stream_t* h, bs_t* b) {
 	} while (moreDataFlag);
 }
 
-int read_debug_macroblock_data( h264_stream_t* h, bs_t* b, int mbNum, uint8_t* pMbData, int maxMbLen )
+int vc_read_debug_macroblock_data( h264_stream_t* h, bs_t* b, int mbNum, uint8_t* pMbData, int maxMbLen )
 {
 	int nMbLen = 0;
 	macroblock_t* mb;
