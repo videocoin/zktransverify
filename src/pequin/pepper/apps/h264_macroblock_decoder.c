@@ -6,7 +6,7 @@
 #include "h264_macroblock_prediction.h"
 #include "h264_macroblock_luma_pred.h"
 
-void hl_decode_mb_simple_8(struct In *in)
+void hl_decode_mb_simple(struct In *in)
 {
     const int mb_x    = in->mb_x;
     const int mb_y    = in->mb_y;
@@ -28,7 +28,7 @@ void hl_decode_mb_simple_8(struct In *in)
     if (IS_INTRA(mb_type)) {
 
         pred8x8_chroma(in->chroma_pred_mode, dest_cb, uvlinesize);
-        pred8x8_chroma(in->chroma_pred_mode, dest_cb, uvlinesize);
+        pred8x8_chroma(in->chroma_pred_mode, dest_cr, uvlinesize);
 
         hl_decode_mb_predict_luma(in, mb_type, PIXEL_SHIFT,
                                   block_offset, linesize, dest_y);
@@ -69,9 +69,7 @@ void compute(struct In *input, struct Out *output) {
 
     if (is_complex) {
 
-    } else if (input->pixel_shift) {
-
     } else {
-        hl_decode_mb_simple_8(input);
+        hl_decode_mb_simple(input);
     }
 }

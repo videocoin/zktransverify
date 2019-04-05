@@ -5,61 +5,34 @@
 #ifndef H264_MACROBLOCK_PREDICTION_H
 #define H264_MACROBLOCK_PREDICTION_H
 
+#ifdef CHROMA_PRED
+
+// Chroma prediciton modes
 #define DC_PRED8x8             0
 #define HOR_PRED8x8            1
 #define VERT_PRED8x8           2
 #define PLANE_PRED8x8          3
 
-// DC edge
-#define LEFT_DC_PRED8x8        4
-#define TOP_DC_PRED8x8         5
-#define DC_128_PRED8x8         6
-
-// H264/SVQ3 (8x8) specific
-#define ALZHEIMER_DC_L0T_PRED8x8  7
-#define ALZHEIMER_DC_0LT_PRED8x8  8
-#define ALZHEIMER_DC_L00_PRED8x8  9
-#define ALZHEIMER_DC_0L0_PRED8x8 10
-
-#define PIXEL_SPLAT_X4(x)	   ((x)*0x01010101U)
-
-uint32_t AV_RN4PA(uint8_t *src)
-{
-    uint32_t v;
-    v  = src[0];
-    v |= src[1] << 8;
-    v |= src[2] << 16
-    v |= src[3] << 24;
-    return v;
-}
-
-void AV_WN4PA(uint8_t *src, uint32_t v)
-{
-    src[0] = v & 0xFF;
-    src[1] = (v >> 8) & 0xFF;
-    src[2] = (v >> 16) & 0xFF;
-    src[3] = (v >> 24) & 0xFF;
-}
-
-uint8_t clip_pixel(int a) {
-    int v = a;
-    if (a & (~0xFF))
-        v = (-a) >> 31;
-
-    return v;
-}
-
-void pred8x8_dc_8(uint8_t *src, int stride)
+void pred8x8_dc(uint8_t *src, int stride)
 {
     int i;
-    int dc0, dc1, dc2;
-    uint32_t dc0splat, dc1splat, dc2splat, dc3splat;
+    unsigned int dc0, dc1, dc2;
+    pixel4 dc0splat, dc1splat, dc2splat, dc3splat;
+    uint8_t *p;
 
     dc0=dc1=dc2=0;
     for(i=0;i<4; i++){
-        dc0+= src[i*stride-1] + src[i-stride];
-        dc1+= src[4+i-stride];
-        dc2+= src[(i+4)*stride-1];
+        p = src + i*stride-1;
+        dc0 += p[0];
+
+        p = src + i-stride;
+        dc0 += p[0];
+
+        p = src + 4+i-stride;
+        dc1+= p[0];
+
+        p = src + (i+4)*stride-1;
+        dc2 += p[0];
     }
 
     dc0splat = PIXEL_SPLAT_X4((dc0 + 4)>>3);
@@ -78,51 +51,46 @@ void pred8x8_dc_8(uint8_t *src, int stride)
     }
 }
 
-void pred8x8_horizontal_8(uint8_t *src, int stride)
+void pred8x8_horizontal(uint8_t *src, int stride)
 {
     int i;
-    pixel *src = (pixel*)_src;
+    uint8_t *p;
 
     for(i=0; i<8; i++){
-        uint32_t a = PIXEL_SPLAT_X4(src[i*stride - 1]);
+        p = src + i*stride-1;
+        pixel4 a = PIXEL_SPLAT_X4(p[0]);
 
         AV_WN4PA(src + i*stride, a);
         AV_WN4PA(src + i*stride + 4, a);
     }
 }
 
-void pred8x8_vertical_8(uint8_t *src, int stride)
+void pred8x8_vertical(uint8_t *src, int stride)
 {
     int i;
-    const pixel *a = src-stride;
+    pixel4 a= AV_RN4PA(src-stride+0);
+    pixel4 b= AV_RN4PA(src-stride+4);
 
     for(i=0; i<8; i++){
-        src[i*stride + 0] = a[0];
-        src[i*stride + 1] = a[1];
-        src[i*stride + 2] = a[2];
-        src[i*stride + 3] = a[3];
-
-        src[i*stride + 4] = a[4];
-        src[i*stride + 5] = a[5];
-        src[i*stride + 6] = a[6];
-        src[i*stride + 7] = a[7];
+        AV_WN4PA(src+i*stride+0, a);
+        AV_WN4PA(src+i*stride+1, b);
     }
 }
 
-static void pred8x8_plane_8(uint8_t *src, int stride)
+void pred8x8_plane(uint8_t *src, int stride)
 {
     int j, k;
     int a;
 
-    const pixel * src0 = src +3-stride;
-    const pixel * src1 = src +4*stride-1;
-    const pixel * src2 = src1-2*stride;    // == src+2*stride-1;
-    int H = src0[1] - src0[-1];
-    int V = src1[0] - src2[ 0];
+    pixel * src0 = src +3-stride;
+    pixel * src1 = src +4*stride-1;
+    pixel * src2 = src1-2*stride;    // == src+2*stride-1;
+    int H = src0[1] + src0[-1] * (-1);
+    int V = src1[0] + src2[ 0] * (-1);
     for(k=2; k<=4; ++k) {
         src1 += stride; src2 -= stride;
-        H += k*(src0[k] - src0[-k]);
-        V += k*(src1[0] - src2[ 0]);
+        H += k*(src0[k] + src0[-k] * (-1));
+        V += k*(src1[0] + src2[ 0] * (-1));
     }
     H = ( 17*H+16 ) >> 5;
     V = ( 17*V+16 ) >> 5;
@@ -143,83 +111,21 @@ static void pred8x8_plane_8(uint8_t *src, int stride)
     }
 }
 
-void pred8x8_left_dc_8(uint8_t *src, int stride)
-{
-    int i;
-    int dc0, dc2;
-    pixel4 dc0splat, dc2splat;
-
-    dc0=dc2=0;
-    for(i=0;i<4; i++){
-        dc0+= src[i*stride-1];
-        dc2+= src[(i+4)*stride-1];
-    }
-    dc0splat = PIXEL_SPLAT_X4((dc0 + 2)>>2);
-    dc2splat = PIXEL_SPLAT_X4((dc2 + 2)>>2);
-
-    for(i=0; i<4; i++){
-        AV_WN4PA(src + i*stride, dc0splat);
-        AV_WN4PA(src + i*stride + 4, dc0splat);
-    }
-    for(i=4; i<8; i++){
-        AV_WN4PA(src+i*stride, dc2splat);
-        AV_WN4PA(src+i*stride + 4, dc2splat);
-    }
-}
-
-void pred8x8_top_dc_8(uint8_t *src, int stride)
-{
-    int i;
-    int dc0, dc1;
-    uint32_t dc0splat, dc1splat;
-
-    dc0=dc1=0;
-    for(i=0;i<4; i++){
-        dc0+= src[i-stride];
-        dc1+= src[4+i-stride];
-    }
-    dc0splat = PIXEL_SPLAT_X4((dc0 + 2)>>2);
-    dc1splat = PIXEL_SPLAT_X4((dc1 + 2)>>2);
-
-    for(i=0; i<4; i++){
-        AV_WN4PA(src+i*stride, dc0splat);
-        AV_WN4PA(src+i*stride+4, dc1splat);
-    }
-    for(i=4; i<8; i++){
-        AV_WN4PA(src+i*stride, dc0splat);
-        AV_WN4PA(src+i*stride+4, dc1splat);
-    }
-}
-
-// TODO: Add remaining chroma prediction methods here
-
 void pred8x8_chroma(int chroma_pred_mode, uint8_t *src, int linesize)
 {
-    switch (chroma_pred_mode)
-    {
-        case DC_PRED8x8:
-            pred8x8_dc_8(src, linesize);
-            break;
-        case HOR_PRED8x8:
-            pred8x8_horizontal_8(src, linesize);
-            break;
-        case VERT_PRED8x8:
-            pred8x8_vertical_8(src, linesize);
-            break;
-        case PLANE_PRED8x8:
-            pred8x8_plane_8(src, linesize);
-            break;
-        case LEFT_DC_PRED8x8:
-            pred8x8_left_dc_8(src, linesize);
-            break;
-        case TOP_DC_PRED8x8:
-            pred8x8_top_dc(src, linesize);
-            break;
-        default:
-            // TODO: ADD remaining chroma predictions
-    }
+    if (chroma_pred_mode == DC_PRED8x8)
+        pred8x8_dc(src, linesize);
+    else if (chroma_pred_mode == HOR_PRED8x8)
+        pred8x8_horizontal(src, linesize);
+    else if (chroma_pred_mode == VERT_PRED8x8)
+        pred8x8_vertical(src, linesize);
+    else if (chroma_pred_mode == PLANE_PRED8x8)
+        pred8x8_plane(src, linesize);
 }
 
+#endif // CHROMA_PRED
+
+#ifdef PRED4x4
 /**
  * Prediction types
  */
@@ -234,9 +140,9 @@ void pred8x8_chroma(int chroma_pred_mode, uint8_t *src, int linesize)
 #define VERT_LEFT_PRED         7
 #define HOR_UP_PRED            8
 
-void pred4x4_vertical_8(uint8_t *src, const uint8_t *topright, int stride)
+void pred4x4_vertical(uint8_t *src, uint8_t *topright, int stride)
 {
-    uint32_t a = AV_RN4PA(src-stride);
+    pixel4 a = AV_RN4PA(src-stride);
 
     AV_WN4PA(src+0*stride, a);
     AV_WN4PA(src+1*stride, a);
@@ -244,7 +150,7 @@ void pred4x4_vertical_8(uint8_t *src, const uint8_t *topright, int stride)
     AV_WN4PA(src+3*stride, a);
 }
 
-void pred4x4_horizontal_8(uint8_t *src, const uint8_t *topright, int stride)
+void pred4x4_horizontal(uint8_t *src, uint8_t *topright, int stride)
 {
     AV_WN4PA(src+0*stride, PIXEL_SPLAT_X4(src[0*stride-1]));
     AV_WN4PA(src+1*stride, PIXEL_SPLAT_X4(src[1*stride-1]));
@@ -252,11 +158,11 @@ void pred4x4_horizontal_8(uint8_t *src, const uint8_t *topright, int stride)
     AV_WN4PA(src+3*stride, PIXEL_SPLAT_X4(src[3*stride-1]));
 }
 
-void pred4x4_dc_8(uint8_t *src, const uint8_t *topright, int stride)
+void pred4x4_dc(uint8_t *src, uint8_t *topright, int stride)
 {
     int dc= (  src[-stride] + src[1-stride] + src[2-stride] + src[3-stride]
                      + src[0*stride-1] + src[1*stride-1] + src[2*stride-1] + src[3*stride-1] + 4) >>3;
-    uint32_t a = PIXEL_SPLAT_X4(dc);
+    pixel4 a = PIXEL_SPLAT_X4(dc);
 
     AV_WN4PA(src+0*stride, a);
     AV_WN4PA(src+1*stride, a);
@@ -264,40 +170,315 @@ void pred4x4_dc_8(uint8_t *src, const uint8_t *topright, int stride)
     AV_WN4PA(src+3*stride, a);
 }
 
-// TODO: Add mission predictions here
+#define LOAD_TOP_RIGHT_EDGE\
+    unsigned int t4 = topright[0];\
+    unsigned int t5 = topright[1];\
+    unsigned int t6 = topright[2];\
+    unsigned int t7 = topright[3];\
+
+#define LOAD_DOWN_LEFT_EDGE\
+    unsigned int l4 = src[4*stride-1];\
+    unsigned int l5 = src[5*stride-1];\
+    unsigned int l6 = src[6*stride-1];\
+    unsigned int l7 = src[7*stride-1];\
+
+#define LOAD_LEFT_EDGE\
+    unsigned int l0 = src[0*stride-1];\
+    unsigned int l1 = src[1*stride-1];\
+    unsigned int l2 = src[2*stride-1];\
+    unsigned int l3 = src[3*stride-1];\
+
+#define LOAD_TOP_EDGE\
+    unsigned int t0 = src[ 0-1*stride];\
+    unsigned int t1 = src[ 1-1*stride];\
+    unsigned int t2 = src[ 2-1*stride];\
+    unsigned int t3 = src[ 3-1*stride];\
+
+void pred4x4_down_left(uint8_t *src, uint8_t *topright, int stride)
+{
+    LOAD_TOP_EDGE
+    LOAD_TOP_RIGHT_EDGE
+//    LOAD_LEFT_EDGE
+
+    src[0+0*stride]=(t0 + t2 + 2*t1 + 2)>>2;
+    src[1+0*stride]=
+    src[0+1*stride]=(t1 + t3 + 2*t2 + 2)>>2;
+    src[2+0*stride]=
+    src[1+1*stride]=
+    src[0+2*stride]=(t2 + t4 + 2*t3 + 2)>>2;
+    src[3+0*stride]=
+    src[2+1*stride]=
+    src[1+2*stride]=
+    src[0+3*stride]=(t3 + t5 + 2*t4 + 2)>>2;
+    src[3+1*stride]=
+    src[2+2*stride]=
+    src[1+3*stride]=(t4 + t6 + 2*t5 + 2)>>2;
+    src[3+2*stride]=
+    src[2+3*stride]=(t5 + t7 + 2*t6 + 2)>>2;
+    src[3+3*stride]=(t6 + 3*t7 + 2)>>2;
+}
+
+void pred4x4_down_right(uint8_t *src, uint8_t *topright, int stride)
+{
+    int lt= src[-1-1*stride];
+    LOAD_TOP_EDGE
+    LOAD_LEFT_EDGE
+
+    src[0+3*stride]=(l3 + 2*l2 + l1 + 2)>>2;
+    src[0+2*stride]=
+    src[1+3*stride]=(l2 + 2*l1 + l0 + 2)>>2;
+    src[0+1*stride]=
+    src[1+2*stride]=
+    src[2+3*stride]=(l1 + 2*l0 + lt + 2)>>2;
+    src[0+0*stride]=
+    src[1+1*stride]=
+    src[2+2*stride]=
+    src[3+3*stride]=(l0 + 2*lt + t0 + 2)>>2;
+    src[1+0*stride]=
+    src[2+1*stride]=
+    src[3+2*stride]=(lt + 2*t0 + t1 + 2)>>2;
+    src[2+0*stride]=
+    src[3+1*stride]=(t0 + 2*t1 + t2 + 2)>>2;
+    src[3+0*stride]=(t1 + 2*t2 + t3 + 2)>>2;
+}
+
+void pred4x4_vertical_right(uint8_t *src, uint8_t *topright, int stride)
+{
+    int lt= src[-1-1*stride];
+    LOAD_TOP_EDGE
+    LOAD_LEFT_EDGE
+
+    src[0+0*stride]=
+    src[1+2*stride]=(lt + t0 + 1)>>1;
+    src[1+0*stride]=
+    src[2+2*stride]=(t0 + t1 + 1)>>1;
+    src[2+0*stride]=
+    src[3+2*stride]=(t1 + t2 + 1)>>1;
+    src[3+0*stride]=(t2 + t3 + 1)>>1;
+    src[0+1*stride]=
+    src[1+3*stride]=(l0 + 2*lt + t0 + 2)>>2;
+    src[1+1*stride]=
+    src[2+3*stride]=(lt + 2*t0 + t1 + 2)>>2;
+    src[2+1*stride]=
+    src[3+3*stride]=(t0 + 2*t1 + t2 + 2)>>2;
+    src[3+1*stride]=(t1 + 2*t2 + t3 + 2)>>2;
+    src[0+2*stride]=(lt + 2*l0 + l1 + 2)>>2;
+    src[0+3*stride]=(l0 + 2*l1 + l2 + 2)>>2;
+}
+
+void pred4x4_vertical_left(uint8_t *src, uint8_t *topright, int stride)
+{
+    LOAD_TOP_EDGE
+    LOAD_TOP_RIGHT_EDGE
+
+    src[0+0*stride]=(t0 + t1 + 1)>>1;
+    src[1+0*stride]=
+    src[0+2*stride]=(t1 + t2 + 1)>>1;
+    src[2+0*stride]=
+    src[1+2*stride]=(t2 + t3 + 1)>>1;
+    src[3+0*stride]=
+    src[2+2*stride]=(t3 + t4+ 1)>>1;
+    src[3+2*stride]=(t4 + t5+ 1)>>1;
+    src[0+1*stride]=(t0 + 2*t1 + t2 + 2)>>2;
+    src[1+1*stride]=
+    src[0+3*stride]=(t1 + 2*t2 + t3 + 2)>>2;
+    src[2+1*stride]=
+    src[1+3*stride]=(t2 + 2*t3 + t4 + 2)>>2;
+    src[3+1*stride]=
+    src[2+3*stride]=(t3 + 2*t4 + t5 + 2)>>2;
+    src[3+3*stride]=(t4 + 2*t5 + t6 + 2)>>2;
+}
+
+void pred4x4_horizontal_up(uint8_t *src, uint8_t *topright, int stride)
+{
+    LOAD_LEFT_EDGE
+
+    src[0+0*stride]=(l0 + l1 + 1)>>1;
+    src[1+0*stride]=(l0 + 2*l1 + l2 + 2)>>2;
+    src[2+0*stride]=
+    src[0+1*stride]=(l1 + l2 + 1)>>1;
+    src[3+0*stride]=
+    src[1+1*stride]=(l1 + 2*l2 + l3 + 2)>>2;
+    src[2+1*stride]=
+    src[0+2*stride]=(l2 + l3 + 1)>>1;
+    src[3+1*stride]=
+    src[1+2*stride]=(l2 + 2*l3 + l3 + 2)>>2;
+    src[3+2*stride]=
+    src[1+3*stride]=
+    src[0+3*stride]=
+    src[2+2*stride]=
+    src[2+3*stride]=
+    src[3+3*stride]=l3;
+}
+
+void pred4x4_horizontal_down(uint8_t *src, uint8_t *topright, int stride)
+{
+    int lt= src[-1-1*stride];
+    LOAD_TOP_EDGE
+    LOAD_LEFT_EDGE
+
+    src[0+0*stride]=
+    src[2+1*stride]=(lt + l0 + 1)>>1;
+    src[1+0*stride]=
+    src[3+1*stride]=(l0 + 2*lt + t0 + 2)>>2;
+    src[2+0*stride]=(lt + 2*t0 + t1 + 2)>>2;
+    src[3+0*stride]=(t0 + 2*t1 + t2 + 2)>>2;
+    src[0+1*stride]=
+    src[2+2*stride]=(l0 + l1 + 1)>>1;
+    src[1+1*stride]=
+    src[3+2*stride]=(lt + 2*l0 + l1 + 2)>>2;
+    src[0+2*stride]=
+    src[2+3*stride]=(l1 + l2+ 1)>>1;
+    src[1+2*stride]=
+    src[3+3*stride]=(l0 + 2*l1 + l2 + 2)>>2;
+    src[0+3*stride]=(l2 + l3 + 1)>>1;
+    src[1+3*stride]=(l1 + 2*l2 + l3 + 2)>>2;
+}
 
 void pred4x4(int direction, uint8_t *src, uint8_t  *topright, int linesize)
 {
-    switch (direction)
-    {
-        case VERT_PRED:
-            pred4x4_vertical_8(src, topright, linesize);
-            break;
-        case HOR_PRED:
-            pred4x4_horizontal_8(src, topright, linesize);
-            break;
-        case DC_PRED:
-            pred4x4_dc_8(src, topright, linesize);
-            break;
-        default:
-            // TODO: Add missing predictions here
-    }
+    if (direction == VERT_PRED)
+        pred4x4_vertical(src, topright, linesize);
+    else if (direction == HOR_PRED)
+        pred4x4_horizontal(src, topright, linesize);
+    else if (direction == DC_PRED)
+        pred4x4_dc(src, topright, linesize);
+    else if (direction == DIAG_DOWN_LEFT_PRED)
+        pred4x4_down_left(src, topright, linesize);
+    else if (direction == DIAG_DOWN_RIGHT_PRED)
+        pred4x4_down_right(src, topright, linesize);
+    else if (direction == VERT_RIGHT_PRED)
+        pred4x4_vertical_right(src, topright, linesize);
+    else if (direction == HOR_DOWN_PRED)
+        pred4x4_horizontal_down(src, topright, linesize);
+    else if (direction == VERT_LEFT_PRED)
+        pred4x4_vertical_left(src, topright, linesize);
+    else if (direction == HOR_UP_PRED)
+        pred4x4_horizontal_up(src, topright, linesize);
 }
 
+#endif // PRED4x4
+
+#ifdef PRED8x8DCT
 void pred8x8l(int direction, uint8_t *src, int topleft, int topright, int linesize)
 {
     // TODO: Add missing predictions here
 }
+#endif
 
+#ifdef PRED16x16
 
-#define DC_PRED8x8             0
-#define HOR_PRED8x8            1
-#define VERT_PRED8x8           2
-#define PLANE_PRED8x8          3
+#define VERT_PRED16x16      0
+#define HOR_PRED16x16       1
+#define DC_PRED16x16        2
+#define PLANE_PRED16x16     3
+
+void pred16x16_vertical(uint8_t *src, int stride)
+{
+    int i;
+    pixel4 a = AV_RN4PA(src-stride+0);
+    pixel4 b = AV_RN4PA(src-stride+4);
+    pixel4 c = AV_RN4PA(src-stride+8);
+    pixel4 d = AV_RN4PA(src-stride+12);
+
+    for(i=0; i<16; i++){
+        AV_WN4PA(src+i*stride+0, a);
+        AV_WN4PA(src+i*stride+4, b);
+        AV_WN4PA(src+i*stride+8, c);
+        AV_WN4PA(src+i*stride+12, d);
+    }
+}
+
+void pred16x16_horizontal(uint8_t *src, int stride)
+{
+    int i;
+
+    for(i=0; i<16; i++){
+        pixel4 a = PIXEL_SPLAT_X4(src[i*stride-1]);
+
+        AV_WN4PA(src+i*stride+0, a);
+        AV_WN4PA(src+i*stride+4, a);
+        AV_WN4PA(src+i*stride+8, a);
+        AV_WN4PA(src+i*stride+12, a);
+    }
+}
+
+void pred16x16_dc(uint8_t *src, int stride)
+{
+    int i, dc=0;
+    pixel4 dcsplat;
+
+    for(i=0;i<16; i++){
+        dc+= src[i*stride-1];
+    }
+
+    for(i=0;i<16; i++){
+        dc+= src[i-stride];
+    }
+
+    dcsplat = PIXEL_SPLAT_X4((dc+16)>>5);
+    for(i=0; i<16; i++){
+        AV_WN4PA(src+ 0, v);
+        AV_WN4PA(src+ 4, v);
+        AV_WN4PA(src+ 8, v);
+        AV_WN4PA(src+12, v);
+        src += stride;
+    }
+}
+
+void pred16x16_plane(uint8_t *src, int stride)
+{
+    int i, j, k;
+    int a;
+
+    pixel * src0 = src +7-stride;
+    pixel *       src1 = src +8*stride-1;
+    pixel *       src2 = src1-2*stride;    // == src+6*stride-1;
+    int H = src0[1] - src0[-1];
+    int V = src1[0] - src2[ 0];
+    for(k=2; k<=8; ++k) {
+        src1 += stride; src2 -= stride;
+        H += k*(src0[k] - src0[-k]);
+        V += k*(src1[0] - src2[ 0]);
+    }
+
+    H = ( 5*H+32 ) >> 6;
+    V = ( 5*V+32 ) >> 6;
+
+    a = 16*(src1[0] + src2[16] + 1) - 7*(V+H);
+    for(j=16; j>0; --j) {
+        int b = a;
+        a += V;
+        for(i=-16; i<0; i+=4) {
+            src[16+i] = clip_pixel((b    ) >> 5);
+            src[17+i] = clip_pixel((b+  H) >> 5);
+            src[18+i] = clip_pixel((b+2*H) >> 5);
+            src[19+i] = clip_pixel((b+3*H) >> 5);
+            b += 4*H;
+        }
+        src += stride;
+    }
+}
 
 void pred16x16(int prediction_mode, uint8_t *src, int linesize)
 {
-    // TODO: Add prediction modes
+    switch (prediction_mode)
+    {
+        case VERT_PRED16x16:
+            pred16x16_vertical(src, linesize);
+            break;
+        case HOR_PRED16x16:
+            pred16x16_horizontal(src, linesize);
+            break;
+        case DC_PRED16x16:
+            pred16x16_dc(src, linesize);
+            break;
+        case PLANE_PRED16x16:
+            pred16x16_plane(src, linesize);
+            break;
+    }
 }
+
+#endif // PRED16x16
 
 #endif // H264_MACROBLOCK_PREDICTION_H

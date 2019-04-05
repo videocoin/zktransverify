@@ -108,7 +108,7 @@ void hl_decode_mb_predict_luma(struct In *in,
         }
     } else {
         pred16x16(in->intra16x16_pred_mode, dest_y, linesize);
-        if (in->non_zero_count_cache[scan8[LUMA_DC_BLOCK_INDEX ]]) {
+        if (in->non_zero_count_cache[scan8[LUMA_DC_BLOCK_INDEX]]) {
 
             h->h264dsp.h264_luma_dc_dequant_idct(in->mb,
                                                  in->mb_luma_dc[0],

@@ -2,7 +2,8 @@
 #define H264_MACROBLOCK_DECODER_H
 
 #include <stdint.h>
-#define pixel uint8_t
+#define pixel  uint8_t
+#define pixel4 uint32_t
 
 // YlCbCr  4:2:0
 #define MB_L_WIDTH 16
@@ -121,9 +122,9 @@ struct In {
     int block_offset[2 * (16 * 3)];
     uint32_t dequant4_coeff[QP_MAX_NUM + 1][16];
 
-    pixel dest_y[MB_L_WIDTH * MB_L_WIDTH];
-    pixel dest_cb[MB_CR_WIDTH * MB_CR_HEIGHT];
-    pixel dest_cr[MB_CR_WIDTH * MB_CR_HEIGHT];
+    pixel dest_y[MB_L_WIDTH * MB_L_WIDTH + MB_L_WIDTH + MB_L_HEIGHT + 1];
+    pixel dest_cb[MB_CR_WIDTH * MB_CR_HEIGHT + MB_CR_WIDTH + MB_CR_HEIGHT + 1];
+    pixel dest_cr[MB_CR_WIDTH * MB_CR_HEIGHT + MB_CR_WIDTH + MB_CR_HEIGHT + 1];
 };
 
 struct Out {
