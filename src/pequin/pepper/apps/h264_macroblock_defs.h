@@ -10,10 +10,12 @@
 #define MB_L_HEIGHT 16
 #define MB_CR_WIDTH 4
 #define MB_CR_HEIGHT 4
+#define MB_L_IN_LENGTH (MB_L_WIDTH * MB_L_WIDTH + MB_L_WIDTH + MB_L_HEIGHT + 1)
+#define MB_CR_IN_LENGTH (MB_CR_WIDTH * MB_CR_HEIGHT + MB_CR_WIDTH + MB_CR_HEIGHT + 1)
 
 // TODO: this may be changed
 #define BITS 8
-#define PIXEL_SHIFT (BITS >> 4)
+#define PIXEL_SHIFT (BITS >> 4) // == 0
 
 /*******************************************************
  * Output Macroblock in 4:2:0 format, Input structure
@@ -24,6 +26,39 @@ struct Out {
     pixel dest_cb[MB_CR_WIDTH * MB_CR_HEIGHT];
     pixel dest_cr[MB_CR_WIDTH * MB_CR_HEIGHT];
 };
+
+/*
+ * o-o o-o
+ *  / / /
+ * o-o o-o
+ *  ,---'
+ * o-o o-o
+ *  / / /
+ * o-o o-o
+ */
+
+/* Scan8 organization:
+ *    0 1 2 3 4 5 6 7
+ * 0  DY    y y y y y
+ * 1        y Y Y Y Y
+ * 2        y Y Y Y Y
+ * 3        y Y Y Y Y
+ * 4        y Y Y Y Y
+ * 5  DU    u u u u u
+ * 6        u U U U U
+ * 7        u U U U U
+ * 8        u U U U U
+ * 9        u U U U U
+ * 10 DV    v v v v v
+ * 11       v V V V V
+ * 12       v V V V V
+ * 13       v V V V V
+ * 14       v V V V V
+ * DY/DU/DV are for luma/chroma DC.
+ */
+
+#define LUMA_DC_BLOCK_INDEX   48
+#define CHROMA_DC_BLOCK_INDEX 49
 
 // This table must be here because scan8[constant] must be known at compiletime
 const uint8_t scan8[16 * 3 + 3] = {

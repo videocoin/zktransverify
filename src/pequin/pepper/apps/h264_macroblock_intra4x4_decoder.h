@@ -3,13 +3,11 @@
 
 #include "h264_macroblock_defs.h"
 
-// TODO: can we remove this?
-#define QP_MAX_NUM (51 + 6*6)           // The maximum supported qp
-
 struct In {
     int slice_num;
 
     int qscale;
+    int chroma_qp[2];   // QPc
 
     int8_t intra4x4_pred_mode_cache[5 * 8];
 
@@ -56,11 +54,12 @@ struct In {
      * block_offset[24..47] for field macroblocks
      */
     int block_offset[2 * (16 * 3)];
-    uint32_t dequant4_coeff[QP_MAX_NUM + 1][16];
 
-    pixel dest_y[MB_L_WIDTH * MB_L_WIDTH + MB_L_WIDTH + MB_L_HEIGHT + 1];
-    pixel dest_cb[MB_CR_WIDTH * MB_CR_HEIGHT + MB_CR_WIDTH + MB_CR_HEIGHT + 1];
-    pixel dest_cr[MB_CR_WIDTH * MB_CR_HEIGHT + MB_CR_WIDTH + MB_CR_HEIGHT + 1];
+    uint32_t dequant4_coeff[2][2];
+
+    pixel dest_y[MB_L_IN_LENGTH];
+    pixel dest_cb[MB_CR_IN_LENGTH];
+    pixel dest_cr[MB_CR_IN_LENGTH];
 };
 
 #endif

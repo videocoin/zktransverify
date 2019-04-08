@@ -13,6 +13,7 @@
 #define VERT_PRED8x8           2
 #define PLANE_PRED8x8          3
 
+
 void pred8x8_dc(uint8_t *src, int stride)
 {
     int i;
@@ -111,7 +112,7 @@ void pred8x8_plane(uint8_t *src, int stride)
     }
 }
 
-void pred8x8_chroma(int chroma_pred_mode, uint8_t *src, int linesize)
+void pred8x8_chroma(int chroma_pred_mode, uint8_t src[MB_CR_IN_LENGTH], int linesize)
 {
     if (chroma_pred_mode == DC_PRED8x8)
         pred8x8_dc(src, linesize);
