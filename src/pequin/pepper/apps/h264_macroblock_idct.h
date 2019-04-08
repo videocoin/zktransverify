@@ -56,25 +56,24 @@ void idct_add(uint8_t *dst, int16_t *block, int stride)
 
 void chroma_dc_dequant_idct(int16_t *block, int qmul)
 {
-//    int stride= 16*2;
-//    int xStride= 16;
-//    int a,b,c,d,e;
-//    dctcoef *block = (dctcoef*)_block;
-//
-//    a= block[stride*0 + xStride*0];
-//    b= block[stride*0 + xStride*1];
-//    c= block[stride*1 + xStride*0];
-//    d= block[stride*1 + xStride*1];
-//
-//    e= a-b;
-//    a= a+b;
-//    b= c-d;
-//    c= c+d;
-//
-//    block[stride*0 + xStride*0]= ((a+c)*qmul) >> 7;
-//    block[stride*0 + xStride*1]= ((e+b)*qmul) >> 7;
-//    block[stride*1 + xStride*0]= ((a-c)*qmul) >> 7;
-//    block[stride*1 + xStride*1]= ((e-b)*qmul) >> 7;
+    int stride= 16*2;
+    int xStride= 16;
+    int a,b,c,d,e;
+
+    a = bytes_to_uint16(block + (stride*0 + xStride*0)*2);
+    b = bytes_to_uint16(block + (stride*0 + xStride*1)*2);
+    c = bytes_to_uint16(block + (stride*1 + xStride*0)*2);
+    d = bytes_to_uint16(block + (stride*1 + xStride*1)*2);
+
+    e= a-b;
+    a= a+b;
+    b= c-d;
+    c= c+d;
+
+    uint32_to_bytes(block + (stride*0 + xStride*0)*2, ((a+c)*qmul) >> 7);
+    uint32_to_bytes(block + (stride*0 + xStride*1)*2, ((e+b)*qmul) >> 7);
+    uint32_to_bytes(block + (stride*1 + xStride*0)*2, ((a-c)*qmul) >> 7);
+    uint32_to_bytes(block + (stride*1 + xStride*1)*2, ((e-b)*qmul) >> 7);
 }
 
 void idct_add8(uint8_t *dest_cb, uint8_t  *dest_cr, int *block_offset, int16_t *block, int stride, uint8_t nnzc[15*8]){
@@ -87,12 +86,8 @@ void idct_add8(uint8_t *dest_cb, uint8_t  *dest_cr, int *block_offset, int16_t *
             int offset = i * 16;
             if((bool)nnzc[ scan8[i] ])
                 idct_add(p + block_offset[i], block + offset, stride);
-            else {
-                uint32_t dctcoef = block[i*16*2];
-                dctcoef |= block[i*16*2+1];
-                if((bool)dctcoef)
-                    idct_dc_add(p + block_offset[i], block + offset, stride);
-            }
+            else if((bool)bytes_to_uint32(block + i*16*2))
+                idct_dc_add(p + block_offset[i], block + offset, stride);
         }
     }
 }

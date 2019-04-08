@@ -61,7 +61,7 @@ struct Out {
 #define CHROMA_DC_BLOCK_INDEX 49
 
 // This table must be here because scan8[constant] must be known at compiletime
-const uint8_t scan8[16 * 3 + 3] = {
+uint8_t scan8[16 * 3 + 3] = {
         4 + 1 * 8, 5 + 1 * 8, 4 + 2 * 8, 5 + 2 * 8,
         6 + 1 * 8, 7 + 1 * 8, 6 + 2 * 8, 7 + 2 * 8,
         4 + 3 * 8, 5 + 3 * 8, 4 + 4 * 8, 5 + 4 * 8,
@@ -84,7 +84,14 @@ pixel4 PIXEL_SPLAT_X4(pixel4 x)
     return x * 0x01010101U;
 }
 
-pixel4 AV_RN4PA(uint8_t *src) {
+uint16_t bytes_to_uint16(uint8_t *src) {
+    uint16_t v;
+    v = src[0];
+    v |= src[1] << 8;
+    return v;
+}
+
+pixel4 bytes_to_uint32(uint8_t *src) {
     pixel4 v;
     v = src[0];
     v |= src[1] << 8;
@@ -93,7 +100,7 @@ pixel4 AV_RN4PA(uint8_t *src) {
     return v;
 }
 
-void AV_WN4PA(uint8_t *src, pixel4 v) {
+void uint32_to_bytes(uint8_t *src, pixel4 v) {
     src[0] = v & 0xFF;
     src[1] = (v >> 8) & 0xFF;
     src[2] = (v >> 16) & 0xFF;
