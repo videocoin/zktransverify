@@ -4,7 +4,6 @@
 #include "h264_macroblock_defs.h"
 
 struct In {
-    int qscale;
     int chroma_qp[2];   // QPc
 
     int8_t intra4x4_pred_mode_cache[5 * 8];
@@ -12,9 +11,6 @@ struct In {
     unsigned int topright_samples_available;
 
     int linesize, uvlinesize;
-
-    int mb_x, mb_y;
-    int mb_xy;
 
     int chroma_pred_mode;
 

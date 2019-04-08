@@ -20,7 +20,6 @@ void decode_mb_predict_luma(struct In *in,
                                uint8_t *dest_y)
 {
     int i;
-    int qscale = in->qscale;
 
     for (i = 0; i < 16; i++) {
         uint8_t *ptr  = dest_y + in->block_offset[i];
@@ -60,15 +59,9 @@ void decode_mb_predict_luma(struct In *in,
 
 void decode_mb(struct In *in)
 {
-    int mb_x    = in->mb_x;
-    int mb_y    = in->mb_y;
-    int mb_xy   = in->mb_xy;
     uint8_t *dest_y, *dest_cb, *dest_cr;
     int linesize, uvlinesize;
     int i, j;
-    // const int block_h   = 16 >> in->chroma_y_shift;
-    // Chroma format 4:2:0
-    int block_h = 8;
 
     dest_y  = in->dest_y;
     dest_cb = in->dest_cb;
