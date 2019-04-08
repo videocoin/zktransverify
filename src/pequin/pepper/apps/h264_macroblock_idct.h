@@ -60,21 +60,20 @@ void chroma_dc_dequant_idct(int16_t *block, int qmul)
     int xStride= 16;
     int a,b,c,d,e;
 
-    // TODO: not sure its right conversion
-    a = bytes_to_uint16(block + (stride*0 + xStride*0)*2);
-    b = bytes_to_uint16(block + (stride*0 + xStride*1)*2);
-    c = bytes_to_uint16(block + (stride*1 + xStride*0)*2);
-    d = bytes_to_uint16(block + (stride*1 + xStride*1)*2);
+    a = i16_a_to_i32(block + (stride*0 + xStride*0)*2);
+    b = i16_a_to_i32(block + (stride*0 + xStride*1)*2);
+    c = i16_a_to_i32(block + (stride*1 + xStride*0)*2);
+    d = i16_a_to_i32(block + (stride*1 + xStride*1)*2);
 
     e= a-b;
     a= a+b;
     b= c-d;
     c= c+d;
 
-    uint32_to_bytes(block + (stride*0 + xStride*0)*2, ((a+c)*qmul) >> 7);
-    uint32_to_bytes(block + (stride*0 + xStride*1)*2, ((e+b)*qmul) >> 7);
-    uint32_to_bytes(block + (stride*1 + xStride*0)*2, ((a-c)*qmul) >> 7);
-    uint32_to_bytes(block + (stride*1 + xStride*1)*2, ((e-b)*qmul) >> 7);
+    i32_to_i16_a(block + (stride*0 + xStride*0)*2, ((a+c)*qmul) >> 7);
+    i32_to_i16_a(block + (stride*0 + xStride*1)*2, ((e+b)*qmul) >> 7);
+    i32_to_i16_a(block + (stride*1 + xStride*0)*2, ((a-c)*qmul) >> 7);
+    i32_to_i16_a(block + (stride*1 + xStride*1)*2, ((e-b)*qmul) >> 7);
 }
 
 void idct_add8(uint8_t *dest_cb, uint8_t  *dest_cr, int *block_offset, int16_t *block, int stride, uint8_t nnzc[15*8]){
