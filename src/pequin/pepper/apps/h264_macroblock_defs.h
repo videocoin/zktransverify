@@ -84,6 +84,18 @@ pixel4 PIXEL_SPLAT_X4(pixel4 x)
     return x * 0x01010101U;
 }
 
+int32_t i16_a_to_i32(int16_t *src) {
+    int32_t v;
+    v = src[0];
+    v |= src[1] << 16;
+    return v;
+}
+
+void i32_to_i16_a(int16_t *dst, int32_t v) {
+    dst[0] = v & 0xFFFF;
+    dst[1] = v >> 16;
+}
+
 uint16_t bytes_to_uint16(uint8_t *src) {
     uint16_t v;
     v = src[0];
