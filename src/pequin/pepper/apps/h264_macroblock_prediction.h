@@ -393,9 +393,10 @@ void pred16x16_vertical(uint8_t *src, int stride)
 void pred16x16_horizontal(uint8_t *src, int stride)
 {
     int i;
-
+    uint8_t *p;
     for(i=0; i<16; i++){
-        pixel4 a = PIXEL_SPLAT_X4(src[i*stride-1]);
+        p = src + i*stride-1;
+        pixel4 a = PIXEL_SPLAT_X4(p[0]);
 
         uint32_to_bytes(src+i*stride+0, a);
         uint32_to_bytes(src+i*stride+4, a);
@@ -408,21 +409,24 @@ void pred16x16_dc(uint8_t *src, int stride)
 {
     int i, dc=0;
     pixel4 dcsplat;
+    uint8_t *p;
 
     for(i=0;i<16; i++){
-        dc+= src[i*stride-1];
+        p = src + i*stride-1;
+        dc+= p[0];
     }
 
     for(i=0;i<16; i++){
-        dc+= src[i-stride];
+        p = src + i-stride;
+        dc+= p[0];
     }
 
     dcsplat = PIXEL_SPLAT_X4((dc+16)>>5);
     for(i=0; i<16; i++){
-        uint32_to_bytes(src+ 0, v);
-        uint32_to_bytes(src+ 4, v);
-        uint32_to_bytes(src+ 8, v);
-        uint32_to_bytes(src+12, v);
+        uint32_to_bytes(src+ 0, dcsplat);
+        uint32_to_bytes(src+ 4, dcsplat);
+        uint32_to_bytes(src+ 8, dcsplat);
+        uint32_to_bytes(src+12, dcsplat);
         src += stride;
     }
 }
@@ -433,19 +437,19 @@ void pred16x16_plane(uint8_t *src, int stride)
     int a;
 
     pixel * src0 = src +7-stride;
-    pixel *       src1 = src +8*stride-1;
-    pixel *       src2 = src1-2*stride;    // == src+6*stride-1;
-    int H = src0[1] - src0[-1];
-    int V = src1[0] - src2[ 0];
+    pixel * src1 = src +8*stride-1;
+    pixel * src2 = src1-2*stride;    // == src+6*stride-1;
+    int H = src0[1] + src0[-1] * (-1);
+    int V = src1[0] + src2[ 0] * (-1);
     for(k=2; k<=8; ++k) {
         src1 += stride; src2 -= stride;
-        H += k*(src0[k] - src0[-k]);
-        V += k*(src1[0] - src2[ 0]);
+        H += k*(src0[k] + src0[-k] * (-1));
+        V += k*(src1[0] + src2[ 0] * (-1));
     }
 
     H = ( 5*H+32 ) >> 6;
     V = ( 5*V+32 ) >> 6;
-
+//
     a = 16*(src1[0] + src2[16] + 1) - 7*(V+H);
     for(j=16; j>0; --j) {
         int b = a;
@@ -463,21 +467,14 @@ void pred16x16_plane(uint8_t *src, int stride)
 
 void pred16x16(int prediction_mode, uint8_t *src, int linesize)
 {
-    switch (prediction_mode)
-    {
-        case VERT_PRED16x16:
-            pred16x16_vertical(src, linesize);
-            break;
-        case HOR_PRED16x16:
-            pred16x16_horizontal(src, linesize);
-            break;
-        case DC_PRED16x16:
-            pred16x16_dc(src, linesize);
-            break;
-        case PLANE_PRED16x16:
-            pred16x16_plane(src, linesize);
-            break;
-    }
+    if (prediction_mode == VERT_PRED16x16)
+        pred16x16_vertical(src, linesize);
+    else if (prediction_mode == HOR_PRED16x16)
+        pred16x16_horizontal(src, linesize);
+    else if (prediction_mode == DC_PRED16x16)
+        pred16x16_dc(src, linesize);
+    else if (prediction_mode == PLANE_PRED16x16)
+        pred16x16_plane(src, linesize);
 }
 
 #endif // PRED16x16
