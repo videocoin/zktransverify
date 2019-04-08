@@ -86,7 +86,7 @@ void idct_add8(uint8_t *dest_cb, uint8_t  *dest_cr, int *block_offset, int16_t *
             int offset = i * 16;
             if((bool)nnzc[ scan8[i] ])
                 idct_add(p + block_offset[i], block + offset, stride);
-            else if((bool)bytes_to_uint32(block + i*16*2))
+            else if((bool)u8_a_to_u32(block + i*16*2))
                 idct_dc_add(p + block_offset[i], block + offset, stride);
         }
     }
@@ -97,9 +97,7 @@ void luma_dc_dequant_idct(int16_t *_output, int16_t *input, int qmul){
     int i;
     int temp[16];
     uint8_t x_offset[4]={0, 2*stride, 8*stride, 10*stride};
-//    dctcoef *input = (dctcoef*)_input;
-//    dctcoef *output = (dctcoef*)_output;
-//
+
     for(i=0; i<4; i++){
         int z0= i16_a_to_i32(input + (4*i+0)*2) + i16_a_to_i32(input + (4*i+1)*2);
         int z1= i16_a_to_i32(input + (4*i+0)*2) + i16_a_to_i32(input + (4*i+1)*2) * (-1);

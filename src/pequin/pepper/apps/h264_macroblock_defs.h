@@ -96,14 +96,14 @@ void i32_to_i16_a(int16_t *dst, int32_t v) {
     dst[1] = v >> 16;
 }
 
-uint16_t bytes_to_uint16(uint8_t *src) {
+uint16_t u8_a_to_u16(uint8_t *src) {
     uint16_t v;
     v = src[0];
     v |= src[1] << 8;
     return v;
 }
 
-pixel4 bytes_to_uint32(uint8_t *src) {
+pixel4 u8_a_to_u32(uint8_t *src) {
     pixel4 v;
     v = src[0];
     v |= src[1] << 8;
@@ -112,7 +112,7 @@ pixel4 bytes_to_uint32(uint8_t *src) {
     return v;
 }
 
-void uint32_to_bytes(uint8_t *src, pixel4 v) {
+void u32_to_u8_a(uint8_t *src, pixel4 v) {
     src[0] = v & 0xFF;
     src[1] = (v >> 8) & 0xFF;
     src[2] = (v >> 16) & 0xFF;

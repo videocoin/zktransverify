@@ -42,13 +42,13 @@ void pred8x8_dc(uint8_t *src, int stride)
     dc3splat = PIXEL_SPLAT_X4((dc1 + dc2 + 4)>>3);
 
     for(i=0; i<4; i++){
-        uint32_to_bytes(src + i*stride, dc0splat);
-        uint32_to_bytes(src + i*stride + 4, dc1splat);
+        u32_to_u8_a(src + i*stride, dc0splat);
+        u32_to_u8_a(src + i*stride + 4, dc1splat);
     }
 
     for(i=4; i<8; i++){
-        uint32_to_bytes(src + i*stride, dc2splat);
-        uint32_to_bytes(src + i*stride + 4, dc3splat);
+        u32_to_u8_a(src + i*stride, dc2splat);
+        u32_to_u8_a(src + i*stride + 4, dc3splat);
     }
 }
 
@@ -61,20 +61,20 @@ void pred8x8_horizontal(uint8_t *src, int stride)
         p = src + i*stride-1;
         pixel4 a = PIXEL_SPLAT_X4(p[0]);
 
-        uint32_to_bytes(src + i*stride, a);
-        uint32_to_bytes(src + i*stride + 4, a);
+        u32_to_u8_a(src + i*stride, a);
+        u32_to_u8_a(src + i*stride + 4, a);
     }
 }
 
 void pred8x8_vertical(uint8_t *src, int stride)
 {
     int i;
-    pixel4 a= bytes_to_uint32(src-stride+0);
-    pixel4 b= bytes_to_uint32(src-stride+4);
+    pixel4 a= u8_a_to_u32(src-stride+0);
+    pixel4 b= u8_a_to_u32(src-stride+4);
 
     for(i=0; i<8; i++){
-        uint32_to_bytes(src+i*stride+0, a);
-        uint32_to_bytes(src+i*stride+1, b);
+        u32_to_u8_a(src+i*stride+0, a);
+        u32_to_u8_a(src+i*stride+1, b);
     }
 }
 
@@ -143,20 +143,20 @@ void pred8x8_chroma(int chroma_pred_mode, uint8_t src[MB_CR_IN_LENGTH], int line
 
 void pred4x4_vertical(uint8_t *src, uint8_t *topright, int stride)
 {
-    pixel4 a = bytes_to_uint32(src-stride);
+    pixel4 a = u8_a_to_u32(src-stride);
 
-    uint32_to_bytes(src+0*stride, a);
-    uint32_to_bytes(src+1*stride, a);
-    uint32_to_bytes(src+2*stride, a);
-    uint32_to_bytes(src+3*stride, a);
+    u32_to_u8_a(src+0*stride, a);
+    u32_to_u8_a(src+1*stride, a);
+    u32_to_u8_a(src+2*stride, a);
+    u32_to_u8_a(src+3*stride, a);
 }
 
 void pred4x4_horizontal(uint8_t *src, uint8_t *topright, int stride)
 {
-    uint32_to_bytes(src+0*stride, PIXEL_SPLAT_X4(src[0*stride-1]));
-    uint32_to_bytes(src+1*stride, PIXEL_SPLAT_X4(src[1*stride-1]));
-    uint32_to_bytes(src+2*stride, PIXEL_SPLAT_X4(src[2*stride-1]));
-    uint32_to_bytes(src+3*stride, PIXEL_SPLAT_X4(src[3*stride-1]));
+    u32_to_u8_a(src+0*stride, PIXEL_SPLAT_X4(src[0*stride-1]));
+    u32_to_u8_a(src+1*stride, PIXEL_SPLAT_X4(src[1*stride-1]));
+    u32_to_u8_a(src+2*stride, PIXEL_SPLAT_X4(src[2*stride-1]));
+    u32_to_u8_a(src+3*stride, PIXEL_SPLAT_X4(src[3*stride-1]));
 }
 
 void pred4x4_dc(uint8_t *src, uint8_t *topright, int stride)
@@ -165,10 +165,10 @@ void pred4x4_dc(uint8_t *src, uint8_t *topright, int stride)
                      + src[0*stride-1] + src[1*stride-1] + src[2*stride-1] + src[3*stride-1] + 4) >>3;
     pixel4 a = PIXEL_SPLAT_X4(dc);
 
-    uint32_to_bytes(src+0*stride, a);
-    uint32_to_bytes(src+1*stride, a);
-    uint32_to_bytes(src+2*stride, a);
-    uint32_to_bytes(src+3*stride, a);
+    u32_to_u8_a(src+0*stride, a);
+    u32_to_u8_a(src+1*stride, a);
+    u32_to_u8_a(src+2*stride, a);
+    u32_to_u8_a(src+3*stride, a);
 }
 
 #define LOAD_TOP_RIGHT_EDGE\
@@ -377,16 +377,16 @@ void pred8x8l(int direction, uint8_t *src, int topleft, int topright, int linesi
 void pred16x16_vertical(uint8_t *src, int stride)
 {
     int i;
-    pixel4 a = bytes_to_uint32(src-stride+0);
-    pixel4 b = bytes_to_uint32(src-stride+4);
-    pixel4 c = bytes_to_uint32(src-stride+8);
-    pixel4 d = bytes_to_uint32(src-stride+12);
+    pixel4 a = u8_a_to_u32(src-stride+0);
+    pixel4 b = u8_a_to_u32(src-stride+4);
+    pixel4 c = u8_a_to_u32(src-stride+8);
+    pixel4 d = u8_a_to_u32(src-stride+12);
 
     for(i=0; i<16; i++){
-        uint32_to_bytes(src+i*stride+0, a);
-        uint32_to_bytes(src+i*stride+4, b);
-        uint32_to_bytes(src+i*stride+8, c);
-        uint32_to_bytes(src+i*stride+12, d);
+        u32_to_u8_a(src+i*stride+0, a);
+        u32_to_u8_a(src+i*stride+4, b);
+        u32_to_u8_a(src+i*stride+8, c);
+        u32_to_u8_a(src+i*stride+12, d);
     }
 }
 
@@ -398,10 +398,10 @@ void pred16x16_horizontal(uint8_t *src, int stride)
         p = src + i*stride-1;
         pixel4 a = PIXEL_SPLAT_X4(p[0]);
 
-        uint32_to_bytes(src+i*stride+0, a);
-        uint32_to_bytes(src+i*stride+4, a);
-        uint32_to_bytes(src+i*stride+8, a);
-        uint32_to_bytes(src+i*stride+12, a);
+        u32_to_u8_a(src+i*stride+0, a);
+        u32_to_u8_a(src+i*stride+4, a);
+        u32_to_u8_a(src+i*stride+8, a);
+        u32_to_u8_a(src+i*stride+12, a);
     }
 }
 
@@ -423,10 +423,10 @@ void pred16x16_dc(uint8_t *src, int stride)
 
     dcsplat = PIXEL_SPLAT_X4((dc+16)>>5);
     for(i=0; i<16; i++){
-        uint32_to_bytes(src+ 0, dcsplat);
-        uint32_to_bytes(src+ 4, dcsplat);
-        uint32_to_bytes(src+ 8, dcsplat);
-        uint32_to_bytes(src+12, dcsplat);
+        u32_to_u8_a(src+ 0, dcsplat);
+        u32_to_u8_a(src+ 4, dcsplat);
+        u32_to_u8_a(src+ 8, dcsplat);
+        u32_to_u8_a(src+12, dcsplat);
         src += stride;
     }
 }
