@@ -1,11 +1,15 @@
+## Using ffmpeg to drive transcode proof generation : Overview
+
+![Overview of using ffmpeg to drive transcode proof generation](./doc/ffmpeg_integration.png) 
+
+An ffmpeg application is used to retrieve macrobocks from source and transcode streams and supply to transcode proof generation.
+
 ## Compilation Guide
 https://trac.ffmpeg.org/wiki/CompilationGuide/Ubuntu
 
 After installing the dependencies as per the above guide, use the following command to fetch the ffmpeg from github and compile (instead of using the step to compile the ffmpeg command from the guide).
+
 ```
-cd ~/ffmpeg_sources && \
-git clone https://github.com/rampenke/FFmpeg.git ffmpeg
-cd ffmpeg && \
 PATH="$HOME/bin:$PATH" PKG_CONFIG_PATH="$HOME/ffmpeg_build/lib/pkgconfig" ./configure \
   --prefix="$HOME/ffmpeg_build" \
   --pkg-config-flags="--static" \
@@ -24,12 +28,23 @@ PATH="$HOME/bin:$PATH" PKG_CONFIG_PATH="$HOME/ffmpeg_build/lib/pkgconfig" ./conf
   --enable-libvpx \
   --enable-libx264 \
   --enable-libx265 \
-  --enable-nonfree && \
-PATH="$HOME/bin:$PATH" make && \
-make install && \
-hash -r
+  --enable-nonfree \
+  --disable-optimizations
+
+PATH="$HOME/bin:$PATH" make
+
+make install
 ```
-### h264mbdec.h
+
+## Customization for driving transcode proof system
+The customization includes the following:
+* Adding a new codec in libavcodec folder in libavcodec folder and necessay changes to the ffmpeg system for allowing an application to use the codec. The codec is based on the h264 decoder. It supports extraction of a macroblock from a frame.
+* An application that uses the above codec and retrieves the macroblock and supplies to transcode verification proof generation library.
+
+
+## Deatils of the modifications files
+
+### h264mbdec.h (New file based on h264dec.h)
 ```
 typedef struct H264MBContext {
     const AVClass *class;
@@ -251,7 +266,7 @@ typedef struct H264MBContext {
 } H264MBContext;
 
 ```
-### h264mbdec.c
+### h264mbdec.c (based on h264dec.c)
 ```
 AVCodec ff_h4mb_decoder = {
     .name                  = "h4mb",
@@ -276,6 +291,12 @@ AVCodec ff_h4mb_decoder = {
     .profiles              = NULL_IF_CONFIG_SMALL(ff_h264_profiles),
     .priv_class            = &h264mb_class,
 };
+
+
+static int output_frame(H264Context *h, AVFrame *dst, H264Picture *srcp)
+{
+// code to return macroblock data to the application
+}
 ```
 
 ```
@@ -320,3 +341,29 @@ static const AVCodec * const codec_list[] = {
     NULL };
 };    
 ```
+
+### Makefile in libavcodec folder
+```
+...
+OBJS-$(CONFIG_H4MB_DECODER)            += h264mbdec.o h264mb_cabac.o h264mb_cavlc.o \
+                                          h264_direct.o h264_loopfilter.o  \
+                                          h264_mb.o h264_picture.o \
+                                          h264_refs.o h264_sei.o \
+                                          h264mb_slice.o h264data.o
+...
+```                                          
+
+### h264mb_slice.c
+Modifications to extract macroblock data
+
+
+### ffmpeg/extools
+Application code to extract macroblock data
+
+compilation:
+SRC_PATH=<ffmpeg source location> make
+
+  ```
+  Example:
+  SRC_PATH=~/ffmpeg_sources/ffmpeg make
+  ```
