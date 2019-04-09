@@ -4,10 +4,29 @@
 
 An ffmpeg application is used to retrieve macrobocks from source and transcode streams and supply to transcode proof generation.
 
+```
+typedef struct _MB_T
+{
+	char *mb_data; // Macroblock DCT Coefficients
+                 // 3 planes of 16x16 32bit coefficients
+	int  mb_size;
+
+	int mb_type;
+	int intra16x16_pred_mode;
+	// TODO : Add othe required params
+} MB_T;
+```
+
 ## Compilation Guide
 https://trac.ffmpeg.org/wiki/CompilationGuide/Ubuntu
 
+In addition to installing dependencies as per the above guide, the following additional dependencies may be installed
+```
+sudo apt-get install libbz2-dev
+```
+
 After installing the dependencies as per the above guide, use the following command to fetch the ffmpeg from github and compile (instead of using the step to compile the ffmpeg command from the guide).
+
 
 ```
 PATH="$HOME/bin:$PATH" PKG_CONFIG_PATH="$HOME/ffmpeg_build/lib/pkgconfig" ./configure \
@@ -35,6 +54,7 @@ PATH="$HOME/bin:$PATH" make
 
 make install
 ```
+
 
 ## Customization for driving transcode proof system
 The customization includes the following:
@@ -356,14 +376,18 @@ OBJS-$(CONFIG_H4MB_DECODER)            += h264mbdec.o h264mb_cabac.o h264mb_cavl
 ### h264mb_slice.c
 Modifications to extract macroblock data
 
-
+## Proof generation App
 ### ffmpeg/extools
 Application code to extract macroblock data
 
 compilation:
 SRC_PATH=<ffmpeg source location> make
-
-  ```
+```
   Example:
-  SRC_PATH=~/ffmpeg_sources/ffmpeg make
-  ```
+  SRC_PATH=../ make
+```
+  
+### Run the application as follows:
+```
+./genproof <file1> <file2>
+```
