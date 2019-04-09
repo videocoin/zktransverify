@@ -41,10 +41,12 @@
 typedef struct _MB_T
 {
 	char *mb_data; // Macroblock DCT Coefficients
+                   // 3 planes of 16x16 32bit coefficients
 	int  mb_size;
 
 	int mb_type;
 	int intra16x16_pred_mode;
+	// TODO : Add othe required params
 } MB_T;
 
 bool ARG_HELP;
@@ -280,6 +282,8 @@ int main(int argc, char **argv)
 
 	parse_options(argc, argv);
 
+	// TODO Generate hash of hashes from input stream and transcoded stream
+	//      and pick random keyframe and macroblock number
 	getMbFromStream(ARG_VIDEO_PATH1, 1, 10, &mbSrc);
 	getMbFromStream(ARG_VIDEO_PATH2, 1, 10, &mbTrans);
 	if(mbSrc.mb_data) free(mbSrc.mb_data);
