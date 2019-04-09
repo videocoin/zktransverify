@@ -3,8 +3,8 @@ include $(SRC_PATH)/ffbuild/config.mak
 
 FFLIBS := -lavfilter -lswscale -lpostproc -lavformat -lavcodec -lswresample -lavutil -lX11 -lm  -lvdpau -lva -lva-drm  -lvdpau -lva -lX11 -lva-x11 -lpthread -lm -ldl -lbz2 
 
-decodemb: decode-h264-mb.o
-	$(CC)  -g -o decodemb decode-h264-mb.o $(LDFLAGS) $(LDEXEFLAGS) $(FFLIBS) $(EXTRALIBS-avcodec) $(EXTRALIBS-avfilter) 
+genproof: decode-h264-mb.o
+	$(CC)  -g -o genproof decode-h264-mb.o $(LDFLAGS) $(LDEXEFLAGS) $(FFLIBS) $(EXTRALIBS-avcodec) $(EXTRALIBS-avfilter) 
 
 clean: 
-	rm decodemb decode-h264-mb.o
+	rm genproof decode-h264-mb.o
