@@ -23,6 +23,7 @@ https://trac.ffmpeg.org/wiki/CompilationGuide/Ubuntu
 In addition to installing dependencies as per the above guide, the following additional dependencies may be installed
 ```
 sudo apt-get install libbz2-dev
+sudo apt-get install libssl-dev
 ```
 
 After installing the dependencies as per the above guide, use the following command to fetch the ffmpeg from github and compile (instead of using the step to compile the ffmpeg command from the guide).
@@ -376,18 +377,23 @@ OBJS-$(CONFIG_H4MB_DECODER)            += h264mbdec.o h264mb_cabac.o h264mb_cavl
 ### h264mb_slice.c
 Modifications to extract macroblock data
 
-## Proof generation App
+## Proof generation and withness generation applications
 ### ffmpeg/extools
 Application code to extract macroblock data
 
 compilation:
-SRC_PATH=<ffmpeg source location> make
+SRC_PATH=<ffmpeg source location> make all
 ```
   Example:
-  SRC_PATH=../ make
+  SRC_PATH=../ make all
 ```
   
 ### Run the application as follows:
+On the Storage-worker
+```
+./genwitness <file1> <file2>
+```
+On the Transocde-worker
 ```
 ./genproof <file1> <file2>
 ```
