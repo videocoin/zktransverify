@@ -58,7 +58,7 @@ Run the verification using the (1) proof submitted by Transcode-worker and (2) h
 
 The following raw video source clips are used to create "source stream" test vectors
 
-website: https://media.xiph.org/video/derf/ 
-crowdrun: https://media.xiph.org/video/derf/y4m/crowd_run_2160p50.y4m 
-ducks_take_off: https://media.xiph.org/video/derf/y4m/ducks_take_off_2160p50.y4m 
-in_to_tree: https://media.xiph.org/video/derf/y4m/in_to_tree_2160p50.y4m 
+website: https://media.xiph.org/video/derf/  
+crowdrun: https://media.xiph.org/video/derf/y4m/crowd_run_2160p50.y4m  
+ducks_take_off: https://media.xiph.org/video/derf/y4m/ducks_take_off_2160p50.y4m  
+in_to_tree: https://media.xiph.org/video/derf/y4m/in_to_tree_2160p50.y4m  
