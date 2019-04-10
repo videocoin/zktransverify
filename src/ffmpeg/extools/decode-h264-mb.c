@@ -243,32 +243,37 @@ int getMbFromStream(char *file_name, int key_frame_num, int mb_num, MB_T *pMb)
 					fprintf(stderr, "Frame decoded\n");
 				}
 
-				if (frame->key_frame)
-					key_frame_count++;
 
-				if (key_frame_count == key_frame_num) {
-					// Free side data from packet
-					av_packet_free_side_data(pkt);
 
-					AVDictionaryEntry *ent = av_dict_get(frame->metadata,
-							"macroblock", NULL, 0);
-					if (ent) {
-						char *macroblock = ent->value;
-						if (macroblock) {
-							printf("macroblockd=%s\n", macroblock);
-							av_base64_decode(pMb->mb_data, macroblock,
-									pMb->mb_size);
+				if (got_frame) {
+					if (frame->key_frame)
+						key_frame_count++;
+
+					if(key_frame_count == key_frame_num) {
+						// Free side data from packet
+						av_packet_free_side_data(pkt);
+
+						AVDictionaryEntry *ent = av_dict_get(frame->metadata,
+								"macroblock", NULL, 0);
+						if (ent) {
+							char *macroblock = ent->value;
+							if (macroblock) {
+								printf("macroblockd=%s\n", macroblock);
+								av_base64_decode(pMb->mb_data, macroblock,
+										pMb->mb_size);
+							}
 						}
+
+						pMb->mb_type = getParam(frame, "mb_type");
+						pMb->intra16x16_pred_mode = getParam(frame, "intra16x16_pred_mode");
+
+						break;
 					}
-
-					pMb->mb_type = getParam(frame, "mb_type");
-					pMb->intra16x16_pred_mode = getParam(frame, "intra16x16_pred_mode");
-
-					break;
 				}
+				frame_count++;
 			}
 
-			frame_count++;
+
 		}
 		av_packet_unref(pkt);
 	}
