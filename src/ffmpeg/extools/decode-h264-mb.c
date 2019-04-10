@@ -38,52 +38,15 @@
 #include "libavutil/timestamp.h"
 #include "libavutil/base64.h"
 
-typedef struct _MB_T
-{
-	char *mb_data; // Macroblock DCT Coefficients
-                   // 3 planes of 16x16 32bit coefficients
-	int  mb_size;
+#include "decode-h264-mb.h"
 
-	int mb_type;
-	int intra16x16_pred_mode;
-	// TODO : Add othe required params
-} MB_T;
 
-bool ARG_HELP;
-const char* ARG_VIDEO_PATH1;
-const char* ARG_VIDEO_PATH2;
-
-void parse_options(int argc, const char* argv[]);
 void hexDump (unsigned char *pData, int n);
 static char* itoa(int val, int base);
 int getParam(AVFrame *frame, char *key);
-int getMbFromStream(char *file_name, int key_frame_num, int mb_num, MB_T *pMb);
 
 
 
-void parse_options(int argc, const char* argv[])
-{
-	int i = 1;
-	while (i < argc) {
-		if (strcmp(argv[i], "--help") == 0 || strcmp(argv[i], "-h") == 0) {
-			ARG_HELP = true;
-		} else {
-			if(i < argc) {
-				ARG_VIDEO_PATH1 = argv[i];
-				i++;
-			}
-			if(i < argc) {
-				ARG_VIDEO_PATH2 = argv[i];
-			}
-		}
-		i++;
-	}
-	if (ARG_HELP || ARG_VIDEO_PATH1 == NULL || ARG_VIDEO_PATH2 == NULL) {
-		fprintf(stderr,
-				"Usage: genproof videoPath1 videoPath2\n  --help and -h will output this help message.\n");
-		exit(1);
-	}
-}
 
 void hexDump (unsigned char *pData, int n)
 {
@@ -258,9 +221,11 @@ int getMbFromStream(char *file_name, int key_frame_num, int mb_num, MB_T *pMb)
 						if (ent) {
 							char *macroblock = ent->value;
 							if (macroblock) {
-								printf("macroblockd=%s\n", macroblock);
-								av_base64_decode(pMb->mb_data, macroblock,
-										pMb->mb_size);
+								//printf("macroblockd=%s\n", macroblock);
+								printf("macroblock=");
+
+								av_base64_decode(pMb->mb_data, macroblock, pMb->mb_size);
+								hexDump(pMb->mb_data, 16*16*4);
 							}
 						}
 
@@ -278,27 +243,4 @@ int getMbFromStream(char *file_name, int key_frame_num, int mb_num, MB_T *pMb)
 		av_packet_unref(pkt);
 	}
 	return 0;
-}
-
-int main(int argc, char **argv)
-{
-	MB_T mbSrc = {0};
-	MB_T mbTrans = {0};
-
-	parse_options(argc, argv);
-
-	// TODO Generate hash of hashes from input stream and transcoded stream
-	//      and pick random keyframe and macroblock number
-	getMbFromStream(ARG_VIDEO_PATH1, 1, 10, &mbSrc);
-	getMbFromStream(ARG_VIDEO_PATH2, 1, 10, &mbTrans);
-	if(mbSrc.mb_data) free(mbSrc.mb_data);
-	if(mbTrans.mb_data) free(mbTrans.mb_data);
-
-	// TODO Get other public parameters
-
-	// TODO Calculate expected SSIM
-
-	// TODO Call proof generation and obtain the proof
-
-	// TODO Call ethereum smart-contract/verifier or stand-alone verifier and submit the proof
 }
