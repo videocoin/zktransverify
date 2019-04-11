@@ -2,7 +2,7 @@
 
 The purpose of this test is to check if "videocoin proof generation and verifier" is functioning correctly. The test procedure includes running the oprtations at wallet, transcode-worker, storage-worker and verifier manually. After the integration with the videocoin-net, these operations will be embedded in the respective modules. 
 
-## 1. wallet : Encodes a yuv420 UHD test source into 10sec TS segment
+## 1. Wallet : Generate test source stream
 
 Encodes streams from test sequences listed in Appendix-A using following settings: 
 
@@ -17,8 +17,9 @@ Example:
 ffmpeg -y -benchmark -i ./crowd_run_2160p50.y4m  -vframes 500 -vcodec libx264 -b:v 40M  -r 50 -preset medium -force_key_frames "expr:gte(t,n_forced*1)" crowd_run_2160p50_40M.ts
 ```
 
-## 2. Transcode-worker:  Generates attack streams as wells as correct stream.
+## 2. Transcode-worker:  Generates attack streams as wells as correct transcoded stream.
 2.1 Correct Transcode   - Transcodes using the correct parameter settings
+
 | Param | Value |
 | --- | --- |
 | preset | medium |
