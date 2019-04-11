@@ -2,6 +2,28 @@
 
 The purpose of this test is to check if "videocoin proof generation and verifier" is functioning correctly. The test procedure includes running the oprtations at wallet, transcode-worker, storage-worker and verifier manually. After the integration with the videocoin-net, these operations will be embedded in the respective modules. 
 
+## Overview
+The transcode verification proof system uses the following logic:
+
+* Receives two macroblocks (one from input stream and the second from transcoded stream) as private input/witness
+* Receives sha256 hash of transcode-macroblock as public input/witness
+* Receives SSIM threshold value as public input/witness
+* The constraint system ensures the verifcation succeeds only when SSIM of the two macroblocks is below the SSIM supplied as public witness and sha256 hash of the transcode-macroblock is equal to the sha256 has supplied as public input.
+* A proving-key and verification key are generated
+
+The operation of the wallet-node is emulated by encoding a stream to generate 10sec TS segment. 
+
+The operation of the transcode-worker is emulated by generating correctly transcoded stream as well attcak streams as described in the following sections. The proof-generation at the transcode-worker includes customized ffmpeg application that retrieves macroblocks from source and transcoded-streams and supplied to the proof-generator. These macroblocks are selected based on the offsets generated from sha256 hashes of source and transcode streams.
+
+The storage-worker after receiving the transcoded stream retrieves the sha256 hash of the macroblock and submits to the vefifier. The storage-worker includes customized ffmpeg application that retrieves macroblock based on frame/macroblock offsets generated similar to storage-worker.
+
+The verifier uses the following inputs and performs using zkSNARK ec pairing functions.
+* proof supplied by the transcode-worker
+* SSIM supplied by the Wallet
+* sha256 hash of transcoded stream submitted by the storage-worker
+
+The commands at each node are described below.
+
 ## 1. Wallet : Generate test source stream
 
 Encodes streams from test sequences listed in Appendix-A using following settings: 
