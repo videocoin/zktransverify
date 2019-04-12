@@ -3,3 +3,5 @@
 *.key
 
 cmake-build-debug/
+
+temp/

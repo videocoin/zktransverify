@@ -1,57 +1,23 @@
 #include <iostream>
 #include <fstream>
 
-#include <gmp.h>
-
 #include <libsnark/relations/constraint_satisfaction_problems/r1cs/r1cs.hpp>
 #include <libsnark/common/default_types/r1cs_ppzksnark_pp.hpp>
 #include <libsnark/zk_proof_systems/ppzksnark/r1cs_ppzksnark/r1cs_ppzksnark.hpp>
 
+#include <common/utility.h>
+
 typedef libff::Fr<libsnark::default_r1cs_ppzksnark_pp> FieldT;
-
-struct comp_params {
-    int n_constraints;
-    int n_inputs;
-    int n_outputs;
-    int n_vars;
-};
-
-comp_params parse_params(std::string &paramFilename) {
-    std::ifstream paramFile(paramFilename);
-    if (!paramFile.is_open()) {
-        std::cerr << "ERROR: " << paramFilename << " not found." << std::endl;
-        exit(1);
-    }
-    int num_constraints, num_inputs, num_outputs, num_vars;
-    std::string comment;
-    paramFile >> num_constraints >> comment >> num_inputs >> comment >> num_outputs >> comment >> num_vars;
-    paramFile.close();
-
-    return comp_params{num_constraints, num_inputs, num_outputs, num_vars};
-}
 
 void print_usage(char *argv[]) {
     std::cout << "usage: " << std::endl
               << argv[0]
-              << " <verification key file> <inputs file> <outputs file> <proof file>"
+              << " <ssim | mb16x16> <verification key file> <inputs file> <outputs file> <proof file>"
               << std::endl;
 }
 
-void convert_to_z(mpz_t z, const mpq_t q, const mpz_t prime) {
-    assert(mpz_sgn(prime) != 0);
-    if (mpz_cmp_ui(mpq_denref(q), 1) == 0) {
-        mpz_set(z, mpq_numref(q));
-    } else if (mpz_cmp_ui(mpq_denref(q), 0) == 0) {
-        mpz_set_ui(z, 0);
-    } else {
-        mpz_invert(z, mpq_denref(q), prime);
-        mpz_mul(z, z, mpq_numref(q));
-    }
-    mpz_mod(z, z, prime);
-}
-
-void verify (std::string verification_key_fn, std::string inputs_fn, std::string outputs_fn,
-             std::string proof_fn, int num_inputs, int num_outputs, mpz_t prime) {
+void verify (std::string &verification_key_fn, std::string &inputs_fn, std::string &outputs_fn,
+             std::string &proof_fn, int num_inputs, int num_outputs, mpz_t prime) {
 
     libsnark::default_r1cs_ppzksnark_pp::init_public_params();
 
@@ -108,23 +74,19 @@ void verify (std::string verification_key_fn, std::string inputs_fn, std::string
 }
 
 int main(int argc, char *argv[]) {
-    if (argc <= 3) {
+    if (argc != 6) {
         print_usage(argv);
         exit(1);
     }
 
     std::string app_path = std::string("./apps/") + std::string(argv[1]) + "/";
     std::string params = app_path + "params";
-    struct comp_params p = parse_params(params);
+    struct comp_params p = parse_params(params.c_str());
 
     mpz_t prime;
     mpz_init_set_str(prime, "21888242871839275222246405745257275088548364400416034343698204186575808495617", 10);
 
     if (!strcmp(argv[1], "ssim") || !strcmp(argv[1], "mb16x16")) {
-        if(argc != 6) {
-            print_usage(argv);
-            exit(1);
-        }
         std::string verification_key_fn = argv[2];
         std::string inputs_fn = argv[3];
         std::string outputs_fn = argv[4];
