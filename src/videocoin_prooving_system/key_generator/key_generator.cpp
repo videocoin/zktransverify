@@ -213,7 +213,7 @@ void generate_keys(std::string &app_path,
 }
 
 int main(int argc, char *argv[]) {
-    if (argc <= 4) {
+    if (argc <= 3) {
         print_usage(argv);
         exit(1);
     }

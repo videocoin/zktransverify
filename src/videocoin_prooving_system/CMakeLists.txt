@@ -24,4 +24,5 @@ link_directories(
 
 link_libraries(-lsnark -lff -lzm -lgmp -lgmpxx)
 
-add_executable(videocoin_proof_keygen main.cpp)
+add_executable(proof_keygen key_generator/key_generator.cpp)
+add_executable(proof_verifier verifier/verifier.cpp)
