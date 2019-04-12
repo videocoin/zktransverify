@@ -6,8 +6,7 @@
 #include <libsnark/zk_proof_systems/ppzksnark/r1cs_ppzksnark/r1cs_ppzksnark.hpp>
 
 #include <common/utility.h>
-
-typedef libff::Fr<libsnark::default_r1cs_ppzksnark_pp> FieldT;
+#include <common/defs.h>
 
 
 void print_usage(char *argv[]) {
