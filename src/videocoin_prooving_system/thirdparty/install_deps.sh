@@ -7,6 +7,30 @@ DEPS_DIR=$UP/dependencies
 mkdir -p $DEPS_DIR/lib
 ln -sf $DEPS_DIR/lib $DEPS_DIR/lib64
 
+TAR="tar xvzf"
+
+#Kyoto Cabinet
+echo "installing Kyoto Cabinet"
+$TAR kyotocabinet-1.2.76.tar.gz
+cp gcc6-workaround.patch kyotocabinet-1.2.76
+cd kyotocabinet-1.2.76
+patch -p1 < gcc6-workaround.patch
+./configure --prefix=$DEPS_DIR
+make
+make install
+cd $UP
+
+#leveldb
+echo "installing leveldb"
+$TAR leveldb-1.10.0.tar.gz
+cd leveldb-1.10.0
+make
+cp --preserve=links libleveldb.* $DEPS_DIR/lib
+cp -r include/leveldb $DEPS_DIR/include
+cd $UP
+
+exit
+
 #libsnark
 echo "installing libsnark"
 [ ! -d libsnark ] && git clone https://github.com/scipr-lab/libsnark.git

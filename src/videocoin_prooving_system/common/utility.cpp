@@ -21,6 +21,11 @@ comp_params parse_params(const char *params_filename) {
     return comp_params{num_constraints, num_inputs, num_outputs, num_vars};
 }
 
+void convert_to_z(const int size, mpz_t *z, const mpq_t *q, const mpz_t prime) {
+    for (int i = 0; i < size; i++)
+        convert_to_z(z[i], q[i], prime);
+}
+
 void convert_to_z(mpz_t z, const mpq_t q, const mpz_t prime) {
     assert(mpz_sgn(prime) != 0);
     if (mpz_cmp_ui(mpq_denref(q), 1) == 0) {
@@ -32,4 +37,40 @@ void convert_to_z(mpz_t z, const mpq_t q, const mpz_t prime) {
         mpz_mul(z, z, mpq_numref(q));
     }
     mpz_mod(z, z, prime);
+}
+
+void alloc_init_vec(mpz_t **arr, uint32_t size) {
+    *arr = new mpz_t[size];
+    for (uint32_t i=0; i<size; i++)
+        alloc_init_scalar((*arr)[i]);
+}
+
+void alloc_init_vec(mpq_t **arr, uint32_t size) {
+    *arr = new mpq_t[size];
+    for (uint32_t i=0; i<size; i++) {
+        alloc_init_scalar((*arr)[i]);
+    }
+}
+
+void alloc_init_scalar(mpz_t s) {
+    mpz_init2(s, INIT_MPZ_BITS);
+    //mpz_init(s);
+    mpz_set_ui(s, 0);
+}
+
+void alloc_init_scalar(mpq_t s) {
+    mpq_init(s);
+    mpq_set_ui(s, 0, 1);
+}
+
+void clear_del_vec(mpq_t* vec, const uint32_t n) {
+    for (uint32_t i = 0; i < n; i++)
+        mpq_clear(vec[i]);
+    delete[] vec;
+}
+
+void clear_del_vec(mpz_t* vec, const uint32_t n) {
+    for (uint32_t i = 0; i < n; i++)
+        mpz_clear(vec[i]);
+    delete[] vec;
 }

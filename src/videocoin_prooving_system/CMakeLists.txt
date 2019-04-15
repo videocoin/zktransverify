@@ -12,6 +12,7 @@ set(THIRDPARTY_DIR ${PROJECT_SOURCE_DIR}/thirdparty)
 
 include_directories(
         ${PROJECT_SOURCE_DIR}
+        ${THIRDPARTY_DIR}/dependencies/include
         ${THIRDPARTY_DIR}/libsnark
         ${THIRDPARTY_DIR}/libsnark/depends/libff
         ${THIRDPARTY_DIR}/libsnark/depends/libfqfft
@@ -25,5 +26,6 @@ link_directories(
 
 link_libraries(-lsnark -lff -lzm -lgmp -lgmpxx)
 
-add_executable(proof_keygen key_generator/main.cpp common/utility.cpp)
-add_executable(proof_verifier verifier/main.cpp common/utility.cpp)
+add_executable(keygen key_generator/main.cpp common/utility.cpp)
+add_executable(verifier verifier/main.cpp common/utility.cpp)
+add_library(prover prover/prover.cpp prover/computation_prover.cpp)

@@ -202,7 +202,7 @@ int main(int argc, char *argv[]) {
     struct comp_params p = parse_params(params.c_str());
 
     mpz_t prime;
-    mpz_init_set_str(prime, "21888242871839275222246405745257275088548364400416034343698204186575808495617", 10);
+    mpz_init_set_str(prime, prime_str, 10);
 
     if (!strcmp(argv[1], "ssim") || !strcmp(argv[1], "mb16x16")) {
         if (argc != 4 && argc != 5) {
