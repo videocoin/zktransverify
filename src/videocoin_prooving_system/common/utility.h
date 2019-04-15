@@ -31,5 +31,7 @@ void alloc_init_vec(mpq_t **arr, uint32_t size);
 void clear_del_vec(mpz_t* vec, const uint32_t n);
 void clear_del_vec(mpq_t* vec, const uint32_t n);
 
+void assert_zero(int value);
+
 #endif //COMP_DEFS_H
 

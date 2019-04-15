@@ -15,7 +15,7 @@
 
 //We need the implementation of some database functions here
 //The code in compiler/cstdinc is compiled by zcc as well.
-#include "../compiler/cstdinc/db.h"
+//#include "../compiler/cstdinc/db.h"
 
 //Use the same library implementation of commitment generation that the
 //apps use

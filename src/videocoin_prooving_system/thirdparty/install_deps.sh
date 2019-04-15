@@ -9,6 +9,15 @@ ln -sf $DEPS_DIR/lib $DEPS_DIR/lib64
 
 TAR="tar xvzf"
 
+# papi
+echo "installing PAPI"
+$TAR papi-5.4.1.tar.gz
+cd papi-5.4.1/src
+./configure --prefix=$DEPS_DIR
+make
+make install
+cd $UP
+
 #Kyoto Cabinet
 echo "installing Kyoto Cabinet"
 $TAR kyotocabinet-1.2.76.tar.gz
@@ -28,8 +37,6 @@ make
 cp --preserve=links libleveldb.* $DEPS_DIR/lib
 cp -r include/leveldb $DEPS_DIR/include
 cd $UP
-
-exit
 
 #libsnark
 echo "installing libsnark"

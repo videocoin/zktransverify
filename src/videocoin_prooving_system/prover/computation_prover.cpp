@@ -21,7 +21,7 @@
 #include <storage/gghA.h>
 
 // TODO: Remove this
-#define FOLDER_STATE "./prover_verifier_shared"
+#define FOLDER_STATE "./temp/prover_verifier_shared"
 
 #define NUM_COMMITMENT_CHUNKS 32
 const int NUM_COMMITMENT_BITS = NUM_COMMITMENT_CHUNKS*8;

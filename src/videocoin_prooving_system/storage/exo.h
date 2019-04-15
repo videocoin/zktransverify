@@ -8,7 +8,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 
-#include <include/db.h>
+#include <storage/db.h>
 #include <storage/merkle_ram.h>
 #include <storage/hasher.h>
 #include <storage/hash_block_store.h>

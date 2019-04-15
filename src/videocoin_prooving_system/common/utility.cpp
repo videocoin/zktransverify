@@ -74,3 +74,7 @@ void clear_del_vec(mpz_t* vec, const uint32_t n) {
         mpz_clear(vec[i]);
     delete[] vec;
 }
+
+void assert_zero(int value) {
+    assert(value == 0);
+}

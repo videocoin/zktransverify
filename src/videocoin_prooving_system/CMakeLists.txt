@@ -19,6 +19,7 @@ include_directories(
 )
 
 link_directories(
+        ${THIRDPARTY_DIR}/dependencies/lib
         ${THIRDPARTY_DIR}/libsnark/build/libsnark
         ${THIRDPARTY_DIR}/libsnark/build/depends
         ${THIRDPARTY_DIR}/libsnark/build/depends/libff/libff
@@ -26,6 +27,30 @@ link_directories(
 
 link_libraries(-lsnark -lff -lzm -lgmp -lgmpxx)
 
+add_definitions(-DDB_NUM_ADDRESSES=1024)
+add_definitions(-DRAM_CELL_NUM_BITS=32)
+add_definitions(-DDB_HASH_NUM_BITS=1216)
+
 add_executable(keygen key_generator/main.cpp common/utility.cpp)
 add_executable(verifier verifier/main.cpp common/utility.cpp)
-add_library(prover prover/prover.cpp prover/computation_prover.cpp)
+add_library(
+        prover
+        STATIC
+
+        prover/prover.cpp
+        prover/computation_prover.cpp
+        common/utility.cpp
+        common/waksman_router.cpp
+        common/measurement.cpp
+        storage/configurable_block_store.cpp
+        storage/ram_impl.cpp
+        storage/leveldb_block_store.cpp
+        storage/ggh_hash.cpp
+        storage/exo.cpp
+        storage/hasher.cpp
+)
+target_link_libraries(prover  -lkyotocabinet -lpapi -lleveldb)
+
+add_executable(prover_example prover_example/example.cpp)
+
+target_link_libraries(prover_example prover)
