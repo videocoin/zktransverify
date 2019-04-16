@@ -22,7 +22,6 @@ class HashBlockStore;
 
 class ComputationProver {
 protected:
-    std::string shared_bstore_file_name;
 
     uint32_t *F1_index;
     int temp_stack_size;
@@ -34,15 +33,10 @@ protected:
     mpq_t temp_q, temp_q2, temp_q3;
     int size_input, size_output, size_f1_vec;
 
-    // folder path where blockstore is created/stored
-    char bstore_file_path[BUFLEN];
-
-
     MerkleRAM *_ram;
     HashBlockStore *_blockStore;
 
     void init_block_store();
-
 
     mpq_t& voc(const char*, mpq_t& use_if_constant);
     void compute_poly(FILE* pws_file, int);
@@ -76,7 +70,10 @@ protected:
 public:
 
     ComputationProver(int _num_vars, int _num_cons, int _size_input, int _size_output,
-                      mpz_t _prime, const char *_shared_bstore_file_name, std::string input_file, bool only_setup);
+                      mpz_t _prime, std::string input_file, bool only_setup);
+
+    ComputationProver(int _num_vars, int _num_cons, int _size_input, int _size_output,
+                      mpz_t _prime, const std::vector<double> &input_vector);
 
     ~ComputationProver();
     void compute_from_pws(const char* pws_filename);

@@ -20,8 +20,6 @@
 #include <storage/ram_impl.h>
 #include <storage/gghA.h>
 
-// TODO: Remove this
-#define FOLDER_STATE "./temp/prover_verifier_shared"
 
 #define NUM_COMMITMENT_CHUNKS 32
 const int NUM_COMMITMENT_BITS = NUM_COMMITMENT_CHUNKS*8;
@@ -30,9 +28,8 @@ using namespace std;
 
 ComputationProver::
 ComputationProver(int _num_vars, int _num_cons, int _size_input, int _size_output,
-                  mpz_t _prime, const char *_shared_bstore_file_name, string inputFilename, bool only_setup) :
-        size_input(_size_input), size_output(_size_output), num_vars(_num_vars), num_cons(_num_cons),
-        shared_bstore_file_name(string(_shared_bstore_file_name)) {
+                  mpz_t _prime, string inputFilename, bool only_setup) :
+        size_input(_size_input), size_output(_size_output), num_vars(_num_vars), num_cons(_num_cons) {
 
     init_block_store();
     if (only_setup) {
@@ -74,6 +71,46 @@ ComputationProver(int _num_vars, int _num_cons, int _size_input, int _size_outpu
         inputFile >> input_q[i];
     }
 
+}
+
+ComputationProver::ComputationProver(
+        int _num_vars, int _num_cons, int _size_input, int _size_output,
+        mpz_t _prime, const std::vector<double> &input_vector)
+        : size_input(_size_input),
+        size_output(_size_output),
+        num_vars(_num_vars),
+        num_cons(_num_cons)
+{
+
+    init_block_store();
+
+    size_f1_vec = num_vars;
+    mpz_init_set(prime, _prime);
+    alloc_init_vec(&F1, size_f1_vec);
+    alloc_init_vec(&F1_q, size_f1_vec);
+
+    F1_index = new uint32_t[size_f1_vec];
+    for (int i = 0; i < size_f1_vec; i++)
+        F1_index[i] = i;
+
+    alloc_init_vec(&input_output_q, size_input + size_output);
+    input_q = &input_output_q[0];
+    output_q = &input_output_q[size_input];
+
+    alloc_init_vec(&input_output, size_input + size_output);
+    input = &input_output[0];
+    output = &input_output[size_input];
+    temp_stack_size = 16;
+    alloc_init_vec(&temp_qs, temp_stack_size);
+
+    alloc_init_scalar(temp);
+    alloc_init_scalar(temp2);
+    alloc_init_scalar(temp_q);
+    alloc_init_scalar(temp_q2);
+
+    for (int i = 0; i < size_input; i++) {
+        mpq_set_d(input_q[i], input_vector[i]);
+    }
 }
 
 
@@ -206,15 +243,22 @@ static std::vector<std::string> execute_command(char *cmd, const char *arg, std:
 }
 
 void ComputationProver::init_block_store() {
-    snprintf(bstore_file_path, BUFLEN - 1, "%s/block_stores", FOLDER_STATE);
-    mkdir(bstore_file_path, S_IRWXU);
+    if (const char* env_p = std::getenv("VIDEOCOIN_ENV")) {
+        std::string store_dir(env_p);
+        store_dir += "/block_store";
 
-    // the name of the block store is shared between the verifier and the prover.
-    char bstore_file_path_priv[BUFLEN];
-    snprintf(bstore_file_path_priv, BUFLEN - 1, "%s/prover_%s", bstore_file_path, shared_bstore_file_name.c_str());
-    string bstore_file_path_priv_str(bstore_file_path_priv);
-    _blockStore = new ConfigurableBlockStore(bstore_file_path_priv_str);
-    _ram = new RAMImpl(_blockStore);
+        mkdir(store_dir.c_str(), S_IRWXU);
+        // the name of the block store is shared between the verifier and the prover.
+        std::string bstore_file_path_priv(store_dir);
+        bstore_file_path_priv += "/prover_";
+        bstore_file_path_priv += SHARED_BSTORE_FN;
+
+        _blockStore = new ConfigurableBlockStore(bstore_file_path_priv);
+        _ram = new RAMImpl(_blockStore);
+    } else {
+        std::cerr << "Environment variable VIDEOCOIN_ENV is not set" << std::endl;
+        exit(-1);
+    }
 }
 
 void ComputationProver::compute_poly(FILE *pws_file, int tempNum) {
