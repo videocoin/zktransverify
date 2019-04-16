@@ -197,7 +197,8 @@ int main(int argc, char *argv[]) {
         exit(1);
     }
 
-    std::string app_path = std::string("./apps/") + std::string(argv[1]) + "/";
+    initialize_env();
+    std::string app_path = application_dir + std::string(argv[1]) + "/";
     std::string params = app_path + "params";
     struct comp_params p = parse_params(params.c_str());
 

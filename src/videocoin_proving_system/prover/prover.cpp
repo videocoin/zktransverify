@@ -15,8 +15,6 @@
 
 #include "computation_prover.h"
 
-std::string application_dir;
-
 void generate_proof_internal(const comp_params &p,
                              const char *pws_fn,
                              libsnark::r1cs_ppzksnark_proving_key<libsnark::default_r1cs_ppzksnark_pp> &pk,
@@ -26,13 +24,7 @@ void generate_proof_internal(const comp_params &p,
 
 void initialize_prover()
 {
-    if (const char* env_p = std::getenv("VIDEOCOIN_ENV")) {
-        application_dir = env_p;
-        application_dir += "/apps/";
-    } else {
-        std::cerr << "ERROR: Environment variable VIDEOCOIN_ENV is not set" << std::endl;
-        exit(-1);
-    }
+    initialize_env();
     libsnark::default_r1cs_ppzksnark_pp::init_public_params();
 }
 
