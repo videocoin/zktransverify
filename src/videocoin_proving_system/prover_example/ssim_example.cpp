@@ -4,6 +4,8 @@
 
 #include "prover/prover.h"
 #include "ssim.h"
+#include "h264_ssim_from_prover.h"
+#include "h264_ssim_original.h"
 #include <png.h>
 #include <cstdlib>
 
@@ -171,9 +173,26 @@ int main(int argc, char *argv[]) {
 
     initialize_prover();
     generate_ssim_proof(argv[3], src.y_buffer, dest.y_buffer, argv[4], argv[5], ssim);
-    printf("ssimp: %f\n", ssim);
-//    generate_ssim_proof("temp/p.key", "temp/inputs.txt", "temp/outputs.txt", "temp/ssim.proof");
+    printf("\n\nArithmetic circuit\n");
+    printf("ssim: %f\n", ssim);
 
+    printf("\n\nFrom Pepper\n");
+    In in;
+    Out out;
+    memcpy(in.pix1, src.y_buffer, sizeof(in.pix1));
+    memcpy(in.pix2, dest.y_buffer, sizeof(in.pix2));
+
+    h264_ssim_compute(&in, &out);
+    ssim = out.ssim / 0x10000;
+    ssim /= out.counter;
+    printf("ssim: %f\n", ssim);
+
+    printf("\n\nOriginal h264 implementation\n");
+    int counter;
+    ssim = x264_pixel_ssim_wxh(src.y_buffer, 16, dest.y_buffer, 16, 16, 16, &counter);
+    printf("ssim: %f\n", ssim/counter);
+
+    printf("\n\nOther implementations\n");
 
     double ssim_y;
     double ssim_u;
