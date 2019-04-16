@@ -52,6 +52,6 @@ add_library(
 )
 target_link_libraries(prover  -lkyotocabinet -lpapi -lleveldb)
 
-add_executable(prover_example prover_example/example.cpp)
+add_executable(prover_example prover_example/ssim_example.cpp prover_example/ssim.cpp)
 
-target_link_libraries(prover_example prover)
+target_link_libraries(prover_example prover -lpng)

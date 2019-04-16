@@ -22,10 +22,51 @@ void generate_proof_internal(const comp_params &p,
                              std::vector<double> &output,
                              libsnark::r1cs_ppzksnark_proof<libsnark::default_r1cs_ppzksnark_pp> &proof);
 
-void initialize_prover()
-{
+void initialize_prover() {
     initialize_env();
     libsnark::default_r1cs_ppzksnark_pp::init_public_params();
+}
+
+void generate_ssim_proof(const char *pk_fn, const unsigned char *src_luma1, const unsigned char *src_luma2,
+                          const char *output_fn, const char *proof_fn, double &ssim) {
+    std::string app_path = application_dir + "ssim/";
+    std::string params = app_path + "params";
+    std::string pws = app_path + "pws";
+    struct comp_params p = parse_params(params.c_str());
+
+    std::ifstream pkey(pk_fn);
+    if (!pkey.is_open()) {
+        std::cerr << "ERROR: " << pk_fn << " not found." << std::endl;
+        exit(-1);
+    }
+
+    libsnark::r1cs_ppzksnark_proving_key<libsnark::default_r1cs_ppzksnark_pp> pk;
+    std::cout << "reading proving key from file..." << std::endl;
+    pkey >> pk;
+
+    std::vector<double> input;
+    std::vector<double> output;
+
+    for (int i = 0; i < p.n_inputs; ++i) {
+        input.emplace_back(i < p.n_inputs / 2 ? src_luma1[i] : src_luma2[i]);
+    }
+
+    libsnark::r1cs_ppzksnark_proof<libsnark::default_r1cs_ppzksnark_pp> proof;
+
+    generate_proof_internal(p, pws.c_str(), pk, input, output, proof);
+
+    std::ofstream proof_file(proof_fn);
+    proof_file << proof;
+    proof_file.close();
+
+    std::ofstream output_file(output_fn);
+    for (int i = 0; i < p.n_outputs; i++) {
+        output_file << (unsigned) output[i] << std::endl;
+    }
+    output_file.close();
+
+    ssim = output[1] / 0x10000;
+    ssim /= output[2];
 }
 
 void generate_ssim_proof(const char *pk_fn, const char *input_fn, const char *output_fn, const char *proof_fn) {
@@ -67,7 +108,7 @@ void generate_ssim_proof(const char *pk_fn, const char *input_fn, const char *ou
 
     std::ofstream output_file(output_fn);
     for (int i = 0; i < p.n_outputs; i++) {
-        output_file << (unsigned)output[i] << std::endl;
+        output_file << (unsigned) output[i] << std::endl;
     }
     output_file.close();
 }
