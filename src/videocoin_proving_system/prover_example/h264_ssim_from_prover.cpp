@@ -3,6 +3,9 @@
 //
 
 #include "h264_ssim_from_prover.h"
+#include <cstdio>
+#include <fstream>
+#include <iomanip>
 
 typedef signed char int8_t;
 typedef short int int16_t;
@@ -100,6 +103,8 @@ ufix_t ufix_ceil(ufix_t val){
 }
 
 int buf[1024];
+static std::ofstream o("temp/ported");
+
 void ssim_4x4x2_core( const unsigned char *pix1, const unsigned char *pix2, int *sums )
 {
     int z, y, x;
@@ -127,16 +132,30 @@ void ssim_4x4x2_core( const unsigned char *pix1, const unsigned char *pix2, int 
         pix2 += 4;
     }
 }
+
 ufix_t ssim_end1( int s1, int s2, int ss, int s12 )
 {
+    o << s1 << " " << s2 << " " << ss << " " << s12 << "\n";
     int vars = ss*64 - s1*s1 - s2*s2;
     int covar = s12*64 - s1*s2;
-    ufix_t a = uint_to_ufix(2 * s1 * s2 + 416);
-    ufix_t b = uint_to_ufix(2 * covar + 235963);
-    ufix_t c = uint_to_ufix(s1*s1 + s2*s2 + 416);
-    ufix_t d = uint_to_ufix(vars + 235963);
-    return ufix_div(ufix_mul(a, b), ufix_mul(c, d));
+    o << vars << " " << covar << "\n";
+
+    uint64_t a = (2 * s1 * s2 + 416);
+    uint64_t b = (2 * covar + 235963);
+    uint64_t c = (s1*s1 + s2*s2 + 416);
+    uint64_t d = (vars + 235963);
+    uint64_t e = (a * b);
+    uint64_t f = (c * d);
+    e >>= 32;
+    f >>= 32;
+
+    o  << a << " " << b << " " << c << " " << d << " " << e << " " << f << "\n";
+    ufix_t res = ufix_div(e, f);
+    o << ((float)res / 65536.0) << "\n";
+
+    return res;
 }
+
 ufix_t ssim_end4( int *sum0, int *sum1, int width )
 {
     fix_t ssim = 0;
@@ -158,6 +177,7 @@ void h264_ssim_compute(struct In *input, struct Out *output) {
     unsigned int width = 16 >> 2;
     unsigned int height = 16 >> 2;
     int y, x;
+
     for (y = 1; y < height; y++)
     {
         for( ; z <= y; z++ )
@@ -167,14 +187,17 @@ void h264_ssim_compute(struct In *input, struct Out *output) {
             sum1 = temp;
             for (x = 0; x < width; x+=2 )
             {
-                ssim_4x4x2_core(input->pix1 + (4 * (x + z * 16)), input->pix2 + (4 * (x + z * 16)), sum0 + x);
+                ssim_4x4x2_core(input->pix1 + (4 * (x + z * 16)), input->pix2 + (4 * (x + z * 16)), sum0 + x * 4);
             }
         }
         for (x = 0; x < width-1; x += 4 )
         {
             ssim += ssim_end4(sum0 + x, sum1 + x, ( (4)<(width - x - 1) ? (4) : (width - x - 1) ));
         }
+        o << "ssim: " << ((float)ssim / 65536.0) << "\n";
     }
+    o << "ssim2: " << ((float)ssim / 65536.0) << "\n";
+
     output->ssim = ssim;
     output->counter = (height - 1) * (width - 1);
 }

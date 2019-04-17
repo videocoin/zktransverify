@@ -153,6 +153,7 @@ void png_to_YV12(png_bytep *row_pointers, png_bytep *row_pointers2, YV12_BUFFER_
     }
 }
 
+#include <fstream>
 
 int main(int argc, char *argv[]) {
     if (argc != 6) {
@@ -171,26 +172,31 @@ int main(int argc, char *argv[]) {
 
     double ssim;
 
+    ///////////////////////////////////////////////////////////////////////////////////
+    // Calculate SSIM using prover library.
+
     initialize_prover();
     generate_ssim_proof(argv[3], src.y_buffer, dest.y_buffer, argv[4], argv[5], ssim);
-    printf("\n\nArithmetic circuit\n");
+    printf("\n\nArithmetic based SSIM\n");
     printf("ssim: %f\n", ssim);
 
-    printf("\n\nFrom Pepper\n");
-    In in;
-    Out out;
+    ///////////////////////////////////////////////////////////////////////////////////
+    // Calculate SSIM using h264 implementation
+
+    printf("\n\nh264 based SSIM\n");
+    int counter;
+    ssim = x264_pixel_ssim_wxh(src.y_buffer, 16, dest.y_buffer, 16, 16, 16, &counter);
+    printf("ssim: %f\n", ssim/counter);
+
+    printf("\n\nPepper based SSIM\n");
+    In in; Out out;
     memcpy(in.pix1, src.y_buffer, sizeof(in.pix1));
     memcpy(in.pix2, dest.y_buffer, sizeof(in.pix2));
 
     h264_ssim_compute(&in, &out);
-    ssim = out.ssim / 0x10000;
+    ssim = (float)out.ssim / 65536.0;
     ssim /= out.counter;
     printf("ssim: %f\n", ssim);
-
-    printf("\n\nOriginal h264 implementation\n");
-    int counter;
-    ssim = x264_pixel_ssim_wxh(src.y_buffer, 16, dest.y_buffer, 16, 16, 16, &counter);
-    printf("ssim: %f\n", ssim/counter);
 
     printf("\n\nOther implementations\n");
 

@@ -2,11 +2,15 @@
 // Created by taras on 16.04.19.
 //
 #include "h264_ssim_original.h"
+#include <cstdio>
+#include <fstream>
+#include <iomanip>
 
 #define X264_MIN(a,b) ( (a)<(b) ? (a) : (b) )
 #define PIXEL_MAX 255
 
-pixel buff[1024];
+static std::ofstream o("temp/original");
+int buff[1024];
 
 /****************************************************************************
  * structural similarity metric
@@ -52,14 +56,30 @@ static float ssim_end1( int s1, int s2, int ss, int s12 )
     static const int ssim_c1 = (int)(.01*.01*PIXEL_MAX*PIXEL_MAX*64 + .5);
     static const int ssim_c2 = (int)(.03*.03*PIXEL_MAX*PIXEL_MAX*64*63 + .5);
 #endif
+
+    o << s1 << " " << s2 << " " << ss << " " << s12 << "\n";
+
     type fs1 = s1;
     type fs2 = s2;
     type fss = ss;
     type fs12 = s12;
     type vars = fss*64 - fs1*fs1 - fs2*fs2;
     type covar = fs12*64 - fs1*fs2;
-    return (float)(2*fs1*fs2 + ssim_c1) * (float)(2*covar + ssim_c2)
-           / ((float)(fs1*fs1 + fs2*fs2 + ssim_c1) * (float)(vars + ssim_c2));
+
+    o << vars << " " << covar << "\n";
+
+    type a = (2*fs1*fs2 + ssim_c1);
+    type b = (2*covar + ssim_c2);
+    type c = (fs1*fs1 + fs2*fs2 + ssim_c1);
+    type d = (vars + ssim_c2);
+    float e = (float)a * (float)b;
+    float f = (float)c * (float)d;
+    float res = e/f;
+
+    o << std::fixed << std::setprecision(0) << a << " " << b << " " << c << " " << d << " " << e << " " << f << "\n";
+
+    o << std::setprecision(6) << res << "\n";
+    return res;
 #undef type
 }
 
@@ -85,6 +105,7 @@ float x264_pixel_ssim_wxh(
     int (*sum1)[4] = sum0 + (width >> 2) + 3;
     width >>= 2;
     height >>= 2;
+
     for( int y = 1; y < height; y++ )
     {
         for( ; z <= y; z++ )
@@ -94,12 +115,17 @@ float x264_pixel_ssim_wxh(
             sum0 = sum1;
             sum1 = (int (*)[4])temp;
 
-            for( int x = 0; x < width; x+=2 )
-                ssim_4x4x2_core( &pix1[4*(x+z*stride1)], stride1, &pix2[4*(x+z*stride2)], stride2, &sum0[x] );
+            for( int x = 0; x < width; x+=2 ) {
+                ssim_4x4x2_core(&pix1[4 * (x + z * stride1)], stride1, &pix2[4 * (x + z * stride2)], stride2, &sum0[x]);
+            }
         }
-        for( int x = 0; x < width-1; x += 4 )
-            ssim += ssim_end4( sum0+x, sum1+x, X264_MIN(4,width-x-1) );
+
+        for( int x = 0; x < width-1; x += 4 ) {
+            ssim += ssim_end4(sum0 + x, sum1 + x, X264_MIN(4, width - x - 1));
+        }
+        o << "ssim: " << ssim << "\n";
     }
+    o << "ssim2: " << ssim << "\n";
     *cnt = (height-1) * (width-1);
     return ssim;
 }

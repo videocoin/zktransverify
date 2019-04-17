@@ -57,23 +57,37 @@ void ssim_4x4x2_core( const pixel *pix1, const pixel *pix2, int *sums )
     }
 }
 
+uint64_t expr(uint64_t e)
+{
+    return e;
+}
+
 ufix_t ssim_end1( int s1, int s2, int ss, int s12 )
 {
     int vars = ss*64 - s1*s1 - s2*s2;
     int covar = s12*64 - s1*s2;
-    ufix_t a = uint_to_ufix(2 * s1 * s2 + SSIM_C1);
-    ufix_t b = uint_to_ufix(2 * covar + SSIM_C2);
-    ufix_t c = uint_to_ufix(s1*s1 + s2*s2 + SSIM_C1);
-    ufix_t d = uint_to_ufix(vars + SSIM_C2);
+    uint64_t a = expr(2 * s1 * s2 + SSIM_C1);
+    uint64_t b = expr(2 * covar + SSIM_C2);
+    uint64_t c = expr(s1*s1 + s2*s2 + SSIM_C1);
+    uint64_t d = expr(vars + SSIM_C2);
+    uint64_t e = expr(a * b);
+    uint64_t f = expr(c * d);
 
-    return ufix_div(ufix_mul(a, b), ufix_mul(c, d));
+    // WARNING: Till this line of code calculations are precise
+    // next operation should be division.
+    // In order to not lose precision in particular case the best
+    // option to have uint128_t type which is not supported by compiler
+    // in current situation we have to sacrifice precision
+    e >>= 32;
+    f >>= 32;
+
+    return ufix_div(e, f);
 }
 
 ufix_t ssim_end4( int *sum0, int *sum1, int width )
 {
     fix_t ssim = 0;
     int i = 0;
-//    int k = 4;
     for (i = 0; i < width; i++)
     {
         ssim += ssim_end1(sum0[i * 4 + 0] + sum0[(i + 1) * 4 + 0] + sum1[i * 4 + 0] + sum1[(i + 1) * 4 + 0],
