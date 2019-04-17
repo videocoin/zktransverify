@@ -106,7 +106,7 @@ void compute(struct In *input, struct Out *output) {
 
             for (x = 0; x < width; x+=2 )
             {
-                ssim_4x4x2_core(input->pix1 + (4 * (x + z * STRIDE)), input->pix2 + (4 * (x + z * STRIDE)), sum0 + x);
+                ssim_4x4x2_core(input->pix1 + (4 * (x + z * STRIDE)), input->pix2 + (4 * (x + z * STRIDE)), sum0 + x * 4);
             }
         }
 
