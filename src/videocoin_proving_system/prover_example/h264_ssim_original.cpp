@@ -68,12 +68,12 @@ static float ssim_end1( int s1, int s2, int ss, int s12 )
 
     o << vars << " " << covar << "\n";
 
-    type a = (2*fs1*fs2 + ssim_c1);
-    type b = (2*covar + ssim_c2);
-    type c = (fs1*fs1 + fs2*fs2 + ssim_c1);
-    type d = (vars + ssim_c2);
-    float e = (float)a * (float)b;
-    float f = (float)c * (float)d;
+    float a = (2*fs1*fs2 + ssim_c1);
+    float b = (2*covar + ssim_c2);
+    float c = (fs1*fs1 + fs2*fs2 + ssim_c1);
+    float d = (vars + ssim_c2);
+    float e = a * b;
+    float f = c * d;
     float res = e/f;
 
     o << std::fixed << std::setprecision(0) << a << " " << b << " " << c << " " << d << " " << e << " " << f << "\n";
