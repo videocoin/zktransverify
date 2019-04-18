@@ -15,7 +15,9 @@
 
 
 #define pixel unsigned char
-#define X264_MIN(a,b) ( (a)<(b) ? (a) : (b) )
+#define MIN(a,b) ( (a)<(b) ? (a) : (b) )
+#define MAX(a,b) ( (a)>(b) ? (a) : (b) )
+#define ABS(v) ( (v)>(0) ? (v) : (-v) )
 
 struct In {
     pixel pix1[WIDTH * HEIGHT];
@@ -23,7 +25,7 @@ struct In {
 };
 
 struct Out {
-    ufix_t ssim;
+    fix_t ssim;
     unsigned int counter;
 };
 
@@ -57,21 +59,45 @@ void ssim_4x4x2_core( const pixel *pix1, const pixel *pix2, int *sums )
     }
 }
 
-ufix_t ssim_end1( int s1, int s2, int ss, int s12 )
+// Initializes a value with an expression.
+// Otherwise compiler wont work.
+int64_t expr(int64_t value)
+{
+    return value;
+}
+
+fix_t ssim_end1( int s1, int s2, int ss, int s12 )
 {
     int vars = ss*64 - s1*s1 - s2*s2;
     int covar = s12*64 - s1*s2;
-    ufix_t a = uint_to_ufix(2 * s1 * s2 + SSIM_C1);
-    ufix_t b = uint_to_ufix(2 * covar + SSIM_C2);
-    ufix_t c = uint_to_ufix(s1*s1 + s2*s2 + SSIM_C1);
-    ufix_t d = uint_to_ufix(vars + SSIM_C2);
+    int64_t a = expr(2 * s1 * s2 + SSIM_C1);
+    int64_t b = expr(2 * covar + SSIM_C2);
+    int64_t c = expr(s1*s1 + s2*s2 + SSIM_C1);
+    int64_t d = expr(vars + SSIM_C2);
+    int64_t e = expr(a * b);
+    int64_t f = expr(c * d);
 
-    return ufix_div(ufix_mul(a, b), ufix_mul(c, d));
+    // WARNING: Till this line of code calculations are precise
+    // next operation should be fixed point dividing to preserve fraction.
+    // Dividing of two int64 values requires int128 scalar type which
+    // is not supported by compiler.
+    //
+    // `ssim_end1` function produces ratio between sums.
+    // So we can reduce both values in order to fit into int32 value.
+
+    int64_t temp = expr(MAX(ABS(e), ABS(f)));
+    if (temp > 0x100000000) {
+        e /= 0x100000000;
+        f /= 0x100000000;
+    }
+
+    // Calculate the ratio.
+    return fix_div(e, f);
 }
 
-ufix_t ssim_end4( int *sum0, int *sum1, int width )
+fix_t ssim_end4( int *sum0, int *sum1, int width )
 {
-    ufix_t ssim = 0;
+    fix_t ssim = 0;
     int i = 0;
     for (i = 0; i < width; i++)
     {
@@ -85,7 +111,7 @@ ufix_t ssim_end4( int *sum0, int *sum1, int width )
 
 void compute(struct In *input, struct Out *output) {
     int z = 0;
-    ufix_t ssim = 0;
+    fix_t ssim = 0;
 
     int *sum0 = buf;
     int *sum1 = sum0 + ((WIDTH >> 2) + 3) * 4;
@@ -111,7 +137,7 @@ void compute(struct In *input, struct Out *output) {
 
         for (x = 0; x < width-1; x += 4 )
         {
-            ssim += ssim_end4(sum0 + x, sum1 + x, X264_MIN(4, width - x - 1));
+            ssim += ssim_end4(sum0 + x, sum1 + x, MIN(4, width - x - 1));
         }
     }
 
