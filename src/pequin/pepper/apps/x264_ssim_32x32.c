@@ -137,7 +137,7 @@ void compute(struct In *input, struct Out *output) {
 
         for (x = 0; x < width-1; x += 4 )
         {
-            ssim += ssim_end4(sum0 + x, sum1 + x, MIN(4, width - x - 1));
+            ssim += ssim_end4(sum0 + x * 4, sum1 + x * 4, MIN(4, width - x - 1));
         }
     }
 
