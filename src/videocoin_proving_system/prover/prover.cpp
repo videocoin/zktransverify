@@ -47,8 +47,11 @@ void generate_ssim_proof(const char *pk_fn, const unsigned char *src_luma1, cons
     std::vector<double> input;
     std::vector<double> output;
 
-    for (int i = 0; i < p.n_inputs; ++i) {
-        input.emplace_back(i < p.n_inputs / 2 ? src_luma1[i] : src_luma2[i]);
+    for (int i = 0; i < p.n_inputs/2; ++i) {
+        input.emplace_back(src_luma1[i]);
+    }
+    for (int i = 0; i < p.n_inputs/2; ++i) {
+        input.emplace_back(src_luma2[i]);
     }
 
     libsnark::r1cs_ppzksnark_proof<libsnark::default_r1cs_ppzksnark_pp> proof;
