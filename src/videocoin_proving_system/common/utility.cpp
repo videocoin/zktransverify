@@ -6,6 +6,7 @@
 #include <iostream>
 #include <fstream>
 #include <assert.h>
+#include <cstring>
 
 comp_params parse_params(const char *params_filename) {
     std::ifstream param_file(params_filename);
@@ -19,6 +20,32 @@ comp_params parse_params(const char *params_filename) {
     param_file.close();
 
     return comp_params{num_constraints, num_inputs, num_outputs, num_vars};
+}
+
+std::string ssim_mode::str() const {
+    switch (_value) {
+        case _x16   :
+            return "ssim16x16";
+        case _x32   :
+            return "ssim32x32";
+        case _x64   :
+            return "ssim64x64";
+        default:
+            return "invalid";
+    }
+}
+
+ssim_mode ssim_mode::from_str(const char *v) {
+    if (!strcmp("ssim16x16", v)) {
+        return ssim_mode(value::_x16);
+    }
+    if (!strcmp("ssim32x32", v)) {
+        return ssim_mode(value::_x32);
+    }
+    if (!strcmp("ssim64x64", v)) {
+        return ssim_mode(value::_x64);
+    }
+    return ssim_mode();
 }
 
 void convert_to_z(const int size, mpz_t *z, const mpq_t *q, const mpz_t prime) {

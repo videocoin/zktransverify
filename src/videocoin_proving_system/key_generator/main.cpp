@@ -197,15 +197,17 @@ int main(int argc, char *argv[]) {
         exit(1);
     }
 
+    ssim_mode mode = ssim_mode::from_str(argv[1]);
+
     initialize_env();
-    std::string app_path = application_dir + std::string(argv[1]) + "/";
+    std::string app_path = application_dir + mode.str() + "/";
     std::string params = app_path + "params";
     struct comp_params p = parse_params(params.c_str());
 
     mpz_t prime;
     mpz_init_set_str(prime, prime_str, 10);
 
-    if (!strcmp(argv[1], "ssim16x16") || !strcmp(argv[1], "mb16x16")) {
+    if (mode.is_valid() || !strcmp(argv[1], "mb16x16")) {
         if (argc != 4 && argc != 5) {
             print_usage(argv);
             exit(1);

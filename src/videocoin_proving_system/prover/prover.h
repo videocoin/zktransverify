@@ -5,11 +5,7 @@
 #ifndef PROVER_H
 #define PROVER_H
 
-typedef enum {
-    x16 = 16,
-    x32 = 32,
-    x64 = 64
-} ssim_mode;
+#include <common/utility.h>
 
 void initialize_prover();
 

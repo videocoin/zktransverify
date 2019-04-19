@@ -78,15 +78,17 @@ int main(int argc, char *argv[]) {
         exit(1);
     }
 
+    ssim_mode mode = ssim_mode::from_str(argv[1]);
+
     initialize_env();
 
-    std::string params = application_dir + std::string(argv[1]) + "/params";
+    std::string params = application_dir + mode.str() + "/params";
     struct comp_params p = parse_params(params.c_str());
 
     mpz_t prime;
     mpz_init_set_str(prime, prime_str, 10);
 
-    if (!strcmp(argv[1], "ssim16x16") || !strcmp(argv[1], "mb16x16")) {
+    if (mode.is_valid() || !strcmp(argv[1], "mb16x16")) {
         std::string verification_key_fn = argv[2];
         std::string inputs_fn = argv[3];
         std::string outputs_fn = argv[4];

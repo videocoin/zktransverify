@@ -42,7 +42,7 @@ int main(int argc, char *argv[]) {
     inputs.close();
 
     initialize_prover();
-    generate_ssim_proof(ssim_mode::x16, argv[3], src.y_buffer, dest.y_buffer, argv[4], argv[5], ssim);
+    generate_ssim_proof(ssim_mode::x16(), argv[3], src.y_buffer, dest.y_buffer, argv[4], argv[5], ssim);
     printf("\n\nArithmetic based SSIM\n");
     printf("ssim16x16: %f\n", ssim);
 

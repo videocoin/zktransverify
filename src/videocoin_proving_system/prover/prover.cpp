@@ -10,13 +10,10 @@
 #include <libsnark/common/default_types/r1cs_ppzksnark_pp.hpp>
 #include <libsnark/zk_proof_systems/ppzksnark/r1cs_ppzksnark/r1cs_ppzksnark.hpp>
 
-#include <common/utility.h>
 #include <common/defs.h>
 
 #include "computation_prover.h"
 #include "prover.h"
-
-static std::string ssim_mode_to_str(ssim_mode c);
 
 static void generate_proof_internal(const comp_params &p,
                                     const char *pws_fn,
@@ -34,7 +31,7 @@ void generate_ssim_proof(ssim_mode mode, const char *pk_fn,
                          const unsigned char *src_luma1,
                          const unsigned char *src_luma2,
                          const char *output_fn, const char *proof_fn, double &ssim) {
-    std::string app_path = application_dir + ssim_mode_to_str(mode) + "/";
+    std::string app_path = application_dir + mode.str() + "/";
     std::string params = app_path + "params";
     std::string pws = app_path + "pws";
     comp_params p = parse_params(params.c_str());
@@ -114,16 +111,5 @@ void generate_proof_internal(const comp_params &p,
 
     for (int i = 0; i < p.n_outputs; i++) {
         output.emplace_back(mpq_get_d(prover.input_output_q[p.n_inputs + i]));
-    }
-}
-
-std::string ssim_mode_to_str(ssim_mode m) {
-    switch (m) {
-        case x16   :
-            return "ssim16x16";
-        case x32   :
-            return "ssim32x32";
-        case x64   :
-            return "ssim64x64";
     }
 }
