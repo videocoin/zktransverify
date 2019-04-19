@@ -2,7 +2,7 @@
 // Created by taras on 06.02.19.
 //
 
-#include "h264_ssim_from_prover.h"
+#include "h264_ssim16x16_from_prover.h"
 #include <cstdio>
 #include <fstream>
 #include <iomanip>
@@ -17,16 +17,16 @@ typedef unsigned long int uint64_t;
 typedef long int intptr_t;
 typedef int32_t fix_t;
 
-fix_t fix_div(fix_t a, fix_t b){
+static fix_t fix_div(fix_t a, fix_t b){
     int64_t quotient = ((int64_t)a) << 16;
     quotient /= b;
     return (fix_t)(quotient);
 }
 
-int buf[1024];
+static int buf[1024];
 static std::ofstream o("temp/ported");
 
-void ssim_4x4x2_core( const unsigned char *pix1, const unsigned char *pix2, int *sums )
+static void ssim_4x4x2_core( const unsigned char *pix1, const unsigned char *pix2, int *sums )
 {
     int z, y, x;
     for (z = 0; z < 2; z++ )
@@ -57,7 +57,7 @@ void ssim_4x4x2_core( const unsigned char *pix1, const unsigned char *pix2, int 
 #define ABS(v) ((v > 0) ? (v) : (-v))
 #define MAX(a, b) ((a) > (b) ? (a) : (b))
 
-fix_t ssim_end1( int s1, int s2, int ss, int s12 )
+static fix_t ssim_end1( int s1, int s2, int ss, int s12 )
 {
     o << s1 << " " << s2 << " " << ss << " " << s12 << "\n";
     int vars = ss*64 - s1*s1 - s2*s2;
@@ -83,7 +83,7 @@ fix_t ssim_end1( int s1, int s2, int ss, int s12 )
     return res;
 }
 
-fix_t ssim_end4( int *sum0, int *sum1, int width )
+static fix_t ssim_end4( int *sum0, int *sum1, int width )
 {
     fix_t ssim = 0;
     int i = 0;
@@ -96,7 +96,7 @@ fix_t ssim_end4( int *sum0, int *sum1, int width )
     }
     return ssim;
 }
-void h264_ssim_compute(struct In *input, struct Out *output) {
+void h264_ssim16x16_compute(struct In *input, struct Out *output) {
     int z = 0;
     fix_t ssim = 0;
     int *sum0 = buf;

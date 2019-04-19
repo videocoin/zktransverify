@@ -29,11 +29,12 @@ public:
     bool operator==(ssim_mode a) const { return _value == a._value; }
     bool operator!=(ssim_mode a) const { return _value != a._value; }
     bool is_valid() const { return _value != _invalid; }
+    bool is_16() const { return _value == _x16; }
+    bool is_32() const { return _value == _x32; }
+    bool is_64() const { return _value == _x64; }
+    int as_int() const { return _value; }
 
     static ssim_mode from_str(const char *v);
-    static ssim_mode x16() { return ssim_mode(value::_x16); }
-    static ssim_mode x32() { return ssim_mode(value::_x32); }
-    static ssim_mode x64() { return ssim_mode(value::_x64); }
 
     constexpr ssim_mode(value v) : _value(v) {}
     constexpr ssim_mode() : _value(value::_invalid) {}
@@ -43,7 +44,6 @@ private:
 };
 
 comp_params parse_params(const char *params_filename);
-std::string ssim_mode_to_str(ssim_mode c);
 
 void convert_to_z(mpz_t z, const mpq_t q, const mpz_t prime);
 void convert_to_z(const int size, mpz_t *z, const mpq_t *q, const mpz_t prime);

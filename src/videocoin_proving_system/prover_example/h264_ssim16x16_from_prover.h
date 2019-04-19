@@ -12,4 +12,4 @@ typedef struct Out {
     unsigned int counter;
 } Out;
 
-void h264_ssim_compute(struct In *input, struct Out *output);
+void h264_ssim16x16_compute(struct In *input, struct Out *output);
