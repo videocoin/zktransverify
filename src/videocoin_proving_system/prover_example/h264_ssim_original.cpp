@@ -123,7 +123,7 @@ float x264_pixel_ssim_wxh(
         for( int x = 0; x < width-1; x += 4 ) {
             ssim += ssim_end4(sum0 + x, sum1 + x, X264_MIN(4, width - x - 1));
         }
-        o << "ssim: " << ssim << "\n";
+        o << "ssim16x16: " << ssim << "\n";
     }
     o << "ssim2: " << ssim << "\n";
     *cnt = (height-1) * (width-1);

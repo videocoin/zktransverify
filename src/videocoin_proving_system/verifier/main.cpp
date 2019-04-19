@@ -11,7 +11,7 @@
 void print_usage(char *argv[]) {
     std::cout << "usage: " << std::endl
               << argv[0]
-              << " <ssim | mb16x16> <verification key file> <inputs file> <outputs file> <proof file>"
+              << " <ssim16x16 | mb16x16> <verification key file> <inputs file> <outputs file> <proof file>"
               << std::endl;
 }
 
@@ -86,7 +86,7 @@ int main(int argc, char *argv[]) {
     mpz_t prime;
     mpz_init_set_str(prime, prime_str, 10);
 
-    if (!strcmp(argv[1], "ssim") || !strcmp(argv[1], "mb16x16")) {
+    if (!strcmp(argv[1], "ssim16x16") || !strcmp(argv[1], "mb16x16")) {
         std::string verification_key_fn = argv[2];
         std::string inputs_fn = argv[3];
         std::string outputs_fn = argv[4];

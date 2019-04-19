@@ -12,7 +12,6 @@ typedef short int int16_t;
 typedef int int32_t;
 typedef long int int64_t;
 typedef unsigned char uint8_t;
-typedef unsigned short int uint16_t;
 typedef unsigned int uint32_t;
 typedef unsigned long int uint64_t;
 typedef long int intptr_t;
@@ -122,7 +121,7 @@ void h264_ssim_compute(struct In *input, struct Out *output) {
         {
             ssim += ssim_end4(sum0 + x, sum1 + x, ( (4)<(width - x - 1) ? (4) : (width - x - 1) ));
         }
-        o << "ssim: " << ((float)ssim / 65536.0) << "\n";
+        o << "ssim16x16: " << ((float)ssim / 65536.0) << "\n";
     }
     o << "ssim2: " << ((float)ssim / 65536.0) << "\n";
 

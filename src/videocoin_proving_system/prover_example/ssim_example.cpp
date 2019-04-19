@@ -42,9 +42,9 @@ int main(int argc, char *argv[]) {
     inputs.close();
 
     initialize_prover();
-    generate_ssim_proof(argv[3], src.y_buffer, dest.y_buffer, argv[4], argv[5], ssim);
+    generate_ssim_proof(ssim_mode::x16, argv[3], src.y_buffer, dest.y_buffer, argv[4], argv[5], ssim);
     printf("\n\nArithmetic based SSIM\n");
-    printf("ssim: %f\n", ssim);
+    printf("ssim16x16: %f\n", ssim);
 
     ///////////////////////////////////////////////////////////////////////////////////
     // Calculate SSIM using h264 implementation
@@ -52,7 +52,7 @@ int main(int argc, char *argv[]) {
     printf("\n\nh264 based SSIM\n");
     int counter;
     ssim = x264_pixel_ssim_wxh(src.y_buffer, 16, dest.y_buffer, 16, 16, 16, &counter);
-    printf("ssim: %f\n", ssim/counter);
+    printf("ssim16x16: %f\n", ssim/counter);
 
     printf("\n\nPepper based SSIM\n");
     In in; Out out;
@@ -62,7 +62,7 @@ int main(int argc, char *argv[]) {
     h264_ssim_compute(&in, &out);
     ssim = (float)out.ssim / 65536.0;
     ssim /= out.counter;
-    printf("ssim: %f\n", ssim);
+    printf("ssim16x16: %f\n", ssim);
 
     clear_YV12(src);
     clear_YV12(dest);
