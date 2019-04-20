@@ -20,7 +20,7 @@ static fix_t fix_div(fix_t a, fix_t b){
 }
 
 static int buf[1024];
-static std::ofstream o("temp/ported");
+
 static void ssim_4x4x2_core( const unsigned char *pix1, const unsigned char *pix2, int *sums )
 {
     int z, y, x;
@@ -54,10 +54,8 @@ static int64_t expr(int64_t value)
 }
 static fix_t ssim_end1( int s1, int s2, int ss, int s12 )
 {
-    o << s1 << " " << s2 << " " << ss << " " << s12 << "\n";
     int vars = ss*64 - s1*s1 - s2*s2;
     int covar = s12*64 - s1*s2;
-    o << vars << " " << covar << "\n";
 
     int64_t a = expr(2 * s1 * s2 + 416);
     int64_t b = expr(2 * covar + 235963);
@@ -70,9 +68,7 @@ static fix_t ssim_end1( int s1, int s2, int ss, int s12 )
         e /= 0x100000000;
         f /= 0x100000000;
     }
-    o  << a << " " << b << " " << c << " " << d << " " << e << " " << f << "\n";
     fix_t res = fix_div(e, f);
-    o << ((float)res / 65536.0) << "\n";
 
     return res;
 }
@@ -111,12 +107,10 @@ void h264_ssim32x32_compute(struct In32 *input, struct Out32 *output) {
         }
         for (x = 0; x < width-1; x += 4 )
         {
-            ssim += ssim_end4(sum0 + x, sum1 + x, ( (4)<(width - x - 1) ? (4) : (width - x - 1) ));
+            ssim += ssim_end4(sum0 + x * 4, sum1 + x * 4, ( (4)<(width - x - 1) ? (4) : (width - x - 1) ));
         }
-        o << "ssim16x16: " << ((float)ssim / 65536.0) << "\n";
     }
 
-    o << "ssim2: " << ((float)ssim / 65536.0) << "\n";
     output->ssim = ssim;
     output->counter = (height - 1) * (width - 1);
 }

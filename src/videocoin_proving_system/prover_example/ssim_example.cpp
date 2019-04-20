@@ -23,7 +23,7 @@ int main(int argc, char *argv[]) {
 
     auto mode = ssim_mode::from_str(argv[1]);
     if (!mode.is_valid()) {
-        printf("Invalud mode %s\n", argv[1]);
+        printf("Invalid mode %s\n", argv[1]);
         print_usage();
         exit(-1);
     }
