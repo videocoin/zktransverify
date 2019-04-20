@@ -1,50 +1,13 @@
-// zktrans of format
+// a - stream ssim
+// b - required minimum ssim
+// c - frame offset
+// d - ssim of frame at offset c
 
-// | a11 | a12 || b11 | b12 |
-// --------------------------
-// | a21 | a22 || b21 | b22 |
-// ==========================
-// | c11 | c12 || d11 | d12 |
-// --------------------------
-// | c21 | c22 || d21 | d22 |
-
-def checkEquality(field e11,field e12,field e13,field e14, field e21,field e22,field e23,field e24) -> (field):
-field counter = if e11 == e12 then 1 else 0 fi
-  counter = counter + if e11 == e21 then 1 else 0 fi
-  counter = counter + if e12 == e22 then 1 else 0 fi
-  counter = counter + if e13 == e23 then 1 else 0 fi
-  counter = counter + if e14 == e24 then 1 else 0 fi
-  return counter
-
-// returns 0 for x in (1..4)
-def validateInput(field x) -> (field):
-return (x-1)*(x-2)*(x-3)*(x-4)
-
-// variables naming: box'row''column'
-def main(field a11, field a12, field a13, field a14, field a21, field a22, field a23, field a24, field a31, field a32, field a33, field a34, field a41, field a42, field a43, field a44,field b11,field b12, field b13, field b14, field b21, field b22, field b23, field b24, field b31, field b32, field b33, field b34, field b41, field b42, field b43, field b44) -> (field):
-
-  field counter = 0 // globally counts duplicate entries in boxes, rows and columns
-  field match = 0
-  counter = counter + if a11 == b11 then 1 else 0 fi
-  counter = counter + if a12 == b12 then 1 else 0 fi
-  counter = counter + if a13 == b13 then 1 else 0 fi
-  counter = counter + if a14 == b14 then 1 else 0 fi
-
-  counter = counter + if a21 == b21 then 1 else 0 fi
-  counter = counter + if a22 == b22 then 1 else 0 fi
-  counter = counter + if a23 == b23 then 1 else 0 fi
-  counter = counter + if a24 == b24 then 1 else 0 fi
-
-  counter = counter + if a31 == b31 then 1 else 0 fi
-  counter = counter + if a32 == b32 then 1 else 0 fi
-  counter = counter + if a33 == b33 then 1 else 0 fi
-  counter = counter + if a34 == b34 then 1 else 0 fi
-
-  counter = counter + if a41 == b41 then 1 else 0 fi
-  counter = counter + if a42 == b42 then 1 else 0 fi
-  counter = counter + if a43 == b43 then 1 else 0 fi
-  counter = counter + if a44 == b44 then 1 else 0 fi
-
-  match =  if counter < 12 then 0 else 1 fi
-  return match
-
+def main(private field[10] a, field b, field c, field d) -> (field):
+	field match = 0
+	field valid = 0
+	for field i in 0..10 do
+	  match = match + if b < a[i] then 1 else 0 fi
+	endfor
+	valid = if a[c] == d then 1 else 0 fi
+	return if match >= 7 && valid == 1 then 1 else 0 fi
