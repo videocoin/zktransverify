@@ -6,6 +6,7 @@
 #include "png.h"
 #include "h264_ssim16x16_from_prover.h"
 #include "h264_ssim32x32_from_prover.h"
+#include "h264_ssim64x64_from_prover.h"
 #include "h264_ssim_original.h"
 
 #include <cstdlib>
@@ -82,6 +83,13 @@ int main(int argc, char *argv[]) {
         memcpy(in.pix1, src.y_buffer, sizeof(in.pix1));
         memcpy(in.pix2, dest.y_buffer, sizeof(in.pix2));
         h264_ssim32x32_compute(&in, &out);
+        ssim = out.ssim;
+        counter = out.counter;
+    } else if (mode.is_64()) {
+        In64 in; Out64 out;
+        memcpy(in.pix1, src.y_buffer, sizeof(in.pix1));
+        memcpy(in.pix2, dest.y_buffer, sizeof(in.pix2));
+        h264_ssim64x64_compute(&in, &out);
         ssim = out.ssim;
         counter = out.counter;
     }

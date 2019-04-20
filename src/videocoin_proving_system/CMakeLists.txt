@@ -58,6 +58,9 @@ add_executable(
         prover_example/ssim_example.cpp
         prover_example/h264_ssim16x16_from_prover.cpp
         prover_example/h264_ssim32x32_from_prover.cpp
-        prover_example/h264_ssim_original.cpp prover_example/png.cpp)
+        prover_example/h264_ssim64x64_from_prover.cpp
+        prover_example/h264_ssim_original.cpp
+        prover_example/png.cpp
+)
 
 target_link_libraries(prover_example prover -lpng)
