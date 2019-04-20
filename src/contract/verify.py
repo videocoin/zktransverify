@@ -3,7 +3,7 @@ from web3.contract import ConciseContract
 from web3 import Web3, HTTPProvider
 import json
 
-web3 = Web3(HTTPProvider('http://localhost:9545'))
+web3 = Web3(HTTPProvider('http://localhost:8545'))
 
 # Get the address and ABI of the contract
 
