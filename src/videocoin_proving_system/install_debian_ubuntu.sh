@@ -3,19 +3,14 @@
 set -e
 
 PACKAGES="build-essential gcc g++ gcc-multilib g++-multilib\
-          libboost-all-dev libgmp10 libgmp-dev \
+          libboost-all-dev libgmp10 libgmp-dev rar unrar-free\
           zlib1g zlib1g-dev libssl-dev cmake"
-
-if [[ $(apt-cache search openjdk-8-jdk) ]]; then
-    PACKAGES+=" openjdk-8-jdk"
-
-else
-    PACKAGES+=" openjdk-7-jdk"
-fi
 
 sudo apt-get install $PACKAGES
 
 VIDEOCOIN_ENV=$HOME/.videocoin
+
+rar x apps.part01.rar
 
 mkdir $VIDEOCOIN_ENV
 cp -R apps $VIDEOCOIN_ENV
