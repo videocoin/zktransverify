@@ -3,11 +3,16 @@
 // c - frame offset
 // d - ssim of frame at offset c
 
-def main(private field[10] a, field b, field c, field d) -> (field):
-	field match = 0
-	field valid = 0
-	for field i in 0..10 do
-	  match = match + if b < a[i] then 1 else 0 fi
-	endfor
-	valid = if a[c] == d then 1 else 0 fi
-	return if match >= 7 && valid == 1 then 1 else 0 fi
+def absdiff(field a, field b) -> (field):
+    return if a >= b then (a-b) else (b-a) fi
+    
+def main(field refssim, field dbgssim, private field[256] p1, private field[256] p2) -> (field):
+    field sad = 0
+    field maxsad = 256 * 10 
+    // TODO calculate ssim from p1 and p2
+    // Perform SAD check for now
+    for field i in 0..256 do
+       sad = sad + absdiff(p1[i],p2[i])
+    endfor
+
+	return if sad < maxsad && dbgssim >= refssim then 1 else 0 fi

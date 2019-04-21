@@ -55,7 +55,7 @@ int main(int argc, char **argv)
 
 	printf("frame_offset=%d macroblock_offset=%d\n",frame_offset, mb_offset);
 	// Get the macroblock
-	getMbFromStream(ARG_VIDEO_PATH1, frame_offset, mb_offset, &mb);
+	getMbFromStream(ARG_VIDEO_PATH1, frame_offset, mb_offset, &mb, NULL);
 
 	// Calculate hash of macroblock
 	sha256_string(mb.mb_data, mb.mb_size, outputBuffer);

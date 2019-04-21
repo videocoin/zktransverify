@@ -81,7 +81,7 @@ int getParam(AVFrame *frame, char *key)
 	return -1;
 }
 
-int getMbFromStream(char *file_name, int key_frame_num, int mb_num, MB_T *pMb)
+int getMbFromStream(char *file_name, int key_frame_num, int mb_num, MB_T *pMb,  unsigned char *pRawY)
 {
 
 	AVFormatContext* fmt_ctx;
@@ -216,8 +216,7 @@ int getMbFromStream(char *file_name, int key_frame_num, int mb_num, MB_T *pMb)
 						// Free side data from packet
 						av_packet_free_side_data(pkt);
 
-						AVDictionaryEntry *ent = av_dict_get(frame->metadata,
-								"macroblock", NULL, 0);
+						AVDictionaryEntry *ent = av_dict_get(frame->metadata,"macroblock", NULL, 0);
 						if (ent) {
 							char *macroblock = ent->value;
 							if (macroblock) {
@@ -226,6 +225,19 @@ int getMbFromStream(char *file_name, int key_frame_num, int mb_num, MB_T *pMb)
 
 								av_base64_decode(pMb->mb_data, macroblock, pMb->mb_size);
 								hexDump(pMb->mb_data, 16*16*4);
+
+								if(pRawY){
+									int mb_locn_x = 0;
+									int mb_locn_y = 0;
+									unsigned char *pDst = pRawY;
+									for (int v=0; v < 16; v++){
+										char *pSrc = frame->data[0] + (mb_locn_y + v)  * frame->linesize[0] + mb_locn_x;
+										for (int h=0; h < 16; h++){
+											*pDst++ = *pSrc++;
+										}
+									}
+									hexDump(pRawY, 256);
+								}
 							}
 						}
 
