@@ -98,18 +98,17 @@ B[1] = B1
 
 address = contractdef["networks"][web3.version.network]['address']
 # Create a contract object
-contract = web3.eth.contract(
-    address,
-    abi=abi,
-    ContractFactoryClass=ConciseContract,
-)
-
-#
+contract = web3.eth.contract(address, abi=abi)
+#b
 # Call contract
 #
 
 try:
-    txhash = contract.verifyTx(A, B, C, I)
+    print ("Calling contract verifyTx")
+    txhash = contract.functions.verifyTx(A, B, C, I)
+    #print(txhash)
+    # Wait for transaction to be mined...
+    #web3.eth.waitForTransactionReceipt(txhash)
 except IOError as e:
     print("Failed to call contract verifyTx (%s)." % e)
     sys.exit(2)
