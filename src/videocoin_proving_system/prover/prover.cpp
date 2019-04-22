@@ -30,7 +30,8 @@ void initialize_prover() {
 double generate_ssim_proof(const char *pk_fn,
                            const unsigned char *src1, size_t src1_len,
                            const unsigned char *src2, size_t src2_len,
-                           const char *output_fn, const char *proof_fn) {
+                           const char *output_fn, const char *proof_fn,
+                           const char *json_fn) {
     if (src1 == nullptr || src2 == nullptr) {
         std::cerr << "ERROR: invalid source." << std::endl;
         exit(-1);
@@ -84,6 +85,21 @@ double generate_ssim_proof(const char *pk_fn,
         output_file << (unsigned) output[i] << std::endl;
     }
     output_file.close();
+
+    if (json_fn != nullptr) {
+        pt::ptree root;
+        pt::ptree node;
+
+        proof_to_ptree<libsnark::default_r1cs_ppzksnark_pp>(root, proof);
+
+        auto _input = input;
+        _input.insert(_input.end(), output.begin(), output.end());
+        input_to_ptree<unsigned>(root, _input);
+
+        std::ofstream proof_data(json_fn);
+        pt::write_json(proof_data, root);
+        proof_data.close();
+    }
 
     double ssim;
     ssim = output[1] / 0x10000;

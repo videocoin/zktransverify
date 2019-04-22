@@ -44,7 +44,8 @@ int main(int argc, char *argv[]) {
     // Calculate SSIM using prover library.
 
     initialize_prover();
-    double ssim = generate_ssim_proof(argv[4], src.y_buffer, src.y_width * src.y_height, dest.y_buffer, dest.y_width * dest.y_height, argv[5], argv[6]);
+    double ssim = generate_ssim_proof(argv[4], src.y_buffer, src.y_width * src.y_height, dest.y_buffer,
+                                      dest.y_width * dest.y_height, argv[5], argv[6], "temp/proof.json");
     printf("\n\nArithmetic based SSIM\n");
     printf("ssim: %f\n", ssim);
 
@@ -53,27 +54,31 @@ int main(int argc, char *argv[]) {
 
     printf("\n\nh264 based SSIM\n");
     int counter;
-    ssim = x264_pixel_ssim_wxh(src.y_buffer, mode.as_int(), dest.y_buffer, mode.as_int(), mode.as_int(), mode.as_int(), &counter);
-    printf("ssim: %f\n", ssim/counter);
+    ssim = x264_pixel_ssim_wxh(src.y_buffer, mode.as_int(), dest.y_buffer, mode.as_int(), mode.as_int(), mode.as_int(),
+                               &counter);
+    printf("ssim: %f\n", ssim / counter);
 
     printf("\n\nPepper based SSIM\n");
 
     if (mode.is_16()) {
-        In in; Out out;
+        In in;
+        Out out;
         memcpy(in.pix1, src.y_buffer, sizeof(in.pix1));
         memcpy(in.pix2, dest.y_buffer, sizeof(in.pix2));
         h264_ssim16x16_compute(&in, &out);
         ssim = out.ssim;
         counter = out.counter;
     } else if (mode.is_32()) {
-        In32 in; Out32 out;
+        In32 in;
+        Out32 out;
         memcpy(in.pix1, src.y_buffer, sizeof(in.pix1));
         memcpy(in.pix2, dest.y_buffer, sizeof(in.pix2));
         h264_ssim32x32_compute(&in, &out);
         ssim = out.ssim;
         counter = out.counter;
     } else if (mode.is_64()) {
-        In64 in; Out64 out;
+        In64 in;
+        Out64 out;
         memcpy(in.pix1, src.y_buffer, sizeof(in.pix1));
         memcpy(in.pix2, dest.y_buffer, sizeof(in.pix2));
         h264_ssim64x64_compute(&in, &out);
