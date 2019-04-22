@@ -65,6 +65,9 @@ void generate_ssim_proof(ssim_mode mode, const char *pk_fn,
     proof_file.close();
 
     std::ofstream output_file(output_fn);
+    for (int i = 0; i < p.n_inputs; i++) {
+        output_file << (unsigned)input[i] << std::endl;
+    }
     for (int i = 0; i < p.n_outputs; i++) {
         output_file << (unsigned) output[i] << std::endl;
     }

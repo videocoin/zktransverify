@@ -11,12 +11,12 @@
 void print_usage(char *argv[]) {
     std::cout << "usage: " << std::endl
               << argv[0]
-              << " <ssim16x16 | mb16x16> <verification key file> <inputs file> <outputs file> <proof file>"
+              << " <ssim16x16 | mb16x16> <verification key file> <inputs file> <proof file>"
               << std::endl;
 }
 
-void verify (std::string &verification_key_fn, std::string &inputs_fn, std::string &outputs_fn,
-             std::string &proof_fn, int num_inputs, int num_outputs, mpz_t prime) {
+void verify (std::string &verification_key_fn, std::string &inputs_fn,
+             std::string &proof_fn, int num_inputs, mpz_t prime) {
 
     libsnark::default_r1cs_ppzksnark_pp::init_public_params();
 
@@ -35,9 +35,6 @@ void verify (std::string &verification_key_fn, std::string &inputs_fn, std::stri
     std::cout << "loading inputs from file: " << inputs_fn << std::endl;
     std::ifstream inputs_file(inputs_fn);
 
-    std::cout << "loading outputs from file: " << outputs_fn << std::endl;
-    std::ifstream outputs_file(outputs_fn);
-
     mpq_t tmp; mpq_init(tmp);
     mpz_t tmp_z; mpz_init(tmp_z);
 
@@ -48,17 +45,9 @@ void verify (std::string &verification_key_fn, std::string &inputs_fn, std::stri
         inputvec.push_back(currentVar);
     }
 
-    for (int i = 0; i < num_outputs; i++) {
-        outputs_file >> tmp;
-        convert_to_z(tmp_z, tmp, prime);
-        FieldT currentVar(tmp_z);
-        inputvec.push_back(currentVar);
-    }
-
     mpq_clear(tmp); mpz_clear(tmp_z);
 
     inputs_file.close();
-    outputs_file.close();
 
     std::cout << "loading vk from file: " << verification_key_fn << std::endl;
     std::ifstream vkey(verification_key_fn);
@@ -73,7 +62,7 @@ void verify (std::string &verification_key_fn, std::string &inputs_fn, std::stri
 }
 
 int main(int argc, char *argv[]) {
-    if (argc != 6) {
+    if (argc != 5) {
         print_usage(argv);
         exit(1);
     }
@@ -91,9 +80,8 @@ int main(int argc, char *argv[]) {
     if (mode.is_valid() || !strcmp(argv[1], "mb16x16")) {
         std::string verification_key_fn = argv[2];
         std::string inputs_fn = argv[3];
-        std::string outputs_fn = argv[4];
-        std::string proof_fn = argv[5];
-        verify(verification_key_fn, inputs_fn, outputs_fn, proof_fn, p.n_inputs, p.n_outputs, prime);
+        std::string proof_fn = argv[4];
+        verify(verification_key_fn, inputs_fn, proof_fn, p.n_inputs + p.n_outputs, prime);
     } else {
         print_usage(argv);
         exit(1);

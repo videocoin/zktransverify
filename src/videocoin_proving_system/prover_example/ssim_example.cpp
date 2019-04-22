@@ -45,17 +45,6 @@ int main(int argc, char *argv[]) {
     ///////////////////////////////////////////////////////////////////////////////////
     // Calculate SSIM using prover library.
 
-    std::ofstream inputs("temp/inputs.txt");
-    YV12_BUFFER_CONFIG *p = &src;
-    for (int i = 0; i < p->y_height * p->y_width; ++i) {
-        inputs << (int)p->y_buffer[i] << "\n";
-    }
-    p = &dest;
-    for (int i = 0; i < p->y_height * p->y_width; ++i) {
-        inputs << (int)p->y_buffer[i] << "\n";
-    }
-    inputs.close();
-
     initialize_prover();
     generate_ssim_proof(mode, argv[4], src.y_buffer, dest.y_buffer, argv[5], argv[6], ssim);
     printf("\n\nArithmetic based SSIM\n");
