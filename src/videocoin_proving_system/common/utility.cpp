@@ -48,6 +48,19 @@ ssim_mode ssim_mode::from_str(const char *v) {
     return ssim_mode();
 }
 
+ssim_mode ssim_mode::from_int(const int v) {
+    switch (v) {
+        case _x16:
+            return ssim_mode(_x16);
+        case _x32:
+            return ssim_mode(_x32);
+        case _x64:
+            return ssim_mode(_x64);
+        default:
+            return ssim_mode();
+    }
+}
+
 void convert_to_z(const int size, mpz_t *z, const mpq_t *q, const mpz_t prime) {
     for (int i = 0; i < size; i++)
         convert_to_z(z[i], q[i], prime);
@@ -88,6 +101,14 @@ void alloc_init_scalar(mpz_t s) {
 void alloc_init_scalar(mpq_t s) {
     mpq_init(s);
     mpq_set_ui(s, 0, 1);
+}
+
+void clear_scalar(mpz_t s) {
+    mpz_clear(s);
+}
+
+void clear_scalar(mpq_t s) {
+    mpq_clear(s);
 }
 
 void clear_del_vec(mpq_t* vec, const uint32_t n) {

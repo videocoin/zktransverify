@@ -38,15 +38,13 @@ int main(int argc, char *argv[]) {
 
     png_to_YV12(row_pointers1, row_pointers2, src, dest);
 
-    double ssim;
-
     printf("Mode %s\n", mode.str().c_str());
 
     ///////////////////////////////////////////////////////////////////////////////////
     // Calculate SSIM using prover library.
 
     initialize_prover();
-    generate_ssim_proof(mode, argv[4], src.y_buffer, dest.y_buffer, argv[5], argv[6], ssim);
+    double ssim = generate_ssim_proof(argv[4], src.y_buffer, src.y_width * src.y_height, dest.y_buffer, dest.y_width * dest.y_height, argv[5], argv[6]);
     printf("\n\nArithmetic based SSIM\n");
     printf("ssim: %f\n", ssim);
 

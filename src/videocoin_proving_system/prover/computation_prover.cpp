@@ -26,53 +26,6 @@ const int NUM_COMMITMENT_BITS = NUM_COMMITMENT_CHUNKS*8;
 
 using namespace std;
 
-ComputationProver::
-ComputationProver(int _num_vars, int _num_cons, int _size_input, int _size_output,
-                  mpz_t _prime, string inputFilename, bool only_setup) :
-        size_input(_size_input), size_output(_size_output), num_vars(_num_vars), num_cons(_num_cons) {
-
-    init_block_store();
-    if (only_setup) {
-        return;
-    }
-
-    size_f1_vec = num_vars;
-    mpz_init_set(prime, _prime);
-    alloc_init_vec(&F1, size_f1_vec);
-    alloc_init_vec(&F1_q, size_f1_vec);
-
-    F1_index = new uint32_t[size_f1_vec];
-    for (int i = 0; i < size_f1_vec; i++)
-        F1_index[i] = i;
-
-    alloc_init_vec(&input_output_q, size_input + size_output);
-    input_q = &input_output_q[0];
-    output_q = &input_output_q[size_input];
-
-    alloc_init_vec(&input_output, size_input + size_output);
-    input = &input_output[0];
-    output = &input_output[size_input];
-    temp_stack_size = 16;
-    alloc_init_vec(&temp_qs, temp_stack_size);
-
-    alloc_init_scalar(temp);
-    alloc_init_scalar(temp2);
-    alloc_init_scalar(temp_q);
-    alloc_init_scalar(temp_q2);
-
-    ifstream inputFile(inputFilename);
-    if (!inputFile.is_open()) {
-        cerr << "ERROR: " << inputFilename << " not found. Did you run the verifier first?" << endl;
-        cerr << "Aborting." << endl;
-        exit(1);
-    }
-
-    for (int i = 0; i < size_input; i++) {
-        inputFile >> input_q[i];
-    }
-
-}
-
 ComputationProver::ComputationProver(
         int _num_vars, int _num_cons, int _size_input, int _size_output,
         mpz_t _prime, const std::vector<double> &input_vector)
@@ -121,6 +74,19 @@ ComputationProver::~ComputationProver() {
     if (_blockStore != nullptr) {
         delete _blockStore;
     }
+    if (F1_index != nullptr) {
+        delete [] F1_index;
+    }
+
+    clear_del_vec(F1, size_f1_vec);
+    clear_del_vec(F1_q, size_f1_vec);
+    clear_del_vec(input_output, size_input + size_output);
+    clear_del_vec(temp_qs, temp_stack_size);
+
+    clear_scalar(temp);
+    clear_scalar(temp2);
+    clear_scalar(temp_q);
+    clear_scalar(temp_q2);
 }
 
 static void zcomp_assert(const char *a, const char *b,
@@ -1481,6 +1447,4 @@ void ComputationProver::compute_from_pws(const char *pws_filename) {
 
     // convert F1_q to F1
     convert_to_z(num_vars, F1, F1_q, prime);
-
-
 }

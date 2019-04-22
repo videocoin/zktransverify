@@ -9,8 +9,9 @@
 
 void initialize_prover();
 
-void generate_ssim_proof(ssim_mode mode, const char *pk_fn,
-                    const unsigned char *src_luma1, const unsigned char *src_luma2,
-                    const char *output_fn, const char *proof_fn, double &ssim);
+double generate_ssim_proof(const char *pk_fn,
+                           const unsigned char *src1, size_t src1_len,
+                           const unsigned char *src2, size_t src2_len,
+                           const char *output_fn, const char *proof_fn);
 
 #endif //PROVER_H

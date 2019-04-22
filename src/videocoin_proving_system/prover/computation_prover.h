@@ -30,7 +30,7 @@ protected:
     mpz_t prime;
     mpz_t *input_output;
     mpq_t *input_q, *output_q, *temp_qs, *F1_q;
-    mpq_t temp_q, temp_q2, temp_q3;
+    mpq_t temp_q, temp_q2;
     int size_input, size_output, size_f1_vec;
 
     MerkleRAM *_ram;
@@ -68,9 +68,6 @@ protected:
     void compute_printf(FILE* pws_file);
 
 public:
-
-    ComputationProver(int _num_vars, int _num_cons, int _size_input, int _size_output,
-                      mpz_t _prime, std::string input_file, bool only_setup);
 
     ComputationProver(int _num_vars, int _num_cons, int _size_input, int _size_output,
                       mpz_t _prime, const std::vector<double> &input_vector);

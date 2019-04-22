@@ -27,10 +27,22 @@ void initialize_prover() {
     libsnark::default_r1cs_ppzksnark_pp::init_public_params();
 }
 
-void generate_ssim_proof(ssim_mode mode, const char *pk_fn,
-                         const unsigned char *src_luma1,
-                         const unsigned char *src_luma2,
-                         const char *output_fn, const char *proof_fn, double &ssim) {
+double generate_ssim_proof(const char *pk_fn,
+                           const unsigned char *src1, size_t src1_len,
+                           const unsigned char *src2, size_t src2_len,
+                           const char *output_fn, const char *proof_fn) {
+    if (src1 == nullptr || src2 == nullptr) {
+        std::cerr << "ERROR: invalid source." << std::endl;
+        exit(-1);
+    }
+
+    if (src1_len != src2_len) {
+        std::cerr << "ERROR: src1 and src2 should be same length." << std::endl;
+        exit(-1);
+    }
+
+    auto mode = ssim_mode::from_int(sqrt(src1_len));
+
     std::string app_path = application_dir + mode.str() + "/";
     std::string params = app_path + "params";
     std::string pws = app_path + "pws";
@@ -50,10 +62,10 @@ void generate_ssim_proof(ssim_mode mode, const char *pk_fn,
     std::vector<double> output;
 
     for (int i = 0; i < p.n_inputs / 2; ++i) {
-        input.emplace_back(src_luma1[i]);
+        input.emplace_back(src1[i]);
     }
     for (int i = 0; i < p.n_inputs / 2; ++i) {
-        input.emplace_back(src_luma2[i]);
+        input.emplace_back(src2[i]);
     }
 
     libsnark::r1cs_ppzksnark_proof<libsnark::default_r1cs_ppzksnark_pp> proof;
@@ -66,15 +78,17 @@ void generate_ssim_proof(ssim_mode mode, const char *pk_fn,
 
     std::ofstream output_file(output_fn);
     for (int i = 0; i < p.n_inputs; i++) {
-        output_file << (unsigned)input[i] << std::endl;
+        output_file << (unsigned) input[i] << std::endl;
     }
     for (int i = 0; i < p.n_outputs; i++) {
         output_file << (unsigned) output[i] << std::endl;
     }
     output_file.close();
 
+    double ssim;
     ssim = output[1] / 0x10000;
     ssim /= output[2];
+    return ssim;
 }
 
 void generate_proof_internal(const comp_params &p,
