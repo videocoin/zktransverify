@@ -3,6 +3,7 @@
 //
 
 #include "prover/prover.h"
+#include "common/utility.h"
 #include "png.h"
 #include "h264_ssim16x16_from_prover.h"
 #include "h264_ssim32x32_from_prover.h"

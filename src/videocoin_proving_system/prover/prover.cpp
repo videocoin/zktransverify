@@ -11,6 +11,7 @@
 #include <libsnark/zk_proof_systems/ppzksnark/r1cs_ppzksnark/r1cs_ppzksnark.hpp>
 
 #include <common/defs.h>
+#include <common/utility.h>
 
 #include "computation_prover.h"
 #include "prover.h"
@@ -28,8 +29,8 @@ void initialize_prover() {
 }
 
 double generate_ssim_proof(const char *pk_fn,
-                           const unsigned char *src1, size_t src1_len,
-                           const unsigned char *src2, size_t src2_len,
+                           const unsigned char *src1, unsigned long src1_len,
+                           const unsigned char *src2, unsigned long src2_len,
                            const char *output_fn, const char *proof_fn,
                            const char *json_fn) {
     if (src1 == nullptr || src2 == nullptr) {
