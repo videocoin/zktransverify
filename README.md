@@ -51,10 +51,6 @@ zkSnarks includes three steps:
 ![Blockdiagram showing zkSnarks Main Steps](./documents/zkproof_2.png)
 
 
-### Details of Elliptic Curve Pairing Computations used in Video Transcode Verification
-
-![Blockdiagram showing zkSnarks Mains Steps](./documents/zkproof_3.png)
-
 The zkSnarks proof is expected to satisfy a compliance predicate: 
 ```
 C(input, code, output)
