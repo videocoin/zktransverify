@@ -64,3 +64,11 @@ add_executable(
 )
 
 target_link_libraries(prover_example prover -lpng)
+
+install(
+    TARGETS prover
+    LIBRARY DESTINATION lib
+    ARCHIVE DESTINATION lib
+    RUNTIME DESTINATION bin
+    INCLUDES DESTINATION include
+)

@@ -81,13 +81,13 @@ void convert_to_z(mpz_t z, const mpq_t q, const mpz_t prime) {
 
 void alloc_init_vec(mpz_t **arr, uint32_t size) {
     *arr = new mpz_t[size];
-    for (uint32_t i=0; i<size; i++)
+    for (uint32_t i = 0; i < size; i++)
         alloc_init_scalar((*arr)[i]);
 }
 
 void alloc_init_vec(mpq_t **arr, uint32_t size) {
     *arr = new mpq_t[size];
-    for (uint32_t i=0; i<size; i++) {
+    for (uint32_t i = 0; i < size; i++) {
         alloc_init_scalar((*arr)[i]);
     }
 }
@@ -111,13 +111,13 @@ void clear_scalar(mpq_t s) {
     mpq_clear(s);
 }
 
-void clear_del_vec(mpq_t* vec, const uint32_t n) {
+void clear_del_vec(mpq_t *vec, const uint32_t n) {
     for (uint32_t i = 0; i < n; i++)
         mpq_clear(vec[i]);
     delete[] vec;
 }
 
-void clear_del_vec(mpz_t* vec, const uint32_t n) {
+void clear_del_vec(mpz_t *vec, const uint32_t n) {
     for (uint32_t i = 0; i < n; i++)
         mpz_clear(vec[i]);
     delete[] vec;

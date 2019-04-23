@@ -36,12 +36,12 @@ typedef struct tree_node {
     tree_key_t key;
     tree_value_t value;
     int key_size, value_size;
-    struct tree_node* left;
-    struct tree_node* right;
+    struct tree_node *left;
+    struct tree_node *right;
 } tree_node_t;
 
 typedef struct tree {
-    tree_node_t* root;
+    tree_node_t *root;
 } tree_t;
 
 typedef struct tree_result {
@@ -57,7 +57,7 @@ typedef struct tree_result_set {
 
 data_t ram[1024];
 
-void tree_traverse_(tree_node_t* t) {
+void tree_traverse_(tree_node_t *t) {
     if (t == 0) {
         return;
     }
@@ -66,13 +66,13 @@ void tree_traverse_(tree_node_t* t) {
     tree_traverse_(t->right);
 }
 
-void tree_init(tree_t* t) {
-  t->root = 0;
+void tree_init(tree_t *t) {
+    t->root = 0;
 }
 
-void tree_insert_(tree_node_t** t, tree_key_t key, tree_value_t value) {
+void tree_insert_(tree_node_t **t, tree_key_t key, tree_value_t value) {
     if (*t == 0) {
-        *t = (tree_node_t*) malloc(sizeof(tree_node_t));
+        *t = (tree_node_t *) malloc(sizeof(tree_node_t));
         (*t)->key = key;
         (*t)->value = value;
         (*t)->left = 0;
@@ -84,7 +84,7 @@ void tree_insert_(tree_node_t** t, tree_key_t key, tree_value_t value) {
     }
 }
 
-void tree_delete_(tree_node_t** t, tree_key_t key) {
+void tree_delete_(tree_node_t **t, tree_key_t key) {
     if (*t == 0) {
         return;
     } else if ((*t)->key > key) {
@@ -92,32 +92,32 @@ void tree_delete_(tree_node_t** t, tree_key_t key) {
     } else if ((*t)->key < key) {
         tree_delete_(&((*t)->right), key);
     } else {
-        if((*t)->left == 0 && (*t)->right == 0) {
+        if ((*t)->left == 0 && (*t)->right == 0) {
             free(*t);
         } else if ((*t)->left == 0) {
-            tree_node_t* temp = *t;
+            tree_node_t *temp = *t;
             *t = (*t)->right;
             free(*t);
         } else if ((*t)->right == 0) {
-            tree_node_t* temp = *t;
+            tree_node_t *temp = *t;
             *t = (*t)->left;
             free(*t);
         } else {
-            tree_node_t** min = &((*t)->right);
-            while((*min)->left != 0) {
+            tree_node_t **min = &((*t)->right);
+            while ((*min)->left != 0) {
                 min = &((*min)->left);
             }
-            tree_node_t** temp = min;
+            tree_node_t **temp = min;
             (*t)->key = (*temp)->key;
             (*t)->value = (*temp)->value;
-            tree_node_t* temp1 = *temp;
+            tree_node_t *temp1 = *temp;
             *temp = (*temp)->right;
             free(temp1);
         }
     }
 }
 
-int tree_find_EQ_(tree_node_t* t, tree_result_set_t* var, tree_key_t key, int i) {
+int tree_find_EQ_(tree_node_t *t, tree_result_set_t *var, tree_key_t key, int i) {
     if (t == 0) {
         return 0;
     } else if (t->key > key) {
@@ -136,14 +136,14 @@ int tree_find_EQ_(tree_node_t* t, tree_result_set_t* var, tree_key_t key, int i)
     }
 }
 
-int tree_find_LT_(tree_node_t* t, tree_result_set_t* var, tree_key_t key, BOOL equal_to, int i) {
+int tree_find_LT_(tree_node_t *t, tree_result_set_t *var, tree_key_t key, BOOL equal_to, int i) {
     if (t == 0) {
         return i;
     } else if (t->key > key) {
         return tree_find_LT_(t->left, var, key, equal_to, i);
     } else {
         i = tree_find_LT_(t->left, var, key, equal_to, i);
-        if(equal_to || t->key < key) {
+        if (equal_to || t->key < key) {
             if (i < MAX_TREE_RESULTS) {
                 var->results[i].key = t->key;
                 var->results[i].value = t->value;
@@ -155,13 +155,13 @@ int tree_find_LT_(tree_node_t* t, tree_result_set_t* var, tree_key_t key, BOOL e
     }
 }
 
-int tree_find_GT_(tree_node_t* t, tree_result_set_t* var, tree_key_t key, BOOL equal_to, int i) {
+int tree_find_GT_(tree_node_t *t, tree_result_set_t *var, tree_key_t key, BOOL equal_to, int i) {
     if (t == 0) {
         return i;
     } else if (t->key < key) {
         return tree_find_GT_(t->right, var, key, equal_to, i);
     } else {
-        if(equal_to || t->key > key) {
+        if (equal_to || t->key > key) {
             i = tree_find_GT_(t->left, var, key, equal_to, i);
             if (i < MAX_TREE_RESULTS) {
                 var->results[i].key = t->key;
@@ -174,19 +174,19 @@ int tree_find_GT_(tree_node_t* t, tree_result_set_t* var, tree_key_t key, BOOL e
     }
 }
 
-void __ramput(int addr, void* value, int size) {
+void __ramput(int addr, void *value, int size) {
     memcpy(&(ram[addr]), value, size);
 }
 
-void __ramget(void* var, int addr, int size) {
+void __ramget(void *var, int addr, int size) {
     memcpy(var, &(ram[addr]), size);
 }
 
-void tree_traverse(tree_t* t) {
+void tree_traverse(tree_t *t) {
     tree_traverse_(t->root);
 }
 
-void tree_insert(tree_t* t, tree_key_t key, tree_value_t value) {
+void tree_insert(tree_t *t, tree_key_t key, tree_value_t value) {
     tree_insert_(&(t->root), key, value);
 }
 
@@ -198,14 +198,14 @@ void tree_remove_value(tree_t *t, tree_key_t key, tree_value_t value) {
 //    tree_delete_value_(&(t->root), key, value);
 }
 
-void tree_find_eq(tree_t* t, tree_key_t key, tree_result_set_t* var) {
+void tree_find_eq(tree_t *t, tree_key_t key, tree_result_set_t *var) {
     var->num_results = tree_find_EQ_(t->root, var, key, 0);
 }
 
-void tree_find_lt(tree_t* t, tree_key_t key, BOOL equal_to, tree_result_set_t* var) {
+void tree_find_lt(tree_t *t, tree_key_t key, BOOL equal_to, tree_result_set_t *var) {
     var->num_results = tree_find_LT_(t->root, var, key, equal_to, 0);
 }
 
-void tree_find_gt(tree_t* t, tree_key_t key, BOOL equal_to, tree_result_set_t* var) {
+void tree_find_gt(tree_t *t, tree_key_t key, BOOL equal_to, tree_result_set_t *var) {
     var->num_results = tree_find_GT_(t->root, var, key, equal_to, 0);
 }

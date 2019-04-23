@@ -3,15 +3,19 @@
 
 #include <storage/hasher.h>
 
-class GGHHash: public Hasher {
+class GGHHash : public Hasher {
 public:
-	GGHHash();
-	virtual ~GGHHash();
+    GGHHash();
 
-	virtual int getNumHashBits();
-	virtual HashType* createHash(const Bits& hashBits);
-	virtual Bits hash(const Bits& v);
-	virtual Bits hash(const Bits& left, const Bits& right);
+    virtual ~GGHHash();
+
+    virtual int getNumHashBits();
+
+    virtual HashType *createHash(const Bits &hashBits);
+
+    virtual Bits hash(const Bits &v);
+
+    virtual Bits hash(const Bits &left, const Bits &right);
 };
 
 #endif /* GGH_HASH_H_ */

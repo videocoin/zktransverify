@@ -9,30 +9,35 @@
 
 class HashType {
 public:
-	static const int FIELD_SIZE = 64;
+    static const int FIELD_SIZE = 64;
 
 
-	//A hash of a value spans multiple field elements.
-	typedef std::vector<mpz_class> HashVec;
+    //A hash of a value spans multiple field elements.
+    typedef std::vector<mpz_class> HashVec;
 
-	HashType(const Bits& hashBits, int numElts);
-	virtual ~HashType();
+    HashType(const Bits &hashBits, int numElts);
 
-	const HashVec& GetFieldElts();
+    virtual ~HashType();
+
+    const HashVec &GetFieldElts();
 
 protected:
-	HashVec _fieldElts;
+    HashVec _fieldElts;
 };
 
 class Hasher {
 public:
-	Hasher() {}
-	virtual ~Hasher() {}
+    Hasher() {}
 
-	virtual int getNumHashBits() = 0;
-	virtual HashType* createHash(const Bits& hash) = 0;
-	virtual Bits hash(const Bits& v) = 0;
-	virtual Bits hash(const Bits& left, const Bits& right) = 0;
+    virtual ~Hasher() {}
+
+    virtual int getNumHashBits() = 0;
+
+    virtual HashType *createHash(const Bits &hash) = 0;
+
+    virtual Bits hash(const Bits &v) = 0;
+
+    virtual Bits hash(const Bits &left, const Bits &right) = 0;
 };
 
 #endif

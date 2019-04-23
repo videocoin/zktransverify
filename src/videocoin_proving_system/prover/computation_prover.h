@@ -18,6 +18,7 @@
 #define BUFLEN 10240
 
 class MerkleRAM;
+
 class HashBlockStore;
 
 class ComputationProver {
@@ -38,34 +39,51 @@ protected:
 
     void init_block_store();
 
-    mpq_t& voc(const char*, mpq_t& use_if_constant);
-    void compute_poly(FILE* pws_file, int);
-    void compute_less_than_int(FILE* pws_file);
-    void compute_less_than_float(FILE* pws_file);
-    void compute_split_unsignedint(FILE* pws_file);
-    void compute_split_int_le(FILE* pws_file);
+    mpq_t &voc(const char *, mpq_t &use_if_constant);
 
-    void compute_db_get_bits(FILE* pws_file);
-    void compute_db_put_bits(FILE* pws_file);
-    void compute_db_get_sibling_hash(FILE* pws_file);
+    void compute_poly(FILE *pws_file, int);
+
+    void compute_less_than_int(FILE *pws_file);
+
+    void compute_less_than_float(FILE *pws_file);
+
+    void compute_split_unsignedint(FILE *pws_file);
+
+    void compute_split_int_le(FILE *pws_file);
+
+    void compute_db_get_bits(FILE *pws_file);
+
+    void compute_db_put_bits(FILE *pws_file);
+
+    void compute_db_get_sibling_hash(FILE *pws_file);
 
     void compute_exo_compute(FILE *pws_file);
+
     void compute_ext_gadget(FILE *pws_file);
-    void getLL(std::vector< std::vector<std::string> > &inLL, FILE *pws_file, char *buf);
-    void getL (std::vector<std::string> &inL, FILE *pws_file, char *buf);
 
-    void compute_fast_ramget(FILE* pws_file);
-    void compute_fast_ramput(FILE* pws_file);
+    void getLL(std::vector<std::vector<std::string> > &inLL, FILE *pws_file, char *buf);
 
-    void parse_hash(FILE* pws_file, HashBlockStore::Key& outKey, int numHashBits);
-    void compute_matrix_vec_mul(FILE* pws_file);
-    void compute_waksman_network(FILE* pws_file);
-    void compute_get_block_by_hash(FILE* pws_file);
-    void compute_put_block_by_hash(FILE* pws_file);
-    void compute_free_block_by_hash(FILE* pws_file);
+    void getL(std::vector<std::string> &inL, FILE *pws_file, char *buf);
 
-    void compute_genericget(FILE* pws_file);
-    void compute_printf(FILE* pws_file);
+    void compute_fast_ramget(FILE *pws_file);
+
+    void compute_fast_ramput(FILE *pws_file);
+
+    void parse_hash(FILE *pws_file, HashBlockStore::Key &outKey, int numHashBits);
+
+    void compute_matrix_vec_mul(FILE *pws_file);
+
+    void compute_waksman_network(FILE *pws_file);
+
+    void compute_get_block_by_hash(FILE *pws_file);
+
+    void compute_put_block_by_hash(FILE *pws_file);
+
+    void compute_free_block_by_hash(FILE *pws_file);
+
+    void compute_genericget(FILE *pws_file);
+
+    void compute_printf(FILE *pws_file);
 
 public:
 
@@ -73,7 +91,8 @@ public:
                       mpz_t _prime, const std::vector<double> &input_vector);
 
     ~ComputationProver();
-    void compute_from_pws(const char* pws_filename);
+
+    void compute_from_pws(const char *pws_filename);
 
     mpz_t *input, *output, *F1;
     mpq_t *input_output_q;

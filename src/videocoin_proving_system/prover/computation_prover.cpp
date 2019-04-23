@@ -22,7 +22,7 @@
 
 
 #define NUM_COMMITMENT_CHUNKS 32
-const int NUM_COMMITMENT_BITS = NUM_COMMITMENT_CHUNKS*8;
+const int NUM_COMMITMENT_BITS = NUM_COMMITMENT_CHUNKS * 8;
 
 using namespace std;
 
@@ -30,10 +30,9 @@ ComputationProver::ComputationProver(
         int _num_vars, int _num_cons, int _size_input, int _size_output,
         mpz_t _prime, const std::vector<double> &input_vector)
         : size_input(_size_input),
-        size_output(_size_output),
-        num_vars(_num_vars),
-        num_cons(_num_cons)
-{
+          size_output(_size_output),
+          num_vars(_num_vars),
+          num_cons(_num_cons) {
 
     init_block_store();
 
@@ -75,7 +74,7 @@ ComputationProver::~ComputationProver() {
         delete _blockStore;
     }
     if (F1_index != nullptr) {
-        delete [] F1_index;
+        delete[] F1_index;
     }
 
     clear_del_vec(F1, size_f1_vec);
@@ -209,7 +208,7 @@ static std::vector<std::string> execute_command(char *cmd, const char *arg, std:
 }
 
 void ComputationProver::init_block_store() {
-    if (const char* env_p = std::getenv("VIDEOCOIN_ENV")) {
+    if (const char *env_p = std::getenv("VIDEOCOIN_ENV")) {
         std::string store_dir(env_p);
         store_dir += "/block_store";
 

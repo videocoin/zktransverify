@@ -38,25 +38,42 @@
 
 //int hasheq(hash_t* a, hash_t* b);
 void initBlockStore();
-HashType* getRootHash();
-void setBlockStoreAndRAM(HashBlockStore* bs, MerkleRAM* ram);
+
+HashType *getRootHash();
+
+void setBlockStoreAndRAM(HashBlockStore *bs, MerkleRAM *ram);
+
 void deleteBlockStoreAndRAM();
 
-void __ramput(uint32_t addr, void* data, uint32_t size);
-void __ramget(void* var, uint32_t addr, uint32_t size);
-void __hashput(hash_t* hash, void* data, uint32_t size);
-void __hashget(void* var, hash_t* hash, uint32_t size);
-void __commitmentput(commitment_t* hash, void* data, uint32_t size);
-void __commitmentget(void* var, commitment_t* hash, uint32_t size);
-void hashfree(hash_t* hash);
+void __ramput(uint32_t addr, void *data, uint32_t size);
+
+void __ramget(void *var, uint32_t addr, uint32_t size);
+
+void __hashput(hash_t *hash, void *data, uint32_t size);
+
+void __hashget(void *var, hash_t *hash, uint32_t size);
+
+void __commitmentput(commitment_t *hash, void *data, uint32_t size);
+
+void __commitmentget(void *var, commitment_t *hash, uint32_t size);
+
+void hashfree(hash_t *hash);
+
 // TODO: reconcile the two methods below with the two above, later
 void __hashbits(hash_t *hash, void *data, uint32_t size);
-void __ramput(MerkleRAM* ram, uint32_t addr, void* data, uint32_t size);
-void __ramget(MerkleRAM* ram, void* var, uint32_t addr, uint32_t size);
-void __hashput(HashBlockStore *bs, hash_t* hash, void* data, uint32_t size);
-void __hashget(HashBlockStore *bs, void* var, hash_t* hash, uint32_t size);
-void __commitmentput(HashBlockStore *bs, commitment_t* hash, void* data, uint32_t size);
-void __commitmentget(HashBlockStore *bs, void* var, commitment_t* hash, uint32_t size);
-void hashfree(HashBlockStore *bs, hash_t* hash);
+
+void __ramput(MerkleRAM *ram, uint32_t addr, void *data, uint32_t size);
+
+void __ramget(MerkleRAM *ram, void *var, uint32_t addr, uint32_t size);
+
+void __hashput(HashBlockStore *bs, hash_t *hash, void *data, uint32_t size);
+
+void __hashget(HashBlockStore *bs, void *var, hash_t *hash, uint32_t size);
+
+void __commitmentput(HashBlockStore *bs, commitment_t *hash, void *data, uint32_t size);
+
+void __commitmentget(HashBlockStore *bs, void *var, commitment_t *hash, uint32_t size);
+
+void hashfree(HashBlockStore *bs, hash_t *hash);
 
 #endif // EXO_H_

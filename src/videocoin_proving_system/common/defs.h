@@ -12,7 +12,7 @@ const char *prime_str = "2188824287183927522224640574525727508854836440041603434
 std::string application_dir;
 
 void initialize_env() {
-    if (const char* env_p = std::getenv("VIDEOCOIN_ENV")) {
+    if (const char *env_p = std::getenv("VIDEOCOIN_ENV")) {
         application_dir = env_p;
         application_dir += "/apps/";
     } else {

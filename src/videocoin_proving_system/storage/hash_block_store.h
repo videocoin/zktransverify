@@ -12,27 +12,33 @@
  */
 class HashBlockStore {
 public:
-  typedef Bits Key;
-  typedef Bits Value;
+    typedef Bits Key;
+    typedef Bits Value;
 
-  HashBlockStore() {}
-  virtual ~HashBlockStore() {}
+    HashBlockStore() {}
 
-  // we should try to guarantee that at any time there is only one instance of
-  // each underlying block store.
-  virtual void Open(std::string db_path_file) {}
-  virtual void Close() {}
+    virtual ~HashBlockStore() {}
 
-  bool isOpened() {return opened;}
-  virtual bool get(const Key& k, Value& value) = 0;
-  virtual void put(const Key& k, const Value& v) = 0;
+    // we should try to guarantee that at any time there is only one instance of
+    // each underlying block store.
+    virtual void Open(std::string db_path_file) {}
 
-  virtual bool getAddr(uint32_t addr, Value& v) = 0;
-  virtual void putAddr(uint32_t addr, const Value& v) = 0;
+    virtual void Close() {}
 
-  virtual void free(const Key& k) = 0;
+    bool isOpened() { return opened; }
+
+    virtual bool get(const Key &k, Value &value) = 0;
+
+    virtual void put(const Key &k, const Value &v) = 0;
+
+    virtual bool getAddr(uint32_t addr, Value &v) = 0;
+
+    virtual void putAddr(uint32_t addr, const Value &v) = 0;
+
+    virtual void free(const Key &k) = 0;
+
 protected:
-  bool opened;
+    bool opened;
 };
 
 #endif /* HASH_BLOCK_STORE_H_ */

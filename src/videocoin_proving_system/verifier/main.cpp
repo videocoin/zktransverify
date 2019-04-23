@@ -15,8 +15,8 @@ void print_usage(char *argv[]) {
               << std::endl;
 }
 
-void verify (std::string &verification_key_fn, std::string &inputs_fn,
-             std::string &proof_fn, int num_inputs, mpz_t prime) {
+void verify(std::string &verification_key_fn, std::string &inputs_fn,
+            std::string &proof_fn, int num_inputs, mpz_t prime) {
 
     libsnark::default_r1cs_ppzksnark_pp::init_public_params();
 
@@ -35,8 +35,10 @@ void verify (std::string &verification_key_fn, std::string &inputs_fn,
     std::cout << "loading inputs from file: " << inputs_fn << std::endl;
     std::ifstream inputs_file(inputs_fn);
 
-    mpq_t tmp; mpq_init(tmp);
-    mpz_t tmp_z; mpz_init(tmp_z);
+    mpq_t tmp;
+    mpq_init(tmp);
+    mpz_t tmp_z;
+    mpz_init(tmp_z);
 
     for (int i = 0; i < num_inputs; i++) {
         inputs_file >> tmp;
@@ -45,7 +47,8 @@ void verify (std::string &verification_key_fn, std::string &inputs_fn,
         inputvec.push_back(currentVar);
     }
 
-    mpq_clear(tmp); mpz_clear(tmp_z);
+    mpq_clear(tmp);
+    mpz_clear(tmp_z);
 
     inputs_file.close();
 
@@ -57,8 +60,9 @@ void verify (std::string &verification_key_fn, std::string &inputs_fn,
 
     std::cout << "verifying..." << std::endl;
     libff::start_profiling();
-    bool result = libsnark::r1cs_ppzksnark_online_verifier_strong_IC<libsnark::default_r1cs_ppzksnark_pp>(pvk, inputvec, proof);
-    std::cout << "VERIFICATION " << (result ? "SUCCESSFUL": "FAILED") << std::endl;
+    bool result = libsnark::r1cs_ppzksnark_online_verifier_strong_IC<libsnark::default_r1cs_ppzksnark_pp>(pvk, inputvec,
+                                                                                                          proof);
+    std::cout << "VERIFICATION " << (result ? "SUCCESSFUL" : "FAILED") << std::endl;
 }
 
 int main(int argc, char *argv[]) {

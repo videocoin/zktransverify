@@ -14,23 +14,29 @@
 using namespace std;
 
 class ConfigurableBlockStore : public HashBlockStore {
-  public:
+public:
     ConfigurableBlockStore();
+
     ConfigurableBlockStore(string db_file_name);
+
     virtual ~ConfigurableBlockStore();
+
     virtual void Open(string db_file_name);
+
     virtual void Close();
 
-    virtual bool get(const Key& key, Value& value);
-    virtual void put(const Key& key, const Value& value);
+    virtual bool get(const Key &key, Value &value);
 
-    virtual bool getAddr(uint32_t addr, Value& value);
-    virtual void putAddr(uint32_t addr, const Value& value);
+    virtual void put(const Key &key, const Value &value);
 
-    virtual void free(const Key& key);
+    virtual bool getAddr(uint32_t addr, Value &value);
 
-  private:
-    HashBlockStore* blockStore;
+    virtual void putAddr(uint32_t addr, const Value &value);
+
+    virtual void free(const Key &key);
+
+private:
+    HashBlockStore *blockStore;
 };
 
 #endif /* KYOTO_BLOCK_STORE_H_ */
