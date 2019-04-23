@@ -1,6 +1,7 @@
 # VideoCoin Proof-of-Transcode using zkSNARKs
 This repo contains software modules that implements VideoCoin proof-of-transcode based on zkSNARKs.
 
+## Conceptual Overivew of zkSNARKs for VideoCoin Proof-of-Transcode
 zkSNARKs(Zero-Knowledge Succinct Non-Interactive Argument of Knowledge), being integrated in Ethereum byzantium, is a very powerful tool for verification of computations. The the correctness of computations can be verified without having to execute them and verifier will not even learn what was executed.
 
 Existing zkSNARK systems like zCash use it as the transaction verifier. On Ethereum, zkSNARKs would not be limited to a single computational problem, but instead, it could be customized for specialized computational problem. Core support for zkSNARKS in Ethereum is enabled through precompiled contracts EIP196 and EIP197 that provide elliptic curve operations for addition,scaling and pairing check. Refer[4],[5] for details of the Ehtereum precompiled contracts.  
@@ -15,18 +16,18 @@ The following diagram shows an overview of video-coin proof-of-transcode using z
 
 The proof-of-transcode includes the following modules:
 ### (A) Library for Setting up Transcode proof system
-* Computation (algorithm) that performs the following
-** Extracts MBs at random offsets
-** Decode MBs
-** Calculate SSIM
-** Compare with reference SSIM
+* Computation (algorithm) that performs the following  
+  * Extracts MBs at random offsets  
+  * Decode MBs  
+  * Calculate SSIM
+  * Compare with reference SSIM  
 * Generation of keys
-** Generation of Proving Key
-** Generation of Verification Key
-** Solidity Contract template
+  * Generation of Proving Key
+  * Generation of Verification Key
+  * Solidity Contract template
 
 ### (B) Library for proof generation:
-* Extraction of witness (public and private inputs) which consists macroblocks from source and transcoded streams.
+* Extraction of witness (public and private inputs) which consists macroblocks from source and transcoded streams.  
 * Proof generation using the witness and proving-key
 
 
@@ -35,12 +36,13 @@ The proof-of-transcode includes the following modules:
 * Smart-contract also contains the zkSNARKS verification keys and algorithm embedded (which uses Ethereum precompiled contracts)\
 * The call from the miner(prover) assembles the input&witness from the supplied arguments and retrieving the encrypted hash values from the escrow records corresponding to the segment. If the verification is successful, it transfers the reward to miner's account.
 
-## Performance and scalability of proof-of-transcode
+### Performance and scalability of proof-of-transcode
 The zero-knowledge feature of zkSNARKS property allows the prover to hide details about the computation from the verifier in the process, and so they are useful for both privacy and performance. This enables a embedding verifier in a smart-contract and offload most of the computation to prover. As the smart-contract runs on all the blockchain nodes and prover runs only on one client, this helps achieve scalability.
  
-## Implementation details of video Transcode Verification using zkSnarks
+## Implementation Overview  
+Most of the zkSnarks frameworks are based on a library called [libsnark](https://github.com/scipr-lab/libsnark). The following diagram (excerpted from [26] is shown below:  
 
--- T0 be added --
+[Overview of the libsnark stack](./documents/libsnarkstack.jpg)  
 
 ### Key generation, proof and verification
 zkSnarks includes three steps:
@@ -66,8 +68,8 @@ The current implementation of Transcode Verification uses a simplified proof gen
 
 ![Blockdiagram showing zkSnarks Proof derived from Encode Process](./documents/zkproof_4.png)
 
-### Tight association of proof generation with encode process 
-The proposed enhancement includes a proof generation based on bitstream syntax elements such as macroblocks and video quality metrics such as SSIM. We will also include pHash as an additional check, but may be dropped if we can support enough macroblocks in the proof system. The proof system is described in the following sections in more detail. Public input containing macroblocks/positions  and expected SSIM are submitted by the client. The macroblocks are selected at the near end of the video segment and signaled through the smart contract.   This ensures prior frames are encoded correctly. The number of macroblocks used in the proof should create hurdle to generate fake proofs. The SSIM generated in the proof system is compared against  the client supplied SSIM to fall with in a range. This ensures the transcode operation is carried with the specified transcode parameters. 
+### Relation between proof gsystem and video encode process 
+The proof system includes bitstream syntax elements such as macroblocks and video quality metrics such as SSIM. The proof system is described in the following sections in more detail. Public input containing macroblocks/positions  and expected SSIM are submitted by the client. The macroblocks are selected at the near end of the video segment and signaled through the smart contract.   This ensures prior frames are encoded correctly. The number of macroblocks used in the proof should create hurdle to generate fake proofs. The SSIM generated in the proof system is compared against  reference SSIM to fall with in a range. This ensures the transcode operation is carried with the specified transcode parameters. 
 
 ## TinyRAM for transcode computation
 As miner may generate fake proofs for verification based on source stream, we have to consider transcode operation as a part of verification process. To avoid fake proof generation.
@@ -195,4 +197,7 @@ The current implementation is only tested in a simulated environment. The zkSNAR
 
 [24. The Pepper Project](http://www.pepper-project.org)
 
-[25. Analysis and Implementation of the H.264 CABAC entropy decoding engine, by Martinus Johannes Pieter Berkhof](http://ce-publications.et.tudelft.nl/publications/214_analysis_and_implementation_of_the_h264_cabac_entropy_decod.pdf)
+[25. Analysis and Implementation of the H.264 CABAC entropy decoding engine, by Martinus Johannes Pieter Berkhof](http://ce-publications.et.tudelft.nl/publications/214_analysis_and_implementation_of_the_h264_cabac_entropy_decod.pdf)  
+
+[26. On Deploying Succinct Zero-Knowledge Proofs, by Madars Vizra ](https://madars.org/phd-thesis/Madars-Virza-thesis-20170831.pdf)
+
