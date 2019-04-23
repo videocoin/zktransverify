@@ -48,7 +48,7 @@ The library consists several alternate implementations for front-end, back-end a
 * [Zokrates: A toolbox for zkSNARKs on Ethereum](https://github.com/Zokrates/ZoKrates)  
 * [Pepper/Pequin: A system for verifying outsourced computations, and applying SNARKs](https://github.com/pepper-project/pequin)
 
-### Key generation, proof and verification
+### Key generation, proof generation and verification
 zkSnarks includes three steps:
 * A one-time setup phase where required Computation is transformed to zkSnarks proover key and verification key through several internal steps that include Algebraic circuit generation, R1CS and QAP. It also includes generation of random values that are used in generation of the keys and discarded (anyone accessing these random values, if not properly discarded, can create attacks).
 * Proof generation that uses proving key generated in the previous phase, public input and private secret that prover knows as part of performing computation. This proof is sent to the verifier.
@@ -56,6 +56,8 @@ zkSnarks includes three steps:
 
 ![Blockdiagram showing zkSnarks Main Steps](./documents/zkproof_2.png)
 
+
+### Relation between proof gsystem and video transcode process
 
 The zkSnarks proof is expected to satisfy a compliance predicate: 
 ```
@@ -65,22 +67,17 @@ input  - input bitstream and transcode options
 output - output bit stream
 code   - decode and encode opertation conforming to required transcode options
 ```
+
 Incase of Transcode Verification, "input" is source bitstream and transcode options, "output" is transcoded bit stream and "code" is transcode operation. The representation of the above compliance predicate requires huge computation power on the part of prover. There are  attempts such as in ref[21] to apply it for image transformation.
 
-The current implementation of Transcode Verification uses a simplified proof generation where input consists of few macroblocks randomly selected in the from the source and transcoded streams.
+The current implementation of Transcode Verification uses a simplified proof generation where input consists of few macroblocks randomly selected from the source and transcoded streams.
 
 
 ![Blockdiagram showing zkSnarks Proof derived from Encode Process](./documents/zkproof_4.png)
 
-### Relation between proof gsystem and video encode process 
-The proof system includes bitstream syntax elements such as macroblocks and video quality metrics such as SSIM. The proof system is described in the following sections in more detail. Public input containing macroblocks/positions  and expected SSIM are submitted by the client. The macroblocks are selected at the near end of the video segment and signaled through the smart contract.   This ensures prior frames are encoded correctly. The number of macroblocks used in the proof should create hurdle to generate fake proofs. The SSIM generated in the proof system is compared against  reference SSIM to fall with in a range. This ensures the transcode operation is carried with the specified transcode parameters. 
+ 
+The proof system includes bitstream(macroblock) decode calculation of video quality metrics SSIM. The proof system is described in the following sections in more detail. Public input includes a reference SSIM submitted by the client. The macroblocks are selected at random offset in video segment. The offets are calculated based on the hash of the transcoded stream. The number of macroblocks used in the proof should create hurdle to generate fake proofs. The SSIM generated in the proof system is compared against  reference SSIM to fall with in a range. This ensures the transcode operation is carried with the specified transcode parameters. The proof system may use additional public and private inputs that may be submitted by upstream and downstream nodes. These additional parameters such as hashes macroblocks being used for proof generation will ensure the source and transcoded streams are consistant along the pipeline. 
 
-## TinyRAM for transcode computation
-As miner may generate fake proofs for verification based on source stream, we have to consider transcode operation as a part of verification process. To avoid fake proof generation.
-
-![Blockdiagram showing no-transcode attack](./documents/zkproof_no_transcode.png)
-
-## Macro-block decode based verification
 ### Outline of the proof generation and verification using SSIM Macro-blocks
 
 #### Public Inputs
