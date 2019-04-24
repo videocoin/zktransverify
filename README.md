@@ -40,13 +40,19 @@ The proof-of-transcode includes the following modules:
 The zero-knowledge feature of zkSNARKS property allows the prover to hide details about the computation from the verifier in the process, and so they are useful for both privacy and performance. This enables a embedding verifier in a smart-contract and offload most of the computation to prover. As the smart-contract runs on all the blockchain nodes and prover runs only on one client, this helps achieve scalability.
  
 ## Implementation Overview  
-Most of the zkSnarks frameworks are based on a library called [libsnark](https://github.com/scipr-lab/libsnark). The following diagram (excerpted from [26]) shown below gives the overview of the stack:  
+Most of the zkSnarks frameworks are based on a library called [libsnark](https://github.com/scipr-lab/libsnark). The library consists several alternate implementations for front-end, back-end and algorithmic layers that allow the application to choose from this set or replace with custom components. We use two front-ends indicatged below for experimentation and final implementation. 
+
+* [Zokrates: A toolbox for zkSNARKs on Ethereum](https://github.com/Zokrates/ZoKrates)  
+* [Pepper/Pequin: A system for verifying outsourced computations, and applying SNARKs](https://github.com/pepper-project/pequin)
+
+![Overview of the VideoCoin Proof-of-transcode modules](./documents/implementation.png)  
+
+In the current implementation ffmpeg custom tool will retrieve the macroblocks from the streams and feeds to the proof-geneartion system. This will be modified in future where the proof system will access the committed transcoded stream and retrieve the macroblocks.
+
+The following diagram (excerpted from [26]) shown below gives a an overview of libsnark stack:  
 
 ![Overview of the libsnark stack](./documents/libsnarkstack.png)  
 
-The library consists several alternate implementations for front-end, back-end and algorithmic layers that allow the application to choose from this set or replace with custom components. We use two front-ends indicatged below for experimentation and final implementation.
-* [Zokrates: A toolbox for zkSNARKs on Ethereum](https://github.com/Zokrates/ZoKrates)  
-* [Pepper/Pequin: A system for verifying outsourced computations, and applying SNARKs](https://github.com/pepper-project/pequin)
 
 ### Key generation, proof generation and verification
 zkSnarks includes three steps:
