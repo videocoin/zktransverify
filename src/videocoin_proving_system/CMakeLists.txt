@@ -4,7 +4,7 @@ project(videocoin_prooving_system)
 # according to libsnark's documentation, we need to use the same conditional defines libsnark was compiled with, as found in
 # thirdparty/libsnark/build/libsnark/CMakeFiles/snark.dir/flags.make
 set(CMAKE_CXX_STANDARD 11)
-set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -m64 -fopenmp\
+set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -m64 -fopenmp -lstdc++\
     -DCURVE_BN128 -DBN_SUPPORT_SNARK -DBINARY_OUTPUT\
     -DMONTGOMERY_OUTPUT -DNO_PROCPS -DUSE_ASM -DMULTICORE")
 
@@ -16,6 +16,7 @@ include_directories(
         ${THIRDPARTY_DIR}/libsnark
         ${THIRDPARTY_DIR}/libsnark/depends/libff
         ${THIRDPARTY_DIR}/libsnark/depends/libfqfft
+        ${THIRDPARTY_DIR}/ffmpeg
 )
 
 link_directories(
@@ -24,14 +25,16 @@ link_directories(
         ${THIRDPARTY_DIR}/libsnark/build/libsnark
         ${THIRDPARTY_DIR}/libsnark/build/depends
         ${THIRDPARTY_DIR}/libsnark/build/depends/libff/libff
+        ${THIRDPARTY_DIR}/ffmpeg/libavcodec
+        ${THIRDPARTY_DIR}/ffmpeg/libavfilter
+        ${THIRDPARTY_DIR}/ffmpeg/libavformat
+        ${THIRDPARTY_DIR}/ffmpeg/libswscale
+        ${THIRDPARTY_DIR}/ffmpeg/libpostproc
+        ${THIRDPARTY_DIR}/ffmpeg/libswresample
+        ${THIRDPARTY_DIR}/ffmpeg/libavutil
 )
 
 link_libraries(-lsnark -lff -lzm -lgmp -lgmpxx)
-
-add_definitions(-DDB_NUM_ADDRESSES=1024)
-add_definitions(-DRAM_CELL_NUM_BITS=32)
-add_definitions(-DDB_HASH_NUM_BITS=1216)
-add_definitions(-DSHARED_BSTORE_FN="default_shared_db")
 
 add_executable(keygen key_generator/main.cpp common/utility.cpp)
 add_executable(verifier verifier/main.cpp common/utility.cpp)
@@ -51,6 +54,15 @@ add_library(
         storage/exo.cpp
         storage/hasher.cpp
 )
+target_compile_definitions(
+        prover
+        PRIVATE
+
+        -DDB_NUM_ADDRESSES=1024
+        -DRAM_CELL_NUM_BITS=32
+        -DDB_HASH_NUM_BITS=1216
+        -DSHARED_BSTORE_FN="default_shared_db"
+)
 target_link_libraries(prover -lkyotocabinet -lpapi -lleveldb)
 
 add_executable(
@@ -63,15 +75,25 @@ add_executable(
         prover_example/h264_ssim_original.cpp
         prover_example/png.cpp
 )
+add_dependencies(prover_example prover)
 
 target_link_libraries(prover_example -lprover -lpng -lkyotocabinet -lpapi -lleveldb -lgmp -lff)
 
-install (FILES prover/prover.h DESTINATION include/prover)
+add_executable(
+        genproof
 
-install(
-        TARGETS prover
-        LIBRARY DESTINATION lib
-        ARCHIVE DESTINATION lib
-        RUNTIME DESTINATION bin
-        INCLUDES DESTINATION include
+        extools/genproof.cpp
+        extools/decode-h264-mb.cpp
+        extools/sha256-util.cpp
 )
+
+target_link_libraries(
+        genproof
+
+        -lprover -lff -lleveldb -lkyotocabinet -lpapi
+        -lavfilter -lswscale -lpostproc -lavformat -lavcodec -lswresample -lavutil
+        -lcrypto -lm -ldl -lbz2 -lpthread -lX11 -lvpx -lx264 -lx265
+        -lass -lz -laom -lvorbis -lvorbisenc -lopus -lmp3lame -lfdk-aac
+)
+
+add_dependencies(genproof prover)
