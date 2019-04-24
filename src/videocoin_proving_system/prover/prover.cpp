@@ -89,13 +89,10 @@ double generate_ssim_proof(const char *pk_fn,
 
     if (json_fn != nullptr) {
         pt::ptree root;
-        pt::ptree node;
+        input.insert(input.end(), output.begin(), output.end());
 
-        proof_to_ptree<libsnark::default_r1cs_ppzksnark_pp>(root, proof);
-
-        auto _input = input;
-        _input.insert(_input.end(), output.begin(), output.end());
-        input_to_ptree<unsigned>(root, _input);
+        root.add_child("proof", proof_to_ptree<libsnark::default_r1cs_ppzksnark_pp>(proof));
+        root.add_child("inputs", input_to_ptree<unsigned>(input));
 
         std::ofstream proof_data(json_fn);
         pt::write_json(proof_data, root);

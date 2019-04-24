@@ -93,8 +93,11 @@ pt::ptree point_to_ptree(libff::G1<ppt> &point) {
     pt::ptree x_node, y_node;
     pt::ptree node;
 
-    x_node.put("", point.coord[0].toString(16));
-    y_node.put("", point.coord[1].toString(16));
+    auto p = libff::G1<ppt>(point);
+    p.to_affine_coordinates();
+
+    x_node.put("", p.coord[0].toString(16));
+    y_node.put("", p.coord[1].toString(16));
     node.push_back(std::make_pair("", x_node));
     node.push_back(std::make_pair("", y_node));
 
@@ -106,8 +109,11 @@ pt::ptree point_to_ptree(libff::G2<ppt> &point) {
     pt::ptree x_node, y_node;
     pt::ptree node1, node2;
 
-    x_node.put("", point.coord[0].a_.toString(16));
-    y_node.put("", point.coord[0].b_.toString(16));
+    auto p = libff::G2<ppt>(point);
+    p.to_affine_coordinates();
+
+    x_node.put("", p.coord[0].a_.toString(16));
+    y_node.put("", p.coord[0].b_.toString(16));
     node1.push_back(std::make_pair("", x_node));
     node1.push_back(std::make_pair("", y_node));
 
@@ -116,8 +122,8 @@ pt::ptree point_to_ptree(libff::G2<ppt> &point) {
     y_node.clear();
     node1.clear();
 
-    x_node.put("", point.coord[1].a_.toString(16));
-    y_node.put("", point.coord[1].b_.toString(16));
+    x_node.put("", p.coord[1].a_.toString(16));
+    y_node.put("", p.coord[1].b_.toString(16));
     node1.push_back(std::make_pair("", x_node));
     node1.push_back(std::make_pair("", y_node));
 
@@ -129,31 +135,23 @@ pt::ptree point_to_ptree(libff::G2<ppt> &point) {
 template<typename ppT>
 void knowledge_commitment_to_ptree(pt::ptree &root, const char *prefix,
                                    libsnark::knowledge_commitment<libff::G1<ppT>, libff::G1<ppT>> &commitment) {
-    auto g = commitment.g;
-    auto h = commitment.h;
 
-    g.to_affine_coordinates();
-    h.to_affine_coordinates();
+    root.add_child(std::string(prefix) + "_g", point_to_ptree<ppT>(commitment.g));
+    root.add_child(std::string(prefix) + "_h", point_to_ptree<ppT>(commitment.h));
 
-    root.add_child(std::string(prefix) + "_g", point_to_ptree<ppT>(g));
-    root.add_child(std::string(prefix) + "_h", point_to_ptree<ppT>(h));
 }
 
 template<typename ppT>
 void knowledge_commitment_to_ptree(pt::ptree &root, const char *prefix,
                                    libsnark::knowledge_commitment<libff::G2<ppT>, libff::G1<ppT>> &commitment) {
-    auto g = commitment.g;
-    auto h = commitment.h;
 
-    g.to_affine_coordinates();
-    h.to_affine_coordinates();
+    root.add_child(std::string(prefix) + "_g", point_to_ptree<ppT>(commitment.g));
+    root.add_child(std::string(prefix) + "_h", point_to_ptree<ppT>(commitment.h));
 
-    root.add_child(std::string(prefix) + "_g", point_to_ptree<ppT>(g));
-    root.add_child(std::string(prefix) + "_h", point_to_ptree<ppT>(h));
 }
 
 template<typename ppT>
-pt::ptree proof_to_ptree(pt::ptree &root, libsnark::r1cs_ppzksnark_proof<ppT> &proof) {
+pt::ptree proof_to_ptree(libsnark::r1cs_ppzksnark_proof<ppT> &proof) {
 
     pt::ptree node;
 
@@ -164,22 +162,21 @@ pt::ptree proof_to_ptree(pt::ptree &root, libsnark::r1cs_ppzksnark_proof<ppT> &p
     node.add_child("H", point_to_ptree<ppT>(proof.g_H));
     node.add_child("K", point_to_ptree<ppT>(proof.g_K));
 
-    root.add_child("proof", node);
+    return node;
 }
 
 template<typename iT>
-void input_to_ptree(pt::ptree &root, std::vector<double> &input) {
+pt::ptree input_to_ptree(std::vector<double> &input) {
 
     pt::ptree node;
     for (auto &item: input) {
         pt::basic_ptree<std::string, std::string> basic_node;
 
         basic_node.put<iT>("", item);
-        root.push_back(std::make_pair("", basic_node));
+        node.push_back(std::make_pair("", basic_node));
     }
 
-    root.add_child("inputs", node);
+    return node;
 }
 
 #endif //COMP_DEFS_H
-

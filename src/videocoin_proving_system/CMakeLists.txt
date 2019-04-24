@@ -1,4 +1,4 @@
-cmake_minimum_required(VERSION 3.13)
+cmake_minimum_required(VERSION 3.5)
 project(videocoin_prooving_system)
 
 # according to libsnark's documentation, we need to use the same conditional defines libsnark was compiled with, as found in
@@ -65,10 +65,12 @@ add_executable(
 
 target_link_libraries(prover_example prover -lpng)
 
+install (FILES prover/prover.h DESTINATION include/prover)
+
 install(
-    TARGETS prover
-    LIBRARY DESTINATION lib
-    ARCHIVE DESTINATION lib
-    RUNTIME DESTINATION bin
-    INCLUDES DESTINATION include
+        TARGETS prover
+        LIBRARY DESTINATION lib
+        ARCHIVE DESTINATION lib
+        RUNTIME DESTINATION bin
+        INCLUDES DESTINATION include
 )
