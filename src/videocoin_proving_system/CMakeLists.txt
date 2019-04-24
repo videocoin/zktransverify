@@ -19,6 +19,7 @@ include_directories(
 )
 
 link_directories(
+        ${PROJECT_BINARY_DIR}
         ${THIRDPARTY_DIR}/dependencies/lib
         ${THIRDPARTY_DIR}/libsnark/build/libsnark
         ${THIRDPARTY_DIR}/libsnark/build/depends
@@ -50,7 +51,7 @@ add_library(
         storage/exo.cpp
         storage/hasher.cpp
 )
-target_link_libraries(prover  -lkyotocabinet -lpapi -lleveldb)
+target_link_libraries(prover -lkyotocabinet -lpapi -lleveldb)
 
 add_executable(
         prover_example
@@ -63,7 +64,7 @@ add_executable(
         prover_example/png.cpp
 )
 
-target_link_libraries(prover_example prover -lpng)
+target_link_libraries(prover_example -lprover -lpng -lkyotocabinet -lpapi -lleveldb -lgmp -lff)
 
 install (FILES prover/prover.h DESTINATION include/prover)
 
