@@ -40,7 +40,7 @@ void parse_options(int argc, const char* argv[])
 	}
 }
 
-int main(int argc, char **argv)
+int main(int argc, const char **argv)
 {
 	MB_T mb = {0};
 	unsigned char outputBuffer[65];
@@ -58,7 +58,7 @@ int main(int argc, char **argv)
 	getMbFromStream(ARG_VIDEO_PATH1, frame_offset, mb_offset, &mb, NULL);
 
 	// Calculate hash of macroblock
-	sha256_string(mb.mb_data, mb.mb_size, outputBuffer);
+	sha256_string((unsigned char *)mb.mb_data, mb.mb_size, outputBuffer);
 	printf("Hash of macroblock=%s\n", outputBuffer);
 	if(mb.mb_data) free(mb.mb_data);
 }

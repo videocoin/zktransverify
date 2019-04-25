@@ -77,7 +77,6 @@ add_executable(
         prover_example/h264_ssim_original.cpp
         prover_example/png.cpp
 )
-add_dependencies(prover_example prover)
 
 target_link_libraries(prover_example -lprover -lpng -lkyotocabinet -lpapi -lleveldb -lgmp -lff)
 
@@ -98,4 +97,21 @@ target_link_libraries(
         -lass -lz -laom -lvorbis -lvorbisenc -lopus -lmp3lame -lfdk-aac
 )
 
+add_executable(
+        genwitness
+
+        extools/genwitness.cpp
+        extools/decode-h264-mb.cpp
+        extools/sha256-util.cpp
+)
+
+target_link_libraries(
+        genwitness
+
+        -lavfilter -lswscale -lpostproc -lavformat -lavcodec -lswresample -lavutil
+        -lcrypto -lm -ldl -lbz2 -lpthread -lX11 -lvpx -lx264 -lx265
+        -lass -lz -laom -lvorbis -lvorbisenc -lopus -lmp3lame -lfdk-aac
+)
+
+add_dependencies(prover_example prover)
 add_dependencies(genproof prover)
