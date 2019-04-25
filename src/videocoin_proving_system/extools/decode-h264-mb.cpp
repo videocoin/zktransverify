@@ -69,7 +69,7 @@ static char* itoa(int val, int base){
 	return &buf[i+1];
 }
 
-int getParam(AVFrame *frame, char *key)
+int getParam(AVFrame *frame, const char *key)
 {
 	AVDictionaryEntry *ent = av_dict_get(frame->metadata,key, NULL, 0);
 	if(ent) {

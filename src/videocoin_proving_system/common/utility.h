@@ -87,6 +87,9 @@ void clear_del_vec(mpq_t *vec, const uint32_t n);
 
 void assert_zero(int value);
 
+#ifdef CURVE_ALT_BN128
+std::string coord_to_string(libff::alt_bn128_Fq &coord);
+#endif
 
 template<typename ppt>
 pt::ptree point_to_ptree(libff::G1<ppt> &point) {
@@ -96,12 +99,18 @@ pt::ptree point_to_ptree(libff::G1<ppt> &point) {
     auto p = libff::G1<ppt>(point);
     p.to_affine_coordinates();
 
-    x_node.put("", p.coord[0].toString(16));
-    y_node.put("", p.coord[1].toString(16));
+#ifdef CURVE_BN128
+    x_node.put("", p.X.toString(16));
+    y_node.put("", p.Y.toString(16));
+#elif CURVE_ALT_BN128
+    x_node.put("", coord_to_string(p.X));
+    y_node.put("", coord_to_string(p.Y));
+#endif
+
     node.push_back(std::make_pair("", x_node));
     node.push_back(std::make_pair("", y_node));
 
-    return node;
+    return std::move(node);
 }
 
 template<typename ppt>
@@ -112,8 +121,14 @@ pt::ptree point_to_ptree(libff::G2<ppt> &point) {
     auto p = libff::G2<ppt>(point);
     p.to_affine_coordinates();
 
+#ifdef CURVE_BN1228
     x_node.put("", p.coord[0].a_.toString(16));
     y_node.put("", p.coord[0].b_.toString(16));
+#elif CURVE_ALT_BN128
+    x_node.put("", coord_to_string(p.X.c0));
+    y_node.put("", coord_to_string(p.X.c1));
+#endif
+
     node1.push_back(std::make_pair("", x_node));
     node1.push_back(std::make_pair("", y_node));
 
@@ -122,14 +137,20 @@ pt::ptree point_to_ptree(libff::G2<ppt> &point) {
     y_node.clear();
     node1.clear();
 
+#ifdef CURVE_BN128
     x_node.put("", p.coord[1].a_.toString(16));
     y_node.put("", p.coord[1].b_.toString(16));
+#elif CURVE_ALT_BN128
+    x_node.put("", coord_to_string(p.Y.c0));
+    y_node.put("", coord_to_string(p.Y.c1));
+#endif
+
     node1.push_back(std::make_pair("", x_node));
     node1.push_back(std::make_pair("", y_node));
 
     node2.push_back(std::make_pair("", node1));
 
-    return node2;
+    return std::move(node2);
 }
 
 template<typename ppT>
@@ -162,7 +183,7 @@ pt::ptree proof_to_ptree(libsnark::r1cs_ppzksnark_proof<ppT> &proof) {
     node.add_child("H", point_to_ptree<ppT>(proof.g_H));
     node.add_child("K", point_to_ptree<ppT>(proof.g_K));
 
-    return node;
+    return std::move(node);
 }
 
 template<typename iT>

@@ -19,7 +19,7 @@ comp_params parse_params(const char *params_filename) {
     param_file >> num_constraints >> comment >> num_inputs >> comment >> num_outputs >> comment >> num_vars;
     param_file.close();
 
-    return comp_params{num_constraints, num_inputs, num_outputs, num_vars};
+    return std::move(comp_params{num_constraints, num_inputs, num_outputs, num_vars});
 }
 
 std::string ssim_mode::str() const {
@@ -126,3 +126,16 @@ void clear_del_vec(mpz_t *vec, const uint32_t n) {
 void assert_zero(int value) {
     assert(value == 0);
 }
+
+#ifdef CURVE_ALT_BN128
+std::string coord_to_string(libff::alt_bn128_Fq &coord) {
+    char buf[70];
+
+    mpz_t temp;
+    mpz_init(temp);
+    coord.as_bigint().to_mpz(temp);
+    gmp_sprintf(buf, "0x%Zx", temp);
+
+    return std::move(std::string(buf));
+}
+#endif

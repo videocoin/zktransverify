@@ -5,7 +5,7 @@ project(videocoin_prooving_system)
 # thirdparty/libsnark/build/libsnark/CMakeFiles/snark.dir/flags.make
 set(CMAKE_CXX_STANDARD 11)
 set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -m64 -fopenmp -lstdc++\
-    -DCURVE_BN128 -DBN_SUPPORT_SNARK -DBINARY_OUTPUT\
+    -DCURVE_ALT_BN128 -DBN_SUPPORT_SNARK -DBINARY_OUTPUT\
     -DMONTGOMERY_OUTPUT -DNO_PROCPS -DUSE_ASM -DMULTICORE")
 
 set(THIRDPARTY_DIR ${PROJECT_SOURCE_DIR}/thirdparty)
@@ -34,10 +34,12 @@ link_directories(
         ${THIRDPARTY_DIR}/ffmpeg/libavutil
 )
 
-link_libraries(-lsnark -lff -lzm -lgmp -lgmpxx)
-
 add_executable(keygen key_generator/main.cpp common/utility.cpp)
+target_link_libraries(keygen -lgmp -lgmpxx -lff)
+
 add_executable(verifier verifier/main.cpp common/utility.cpp)
+target_link_libraries(verifier -lgmp -lgmpxx -lff)
+
 add_library(
         prover
         STATIC
@@ -90,7 +92,7 @@ add_executable(
 target_link_libraries(
         genproof
 
-        -lprover -lff -lleveldb -lkyotocabinet -lpapi
+        -lprover -lff -lleveldb -lkyotocabinet -lpapi -lgmp
         -lavfilter -lswscale -lpostproc -lavformat -lavcodec -lswresample -lavutil
         -lcrypto -lm -ldl -lbz2 -lpthread -lX11 -lvpx -lx264 -lx265
         -lass -lz -laom -lvorbis -lvorbisenc -lopus -lmp3lame -lfdk-aac

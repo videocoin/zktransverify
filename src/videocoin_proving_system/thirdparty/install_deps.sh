@@ -48,6 +48,8 @@ git submodule init && git submodule update
 git apply libsnark_compilerflag.patch
 mkdir build && cd build
 echo $DEPS_DIR
-cmake -DCMAKE_INSTALL_PREFIX=$DEPS_DIR -DWITH_PROCPS=OFF -DMULTICORE=ON ..
+cmake -DCMAKE_INSTALL_PREFIX=$DEPS_DIR -DWITH_PROCPS=OFF -DMULTICORE=ON -DCURVE=ALT_BN128 ..
 DESTDIR=$DEPS_DIR make install
 cd $UP
+
+# TODO: add ffmpeg?
