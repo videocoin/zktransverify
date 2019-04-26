@@ -76,9 +76,9 @@ double generate_ssim_proof(const char *pk_fn,
 
     print_proof_to_file(proof, proof_fn);
 
-    std::ofstream proof_file(proof_fn);
-    proof_file << proof;
-    proof_file.close();
+//    std::ofstream proof_file(proof_fn);
+//    proof_file << proof;
+//    proof_file.close();
 
     std::ofstream output_file(output_fn);
     for (int i = 0; i < p.n_inputs; i++) {
