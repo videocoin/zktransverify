@@ -16,8 +16,8 @@ transfile = "-"
 proof_file = "../temp/proof.json"
 verifier_abi_n_addr_file = 'build/contracts/Verifier.json'  # to be moved to current folder after debug
 # verifier_abi_n_addr_file = 'Verifier.json'
-exec_genwitness = "../cmake-build-debug/extools/genwitness"
-exec_genproof = "../cmake-build-debug/extools/genwitness"
+exec_genwitness = "../build/genwitness"
+exec_genproof = "../build/genwitness"
 winess_file = "mywitness"
 
 genproof = False
