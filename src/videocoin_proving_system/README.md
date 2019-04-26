@@ -1,4 +1,4 @@
-# Videocoin Proving System
+# Videcocoin Proving System
 
 ## Installation Guide
 
@@ -18,13 +18,13 @@ make
 
 ## Running binaries
 
-Go to root directory.
+Go to root directory
 
 ```
 cd ..
 ```
 
-### Create temporary folder.
+### Create temporary folder
 
 ```
 mkdir temp
@@ -32,7 +32,7 @@ mkdir temp
 
 **Note**: Currently tests and binaries are tied to temp folder. Should be removed during code cleanup.
 
-### Generate proving and verification keys.
+### Generate proving and verification keys
 
 ```
 ./build/keygen ssim16x16 temp/v.key temp/p.key temp/vk_data
@@ -44,7 +44,7 @@ mkdir temp
 
 `vk_data` is verification key in uncompressed format which is required for truffle tests.
 
-### Calculate SSIM for two video files and generate proof
+### Calculate SSIM for two video samples and generate proof
 
 ```
 ./build/genproof extools/SampleVideo_1280x720_1mb.mp4 extools/SampleVideo_1280x720_1mb.mp4 temp/p.key
@@ -54,7 +54,7 @@ mkdir temp
 
 **Note**: Add more video samples.
 
-### Running truffle Tests
+### Running Truffle Tests
 
 **Pre-requirements**: `node.js`, `truffle` packages should be installed.
 
