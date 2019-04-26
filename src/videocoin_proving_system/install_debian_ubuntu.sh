@@ -3,7 +3,7 @@
 set -e
 
 PACKAGES="build-essential gcc g++ gcc-multilib g++-multilib\
-          libboost-all-dev libgmp10 libgmp-dev rar unrar-free\
+          libboost-all-dev libgmp10 libgmp-dev rar unrar-free libbz2-dev\
           zlib1g zlib1g-dev libssl-dev cmake"
 
 sudo apt-get install $PACKAGES
