@@ -38,18 +38,13 @@ cp --preserve=links libleveldb.* $DEPS_DIR/lib
 cp -r include/leveldb $DEPS_DIR/include
 cd $UP
 
-#libsnark
-echo "installing libsnark"
-[ ! -d libsnark ] && git clone https://github.com/scipr-lab/libsnark.git
-cp libsnark_compilerflag.patch libsnark
-cd libsnark
-git checkout dc78fdae02b437bb6c838a82f9261c49bbd7723e
-git submodule init && git submodule update
-git apply libsnark_compilerflag.patch
-mkdir build && cd build
-echo $DEPS_DIR
-cmake -DCMAKE_INSTALL_PREFIX=$DEPS_DIR -DWITH_PROCPS=OFF -DMULTICORE=ON -DCURVE=ALT_BN128 ..
-DESTDIR=$DEPS_DIR make install
+#aom
+echo "installing aom"
+[ ! -d aom ] && git clone https://aomedia.googlesource.com/aom
+cd aom/build
+cmake ..
+make 
+sudo make install
 cd $UP
 
 #ffmpeg
@@ -77,5 +72,19 @@ PATH="$HOME/bin:$PATH" PKG_CONFIG_PATH="$HOME/ffmpeg_build/lib/pkgconfig" ./conf
   --enable-nonfree \
   --disable-optimizations
 PATH="$HOME/bin:$PATH" make
-make install
+sudo make install
+cd $UP
+
+#libsnark
+echo "installing libsnark"
+[ ! -d libsnark ] && git clone https://github.com/scipr-lab/libsnark.git
+cp libsnark_compilerflag.patch libsnark
+cd libsnark
+git checkout dc78fdae02b437bb6c838a82f9261c49bbd7723e
+git submodule init && git submodule update
+git apply libsnark_compilerflag.patch
+mkdir build && cd build
+echo $DEPS_DIR
+cmake -DCMAKE_INSTALL_PREFIX=$DEPS_DIR -DWITH_PROCPS=OFF -DMULTICORE=ON -DCURVE=ALT_BN128 ..
+DESTDIR=$DEPS_DIR make install
 cd $UP
