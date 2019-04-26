@@ -1,4 +1,4 @@
-# Videcocoin Proving System
+# Videcoin Proving System
 
 ## Installation Guide
 
