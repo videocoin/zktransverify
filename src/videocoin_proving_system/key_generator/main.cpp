@@ -185,9 +185,7 @@ void generate_keys(std::string &app_path,
     vkey.close();
 
     if (unprocessed_vkey_file.length() > 0) {
-        std::ofstream unprocessed_vkey(unprocessed_vkey_file);
-        unprocessed_vkey << keypair.vk;
-        unprocessed_vkey.close();
+        print_vk_to_file(keypair.vk, unprocessed_vkey_file);
     }
 }
 

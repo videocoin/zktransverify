@@ -658,8 +658,16 @@ void ComputationProver::compute_exo_compute(FILE *pws_file) {
     }
     std::string procInStr = procIn.str();
 
+    std::string exo_dir;
+    if (const char *env_p = std::getenv("VIDEOCOIN_ENV")) {
+        exo_dir += env_p;
+    } else {
+        gmp_printf("ERROR: exo_compute failed. VIDEOCOIN_ENV is not set: \n");
+        exit(1);
+    }
+
     // build up the arguments to the command and run it
-    sprintf(cmds, "./bin/exo%d", exoId);
+    sprintf(cmds, "%s/exo/exo%d", exo_dir.c_str(), exoId);
 
     // buffer is totally big enough that this is acceptable. tee hee
     char *outLenStr = cmds + strlen(cmds) + 2;

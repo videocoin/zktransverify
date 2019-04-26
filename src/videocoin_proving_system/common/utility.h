@@ -88,6 +88,7 @@ void clear_del_vec(mpq_t *vec, const uint32_t n);
 void assert_zero(int value);
 
 #ifdef CURVE_ALT_BN128
+std::string coord_to_string(libff::alt_bn128_Fq2 &coord);
 std::string coord_to_string(libff::alt_bn128_Fq &coord);
 #endif
 
@@ -198,6 +199,199 @@ pt::ptree input_to_ptree(std::vector<double> &input) {
     }
 
     return node;
+}
+
+template<typename ppT>
+pt::ptree vk_to_ptree(libsnark::r1cs_ppzksnark_verification_key<ppT> vk)
+{
+    pt::ptree node;
+
+    libff::G2<ppT> A(vk.alphaA_g2);
+    A.to_affine_coordinates();
+    libff::G1<ppT> B(vk.alphaB_g1);
+    B.to_affine_coordinates();
+    libff::G2<ppT> C(vk.alphaC_g2);
+    C.to_affine_coordinates();
+
+    libff::G2<ppT> gamma(vk.gamma_g2);
+    gamma.to_affine_coordinates();
+    libff::G1<ppT> gamma_beta_1(vk.gamma_beta_g1);
+    gamma_beta_1.to_affine_coordinates();
+    libff::G2<ppT> gamma_beta_2(vk.gamma_beta_g2);
+    gamma_beta_2.to_affine_coordinates();
+
+    libff::G2<ppT> Z(vk.rC_Z_g2);
+    Z.to_affine_coordinates();
+
+    libsnark::accumulation_vector<libff::G1<ppT>> IC(vk.encoded_IC_query);
+    libff::G1<ppT> IC_0(IC.first);
+    IC_0.to_affine_coordinates();
+
+    node.add_child("A", point_to_ptree<ppT>(A));
+    node.add_child("B", point_to_ptree<ppT>(B));
+    node.add_child("C", point_to_ptree<ppT>(C));
+    node.add_child("gamma", point_to_ptree<ppT>(gamma));
+    node.add_child("gamma_beta_1", point_to_ptree<ppT>(gamma_beta_1));
+    node.add_child("gamma_beta_2", point_to_ptree<ppT>(gamma_beta_2));
+    node.add_child("Z", point_to_ptree<ppT>(Z));
+    node.add_child("IC_0", point_to_ptree<ppT>(IC_0));
+
+    for(size_t i=0; i<IC.size(); i++) {
+        char buf[10] = {0};
+        libff::G1<ppT> IC_N(IC.rest[i]);
+        IC_N.to_affine_coordinates();
+
+        sprintf(buf, "IC_%zu", i);
+        node.add_child(buf, point_to_ptree<ppT>(IC_N));
+    }
+
+    return std::move(node);
+}
+
+template<typename ppT>
+void print_vk_to_file(libsnark::r1cs_ppzksnark_verification_key<ppT> vk, std::string pathToFile)
+{
+    std::ofstream vk_data;
+    vk_data.open(pathToFile);
+
+    libff::G2<ppT> A(vk.alphaA_g2);
+    A.to_affine_coordinates();
+    libff::G1<ppT> B(vk.alphaB_g1);
+    B.to_affine_coordinates();
+    libff::G2<ppT> C(vk.alphaC_g2);
+    C.to_affine_coordinates();
+
+    libff::G2<ppT> gamma(vk.gamma_g2);
+    gamma.to_affine_coordinates();
+    libff::G1<ppT> gamma_beta_1(vk.gamma_beta_g1);
+    gamma_beta_1.to_affine_coordinates();
+    libff::G2<ppT> gamma_beta_2(vk.gamma_beta_g2);
+    gamma_beta_2.to_affine_coordinates();
+
+    libff::G2<ppT> Z(vk.rC_Z_g2);
+    Z.to_affine_coordinates();
+
+    libsnark::accumulation_vector<libff::G1<ppT>> IC(vk.encoded_IC_query);
+    libff::G1<ppT> IC_0(IC.first);
+    IC_0.to_affine_coordinates();
+
+    vk_data << coord_to_string(A.X) << std::endl;
+    vk_data << coord_to_string(A.Y) << std::endl;
+
+    vk_data << coord_to_string(B.X) << std::endl;
+    vk_data << coord_to_string(B.Y) << std::endl;
+
+    vk_data << coord_to_string(C.X) << std::endl;
+    vk_data << coord_to_string(C.Y) << std::endl;
+
+    vk_data << coord_to_string(gamma.X) << std::endl;
+    vk_data << coord_to_string(gamma.Y) << std::endl;
+
+    vk_data << coord_to_string(gamma_beta_1.X) << std::endl;
+    vk_data << coord_to_string(gamma_beta_1.Y) << std::endl;
+
+    vk_data << coord_to_string(gamma_beta_2.X) << std::endl;
+    vk_data << coord_to_string(gamma_beta_2.Y) << std::endl;
+
+    vk_data << coord_to_string(Z.X) << std::endl;
+    vk_data << coord_to_string(Z.Y) << std::endl;
+
+    vk_data << coord_to_string(IC_0.X) << std::endl;
+    vk_data << coord_to_string(IC_0.Y) << std::endl;
+
+    for(size_t i=0; i<IC.size(); i++) {
+        libff::G1<ppT> IC_N(IC.rest[i]);
+        IC_N.to_affine_coordinates();
+        vk_data << coord_to_string(IC_N.X) << std::endl;
+        vk_data << coord_to_string(IC_N.Y) << std::endl;
+    }
+
+//    vk_data << A.X << std::endl;
+//    vk_data << A.Y << std::endl;
+//
+//    vk_data << B.X << std::endl;
+//    vk_data << B.Y << std::endl;
+//
+//    vk_data << C.X << std::endl;
+//    vk_data << C.Y << std::endl;
+//
+//    vk_data << gamma.X << std::endl;
+//    vk_data << gamma.Y << std::endl;
+//
+//    vk_data << gamma_beta_1.X << std::endl;
+//    vk_data << gamma_beta_1.Y << std::endl;
+//
+//    vk_data << gamma_beta_2.X << std::endl;
+//    vk_data << gamma_beta_2.Y << std::endl;
+//
+//    vk_data << Z.X << std::endl;
+//    vk_data << Z.Y << std::endl;
+//
+//    vk_data << IC_0.X << std::endl;
+//    vk_data << IC_0.Y << std::endl;
+//
+//    for(size_t i=0; i<IC.size(); i++) {
+//        libff::G1<ppT> IC_N(IC.rest[i]);
+//        IC_N.to_affine_coordinates();
+//        vk_data << IC_N.X << std::endl;
+//        vk_data << IC_N.Y << std::endl;
+//    }
+
+
+    vk_data.close();
+}
+
+template<typename ppT>
+void print_proof_to_file(libsnark::r1cs_ppzksnark_proof<ppT> proof, std::string pathToFile)
+{
+    std::ofstream proof_data;
+    proof_data.open(pathToFile);
+
+    libff::G1<ppT> A_g(proof.g_A.g);
+    A_g.to_affine_coordinates();
+    libff::G1<ppT> A_h(proof.g_A.h);
+    A_h.to_affine_coordinates();
+
+    libff::G2<ppT> B_g(proof.g_B.g);
+    B_g.to_affine_coordinates();
+    libff::G1<ppT> B_h(proof.g_B.h);
+    B_h.to_affine_coordinates();
+
+    libff::G1<ppT> C_g(proof.g_C.g);
+    C_g.to_affine_coordinates();
+    libff::G1<ppT> C_h(proof.g_C.h);
+    C_h.to_affine_coordinates();
+
+    libff::G1<ppT> H(proof.g_H);
+    H.to_affine_coordinates();
+    libff::G1<ppT> K(proof.g_K);
+    K.to_affine_coordinates();
+
+    proof_data << coord_to_string(A_g.X) << std::endl;
+    proof_data << coord_to_string(A_g.Y) << std::endl;
+
+    proof_data << coord_to_string(A_h.X) << std::endl;
+    proof_data << coord_to_string(A_h.Y) << std::endl;
+
+    proof_data << coord_to_string(B_g.X) << std::endl;
+    proof_data << coord_to_string(B_g.Y) << std::endl;
+
+    proof_data << coord_to_string(B_h.X) << std::endl;
+    proof_data << coord_to_string(B_h.Y) << std::endl;
+
+    proof_data << coord_to_string(C_g.X) << std::endl;
+    proof_data << coord_to_string(C_g.Y) << std::endl;
+
+    proof_data << coord_to_string(C_h.X) << std::endl;
+    proof_data << coord_to_string(C_h.Y) << std::endl;
+
+    proof_data << coord_to_string(H.X) << std::endl;
+    proof_data << coord_to_string(H.Y) << std::endl;
+
+    proof_data << coord_to_string(K.X) << std::endl;
+    proof_data << coord_to_string(K.Y) << std::endl;
+
+    proof_data.close();
 }
 
 #endif //COMP_DEFS_H

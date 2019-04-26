@@ -128,6 +128,10 @@ void assert_zero(int value) {
 }
 
 #ifdef CURVE_ALT_BN128
+std::string coord_to_string(libff::alt_bn128_Fq2 &coord) {
+    return std::move(coord_to_string(coord.c0) + "\n" + coord_to_string(coord.c1));
+}
+
 std::string coord_to_string(libff::alt_bn128_Fq &coord) {
     char buf[70];
 
