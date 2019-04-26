@@ -86,7 +86,7 @@ int main(int argc, const char *argv[]) {
 
     initialize_prover();
     double ssim = generate_ssim_proof(ARG_PROVING_KEY_PATH, srcRawY, sizeof(srcRawY), transRawY, sizeof(transRawY),
-                                      "../temp/output.txt", "../temp/ssim.proof", "../temp/proof.json");
+                                      "../temp/input.txt", "../temp/ssim.proof", "../temp/proof.json");
     printf("{\"witness\":[\"%d\"]}\n", (int) (ssim * 100));
     save_witness("mywitness", 80, (int) (ssim * 100), srcRawY, transRawY);
 

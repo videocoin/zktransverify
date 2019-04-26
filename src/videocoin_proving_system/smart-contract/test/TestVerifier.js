@@ -3,6 +3,7 @@ var Verifier = artifacts.require("Verifier");
 
 var vk;
 var proof;
+var input;
 
 var A, B, C;
 var gamma, gamma_beta_1, gamma_beta_2;
@@ -11,6 +12,7 @@ var IC = [];
 
 var A_g, A_h, B_g, B_h, C_g, C_h;
 var H, K;
+var input_vector = [];
 
 contract('Verifier', function(accounts) {
 	fs.readFile("/home/taras/videocoin/zktransverify/src/videocoin_proving_system/temp/vk_data", function(err, data) {
@@ -29,15 +31,24 @@ contract('Verifier', function(accounts) {
 		console.log("proof_data:");
 		console.log(proof);
 	});
+	fs.readFile("/home/taras/videocoin/zktransverify/src/videocoin_proving_system/temp/input.txt", function(err, data) {
+		if(err) {
+			console.log("Error reading input_data");
+		}
+		input = data.toString().replace(/\n/g, " ").split(" ");
+		console.log("input_data:");
+		console.log(input);
+	});
 
 	it("should have vk and proof data", function() {
 		assert.isAtLeast(vk.length, 24, "vk_data not correct size");
 		assert.isAtLeast(proof.length, 18, "proof_data not correct size");
+		assert.isAtLeast(input.length, 3, "input_data not correct size");
 	});
 
 	it("should set verifying key", function() {
 		var verifier;
-		
+
 		return Verifier.deployed().then(function(instance) {
 			verifier = instance;
 		}).then(function() {
@@ -61,9 +72,9 @@ contract('Verifier', function(accounts) {
 			}
 
 			return verifier.setVerifyingKey(A, B, C,
-											gamma, gamma_beta_1, gamma_beta_2,
-											Z,
-											IC);
+				gamma, gamma_beta_1, gamma_beta_2,
+				Z,
+				IC);
 		}).then(function() {
 			return verifier.verifyingKeySet.call();
 		}).then(function(verifyingKeySet) {
@@ -94,9 +105,14 @@ contract('Verifier', function(accounts) {
 			K = parseG1Point(proof);
 			proof = proof.slice(2);
 
+			while(input != [] && input[0] != "") {
+				input_vector.push(input[0]);
+				input = input.slice(1);
+			}
+
 			return verifier.verifyTx.call(A_g, A_h, B_g, B_h, C_g, C_h,
-										  H, K,
-										  [105, 0, 589824, 9]);
+				H, K,
+				input_vector);
 		}).then(function(result) {
 			assert.equal(result, true, "The correct proof did not verify");
 		});
@@ -111,14 +127,14 @@ contract('Verifier', function(accounts) {
 			verifier = instance;
 
 			return verifier.verifyTx.call([0,0], A_h, B_g, B_h, C_g, C_h,
-										  H, K,
-										  [105, 0, 589824, 9]);
+				H, K,
+				input_vector);
 		}).then(function(result) {
 			wrongProof = result;
 
 			return verifier.verifyTx.call(A_g, A_h, B_g, B_h, C_g, C_h,
-										  H, K,
-										  [105, 0, 0, 3]);
+				H, K,
+				[105, 0, 0, 3]);
 		}).then(function(result) {
 			wrongInput = result;
 		}).then(function() {
