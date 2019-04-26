@@ -5,6 +5,7 @@
 #include <string>
 #include <iostream>
 #include <fstream>
+#include <sys/stat.h>
 
 #include <libsnark/relations/constraint_satisfaction_problems/r1cs/r1cs.hpp>
 #include <libsnark/common/default_types/r1cs_ppzksnark_pp.hpp>
@@ -22,6 +23,9 @@ static void generate_proof_internal(const comp_params &p,
                                     const std::vector<double> &input,
                                     std::vector<double> &output,
                                     libsnark::r1cs_ppzksnark_proof<libsnark::default_r1cs_ppzksnark_pp> &proof);
+
+static void write_to_auxilary_input(const unsigned char *src1, size_t len1, const unsigned char *src2, size_t len2);
+static void clear_auxilary_input();
 
 void initialize_prover() {
     initialize_env();
@@ -63,16 +67,14 @@ double generate_ssim_proof(const char *pk_fn,
     std::vector<double> input;
     std::vector<double> output;
 
-    for (int i = 0; i < p.n_inputs / 2; ++i) {
-        input.emplace_back(src1[i]);
-    }
-    for (int i = 0; i < p.n_inputs / 2; ++i) {
-        input.emplace_back(src2[i]);
-    }
+    write_to_auxilary_input(src1, src1_len, src2, src2_len);
+    input.emplace_back(src1[0]);
 
     libsnark::r1cs_ppzksnark_proof<libsnark::default_r1cs_ppzksnark_pp> proof;
 
     generate_proof_internal(p, pws.c_str(), pk, input, output, proof);
+
+    print_proof_to_file(proof, proof_fn);
 
     std::ofstream proof_file(proof_fn);
     proof_file << proof;
@@ -86,6 +88,8 @@ double generate_ssim_proof(const char *pk_fn,
         output_file << (unsigned) output[i] << std::endl;
     }
     output_file.close();
+
+    clear_auxilary_input();
 
     if (json_fn != nullptr) {
         pt::ptree root;
@@ -143,4 +147,28 @@ void generate_proof_internal(const comp_params &p,
     for (int i = 0; i < p.n_outputs; i++) {
         output.emplace_back(mpq_get_d(prover.input_output_q[p.n_inputs + i]));
     }
+}
+
+void write_to_auxilary_input(const unsigned char *src1, size_t len1, const unsigned char *src2, size_t len2) {
+    std::string file = exo_dir + "exo3";
+    std::ofstream aux(file);
+    if (!aux.is_open()) {
+        std::cerr << "ERROR: can't create file " << file << "." << std::endl;
+        exit(1);
+    }
+
+    aux << "#!/bin/sh" << std::endl << std::endl << std::endl;
+    for (size_t i = 0; i < len1; ++i) {
+        aux << "echo " << (int)src1[i] << std::endl;
+    }
+    for (size_t i = 0; i < len2; ++i) {
+        aux << "echo " << (int)src2[i] << std::endl;
+    }
+
+    aux.close();
+    chmod(file.c_str(), ALLPERMS);
+}
+
+void clear_auxilary_input() {
+    remove((exo_dir + "exo3").c_str());
 }
