@@ -10,11 +10,11 @@ library Pairing {
         uint[2] Y;
     }
     /// @return the generator of G1
-    function P1() internal returns (G1Point memory) {
+    function P1() pure internal returns (G1Point memory) {
         return G1Point(1, 2);
     }
     /// @return the generator of G2
-    function P2() internal returns (G2Point memory) {
+    function P2() pure internal returns (G2Point memory) {
         return G2Point(
             [11559732032986387107991004021392285783925812861821192530917403151452391805634,
              10857046999023057135944570762232829481370756359578518086990519993285655852781],
@@ -22,8 +22,8 @@ library Pairing {
              8495653923123431417604973247489272438418190587263600148770280649306958101930]
         );
     }
-    /// @return the negation of p, i.e. p.add(p.negate()) should be zero.
-    function negate(G1Point memory p) internal returns (G1Point memory) {
+    /// @return the negation of p, i.e. p.addition(p.negate()) should be zero.
+    function negate(G1Point memory p) pure internal returns (G1Point memory) {
         // The prime q in the base field F_q for G1
         uint q = 21888242871839275222246405745257275088696311157297823662689037894645226208583;
         if (p.X == 0 && p.Y == 0)
@@ -31,7 +31,7 @@ library Pairing {
         return G1Point(p.X, q - (p.Y % q));
     }
     /// @return the sum of two points of G1
-    function add(G1Point memory p1, G1Point memory p2) internal returns (G1Point memory r) {
+    function addition(G1Point memory p1, G1Point memory p2) internal returns (G1Point memory r) {
         uint[4] memory input;
         input[0] = p1.X;
         input[1] = p1.Y;
@@ -46,8 +46,8 @@ library Pairing {
         require(success);
     }
     /// @return the product of a point on G1 and a scalar, i.e.
-    /// p == p.mul(1) and p.add(p) == p.mul(2) for all points p.
-    function mul(G1Point memory p, uint s) internal returns (G1Point memory r) {
+    /// p == p.scalar_mul(1) and p.addition(p) == p.scalar_mul(2) for all points p.
+    function scalar_mul(G1Point memory p, uint s) internal returns (G1Point memory r) {
         uint[3] memory input;
         input[0] = p.X;
         input[1] = p.Y;
@@ -164,18 +164,18 @@ contract Verifier {
         // Compute the linear combination vk_x
         Pairing.G1Point memory vk_x = Pairing.G1Point(0, 0);
         for (uint i = 0; i < input.length; i++)
-            vk_x = Pairing.add(vk_x, Pairing.mul(vk.IC[i + 1], input[i]));
-        vk_x = Pairing.add(vk_x, vk.IC[0]);
+            vk_x = Pairing.addition(vk_x, Pairing.scalar_mul(vk.IC[i + 1], input[i]));
+        vk_x = Pairing.addition(vk_x, vk.IC[0]);
         if (!Pairing.pairingProd2(proof.A, vk.A, Pairing.negate(proof.A_p), Pairing.P2())) return 1;
         if (!Pairing.pairingProd2(vk.B, proof.B, Pairing.negate(proof.B_p), Pairing.P2())) return 2;
         if (!Pairing.pairingProd2(proof.C, vk.C, Pairing.negate(proof.C_p), Pairing.P2())) return 3;
         if (!Pairing.pairingProd3(
             proof.K, vk.gamma,
-            Pairing.negate(Pairing.add(vk_x, Pairing.add(proof.A, proof.C))), vk.gammaBeta2,
+            Pairing.negate(Pairing.addition(vk_x, Pairing.addition(proof.A, proof.C))), vk.gammaBeta2,
             Pairing.negate(vk.gammaBeta1), proof.B
         )) return 4;
         if (!Pairing.pairingProd3(
-                Pairing.add(vk_x, proof.A), proof.B,
+                Pairing.addition(vk_x, proof.A), proof.B,
                 Pairing.negate(proof.H), vk.Z,
                 Pairing.negate(proof.C), Pairing.P2()
         )) return 5;
