@@ -21,13 +21,16 @@
 
 
 struct In {
-    pixel pix1[WIDTH * HEIGHT];
-    pixel pix2[WIDTH * HEIGHT];
+    uint32_t input_num[1];
 };
 
 struct Out {
     fix_t ssim;
     unsigned int counter;
+};
+
+struct input_elm {
+    pixel values[2 * WIDTH * HEIGHT];
 };
 
 int buf[1024];
@@ -111,6 +114,14 @@ fix_t ssim_end4( int *sum0, int *sum1, int width )
 }
 
 void compute(struct In *input, struct Out *output) {
+    uint32_t *exo0_inputs[1] = { input->input_num };
+    uint32_t lens[1] = {0};
+
+    struct input_elm inputs[1];
+    exo_compute(exo0_inputs, lens, inputs, 3);
+    pixel *pix1 = inputs[0].values;
+    pixel *pix2 = inputs[0].values + WIDTH * HEIGHT;
+
     int z = 0;
     fix_t ssim = 0;
 
@@ -132,7 +143,7 @@ void compute(struct In *input, struct Out *output) {
 
             for (x = 0; x < width; x+=2 )
             {
-                ssim_4x4x2_core(input->pix1 + (4 * (x + z * STRIDE)), input->pix2 + (4 * (x + z * STRIDE)), sum0 + x * 4);
+                ssim_4x4x2_core(pix1 + (4 * (x + z * STRIDE)), pix2 + (4 * (x + z * STRIDE)), sum0 + x * 4);
             }
         }
 
