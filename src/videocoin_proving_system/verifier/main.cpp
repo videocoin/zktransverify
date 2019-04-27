@@ -1,5 +1,8 @@
 #include <iostream>
 #include <fstream>
+#include <exception>
+
+#include <boost/program_options.hpp>
 
 #include <libsnark/relations/constraint_satisfaction_problems/r1cs/r1cs.hpp>
 #include <libsnark/common/default_types/r1cs_ppzksnark_pp.hpp>
@@ -8,15 +11,10 @@
 #include <common/utility.h>
 #include <common/defs.h>
 
-void print_usage(char *argv[]) {
-    std::cout << "usage: " << std::endl
-              << argv[0]
-              << " <ssim16x16 | mb16x16> <verification key file> <inputs file> <proof file>"
-              << std::endl;
-}
+namespace po = boost::program_options;
 
-void verify(std::string &verification_key_fn, std::string &inputs_fn,
-            std::string &proof_fn, int num_inputs, mpz_t prime) {
+void verify(const std::string &verification_key_fn, const std::string &inputs_fn,
+            const std::string &proof_fn, int num_inputs, mpz_t prime) {
 
     libsnark::default_r1cs_ppzksnark_pp::init_public_params();
 
@@ -66,28 +64,68 @@ void verify(std::string &verification_key_fn, std::string &inputs_fn,
 }
 
 int main(int argc, char *argv[]) {
-    if (argc != 5) {
-        print_usage(argv);
-        exit(1);
-    }
+    try {
+        po::options_description general("General options");
+        po::options_description verifier("Verifier options");
+        po::options_description all;
+        po::variables_map vm;
 
-    ssim_mode mode = ssim_mode::from_str(argv[1]);
+        general.add_options()
+                ("help,h", "produce help message");
 
-    initialize_env();
+        verifier.add_options()
+                ("mode,m", po::value<std::string>(),
+                 "set algorithm type <ssim16x16 | ssim32x32 | ssim64x64>")
+                ("vkey,v", po::value<std::string>(), "path to verification key")
+                ("proof,p", po::value<std::string>(), "path to proof")
+                ("input-output,i", po::value<std::string>(), "path to input-output file");
 
-    std::string params = application_dir + mode.str() + "/params";
-    struct comp_params p = parse_params(params.c_str());
+        all.add(general).add(verifier);
 
-    mpz_t prime;
-    mpz_init_set_str(prime, prime_str, 10);
+        po::store(po::parse_command_line(argc, argv, all), vm);
+        po::notify(vm);
 
-    if (mode.is_valid() || !strcmp(argv[1], "mb16x16")) {
+        if (vm.count("help")) {
+            std::cout << all << std::endl;
+            exit(0);
+        }
+
+        // check mandatory options
+        for (auto &e: {"mode", "vkey", "proof", "input-output"}) {
+            if (!vm.count(e)) {
+                std::cerr << "error: the option '--" << e << "' is required but missing\n" << all << std::endl;
+                exit(1);
+            }
+        }
+
+        ssim_mode mode = ssim_mode::from_str(vm["mode"].as<std::string>().c_str());
+        if (!mode.is_valid()) {
+            std::cerr << "error: the option '--mode' has invalid value: " << vm["mode"].as<std::string>() << std::endl
+                      << all << std::endl;
+            exit(1);
+        }
+
+        initialize_env();
+        std::string params = application_dir + mode.str() + "/params";
+        struct comp_params p = parse_params(params.c_str());
+
+        mpz_t prime;
+        mpz_init_set_str(prime, prime_str, 10);
+
         std::string verification_key_fn = argv[2];
         std::string inputs_fn = argv[3];
         std::string proof_fn = argv[4];
-        verify(verification_key_fn, inputs_fn, proof_fn, p.n_inputs + p.n_outputs, prime);
-    } else {
-        print_usage(argv);
+        verify(vm["vkey"].as<std::string>(), vm["input-output"].as<std::string>(), vm["proof"].as<std::string>(),
+               p.n_inputs + p.n_outputs, prime);
+    }
+    catch (std::exception &e) {
+        std::cerr << "error: " << e.what() << "\n";
         exit(1);
     }
+    catch (...) {
+        std::cerr << "Exception of unknown type!\n";
+        exit(1);
+    }
+
+    return 0;
 }

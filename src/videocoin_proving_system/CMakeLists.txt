@@ -38,7 +38,7 @@ add_executable(keygen key_generator/main.cpp common/utility.cpp)
 target_link_libraries(keygen -lgmp -lgmpxx -lff -lboost_program_options)
 
 add_executable(verifier verifier/main.cpp common/utility.cpp)
-target_link_libraries(verifier -lgmp -lgmpxx -lff)
+target_link_libraries(verifier -lgmp -lgmpxx -lff -lboost_program_options)
 
 add_library(
         prover
