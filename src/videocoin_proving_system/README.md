@@ -1,6 +1,6 @@
-# Videocoin Proving System
+# VideoCoin Proving System
 
-
+This is initial implementation of VideoCoin proof-of-transcode based on zkSNARKs for end-to-end testing.
 
 ## Installation Guide
 
