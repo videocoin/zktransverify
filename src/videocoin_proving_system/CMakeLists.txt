@@ -95,6 +95,7 @@ target_link_libraries(
         -lavfilter -lswscale -lpostproc -lavformat -lavcodec -lswresample -lavutil
         -lcrypto -lm -ldl -lbz2 -lpthread -lX11 -lvpx -lx264 -lx265
         -lass -lz -laom -lvorbis -lvorbisenc -lopus -lmp3lame -lfdk-aac
+        -lboost_program_options
 )
 
 add_executable(

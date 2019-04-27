@@ -70,7 +70,7 @@ int main(int argc, char *argv[]) {
         }
 
         if (files.size() != 2) {
-            std::cerr << "error: the option '--mode' has invalid number files\n"
+            std::cerr << "error: the option '--files' has invalid number files\n"
                       << all << std::endl;
             exit(1);
         }

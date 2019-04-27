@@ -5,42 +5,80 @@
 #include <stdint.h>
 #include <stdbool.h>
 #include <string.h>
+#include <exception>
+#include <iostream>
+
+#include <boost/program_options.hpp>
 
 #include <prover/prover.h>
 
 #include "decode-h264-mb.h"
 #include "sha256-util.h"
 
-bool ARG_HELP;
-const char *ARG_VIDEO_PATH1;
-const char *ARG_VIDEO_PATH2;
-const char *ARG_PROVING_KEY_PATH;
+namespace po = boost::program_options;
+
+std::vector<std::string> files;
+std::string input;
+std::string proving_key_path;
+std::string proof;
+std::string uncompressed_proof;
+std::string json_proof;
+std::string witness;
+
 
 void parse_options(int argc, const char *argv[]);
 
 void save_witness(const char *filename, int refssim, int dbgssim, unsigned char *p1, unsigned char *p2);
 
 void parse_options(int argc, const char *argv[]) {
-    int i = 1;
-    while (i < argc) {
-        if (strcmp(argv[i], "--help") == 0 || strcmp(argv[i], "-h") == 0) {
-            ARG_HELP = true;
-        } else {
-            if (i < argc) {
-                ARG_VIDEO_PATH1 = argv[i++];
-            }
-            if (i < argc) {
-                ARG_VIDEO_PATH2 = argv[i++];
-            }
-            if (i < argc) {
-                ARG_PROVING_KEY_PATH = argv[i];
+    try {
+        po::options_description general("General options");
+        po::options_description prover("Prover options");
+        po::options_description all;
+        po::variables_map vm;
+
+        general.add_options()
+                ("help,h", "produce help message");
+
+        prover.add_options()
+                ("pkey,p", po::value<std::string>(&proving_key_path), "path to proving key")
+                ("files,f", po::value<std::vector<std::string>>(&files)->multitoken(), "list of %file1, %file2")
+                ("input-output,i", po::value<std::string>(&input), "path to input-output file")
+                ("proof,P", po::value<std::string>(&proof), "path to proof file")
+                ("uncompressed-proof,u", po::value<std::string>(&uncompressed_proof), "path to uncompressed proof file")
+                ("json-proof,j", po::value<std::string>(&json_proof), "path to json proof file")
+                ("witness,w", po::value<std::string>(&witness), "path to witness file");
+
+        all.add(general).add(prover);
+
+        po::store(po::parse_command_line(argc, argv, all), vm);
+        po::notify(vm);
+
+        if (vm.count("help")) {
+            std::cout << all << std::endl;
+            exit(0);
+        }
+
+        // check mandatory options
+        for (auto &e: {"files", "pkey"}) {
+            if (!vm.count(e)) {
+                std::cerr << "error: the option '--" << e << "' is required but missing\n" << all << std::endl;
+                exit(1);
             }
         }
-        i++;
+
+        if (files.size() != 2) {
+            std::cerr << "error: the option '--files' has invalid number files\n"
+                      << all << std::endl;
+            exit(1);
+        }
     }
-    if (ARG_HELP || ARG_VIDEO_PATH1 == NULL || ARG_VIDEO_PATH2 == NULL) {
-        fprintf(stderr,
-                "Usage: genproof videoPath1 videoPath2 provingKey\n  --help and -h will output this help message.\n");
+    catch (std::exception &e) {
+        std::cerr << "error: " << e.what() << "\n";
+        exit(1);
+    }
+    catch (...) {
+        std::cerr << "Exception of unknown type!\n";
         exit(1);
     }
 }
@@ -74,21 +112,29 @@ int main(int argc, const char *argv[]) {
 
     // Generate hash of hashes from input stream and transcoded stream
     //      and pick random keyframe and macroblock number
-    getRandomOffsets(ARG_VIDEO_PATH1, ARG_VIDEO_PATH2, &frame_offset, 10, &mb_offset, 1);
+    getRandomOffsets(files.front().c_str(), files.back().c_str(), &frame_offset, 10, &mb_offset, 1);
     printf("frame_offset=%d macroblock_offset=%d\n", frame_offset, mb_offset);
 
     memset(srcRawY, 0x00, 256);
     memset(transRawY, 0x00, 256);
-    getMbFromStream(ARG_VIDEO_PATH1, 1, 10, &mbSrc, srcRawY);
-    getMbFromStream(ARG_VIDEO_PATH2, 1, 10, &mbTrans, transRawY);
+    getMbFromStream(files.front().c_str(), 1, 10, &mbSrc, srcRawY);
+    getMbFromStream(files.back().c_str(), 1, 10, &mbTrans, transRawY);
     if (mbSrc.mb_data) free(mbSrc.mb_data);
     if (mbTrans.mb_data) free(mbTrans.mb_data);
 
     initialize_prover();
-    double ssim = generate_ssim_proof(ARG_PROVING_KEY_PATH, srcRawY, sizeof(srcRawY), transRawY, sizeof(transRawY),
-                                      "../temp/input.txt", "../temp/ssim.proof", nullptr);
+    double ssim = generate_ssim_proof(
+            proving_key_path.c_str(),
+            srcRawY, sizeof(srcRawY),
+            transRawY, sizeof(transRawY),
+            input.empty() ? nullptr : input.c_str(),
+            proof.empty() ? nullptr : proof.c_str(),
+            uncompressed_proof.empty() ? nullptr : uncompressed_proof.c_str(),
+            json_proof.empty() ? nullptr : json_proof.c_str());
+
     printf("{\"witness\":[\"%d\"]}\n", (int) (ssim * 100));
-    save_witness("../temp/mywitness", 80, (int) (ssim * 100), srcRawY, transRawY);
+    if (!witness.empty())
+        save_witness(witness.c_str(), 80, (int) (ssim * 100), srcRawY, transRawY);
 
     // TODO Call ethereum smart-contract/verifier or stand-alone verifier and submit the proof
 }
