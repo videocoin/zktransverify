@@ -86,9 +86,9 @@ int main(int argc, const char *argv[]) {
 
     initialize_prover();
     double ssim = generate_ssim_proof(ARG_PROVING_KEY_PATH, srcRawY, sizeof(srcRawY), transRawY, sizeof(transRawY),
-                                      "../temp/input.txt", "../temp/ssim.proof", "../temp/proof.json");
+                                      "../temp/input.txt", "../temp/ssim.proof", nullptr);
     printf("{\"witness\":[\"%d\"]}\n", (int) (ssim * 100));
-    save_witness("mywitness", 80, (int) (ssim * 100), srcRawY, transRawY);
+    save_witness("../temp/mywitness", 80, (int) (ssim * 100), srcRawY, transRawY);
 
     // TODO Call ethereum smart-contract/verifier or stand-alone verifier and submit the proof
 }
