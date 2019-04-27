@@ -15,7 +15,7 @@ var H, K;
 var input_vector = [];
 
 contract('Verifier', function(accounts) {
-	fs.readFile("../temp/vk_data", function(err, data) {
+	fs.readFile("../build/v.key.uncompressed", function(err, data) {
 		if(err) {
 			console.log("Error reading vk_data");
 		}
@@ -23,7 +23,7 @@ contract('Verifier', function(accounts) {
 		console.log("vk_data:");
 		console.log(vk);
 	});
-	fs.readFile("../temp/ssim.proof", function(err, data) {
+	fs.readFile("../build/ssim.proof.uncompressed", function(err, data) {
 		if(err) {
 			console.log("Error reading proof_data");
 		}
@@ -31,7 +31,7 @@ contract('Verifier', function(accounts) {
 		console.log("proof_data:");
 		console.log(proof);
 	});
-	fs.readFile("../temp/input.txt", function(err, data) {
+	fs.readFile("../build/inputs.txt", function(err, data) {
 		if(err) {
 			console.log("Error reading input_data");
 		}
