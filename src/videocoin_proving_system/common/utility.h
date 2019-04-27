@@ -201,6 +201,23 @@ pt::ptree input_to_ptree(std::vector<double> &input) {
     return node;
 }
 
+template <typename ppT>
+void print_proof_to_json(libsnark::r1cs_ppzksnark_proof<ppT> &proof, std::vector<double> &input, const std::string &file_path) {
+    std::ofstream proof_data(file_path);
+    if (!proof_data.is_open()) {
+        std::cerr << "WARNING: unable to open file at path: " << file_path << std::endl;
+        return;
+    }
+
+    pt::ptree node;
+
+    node.add_child("proof", proof_to_ptree<libsnark::default_r1cs_ppzksnark_pp>(proof));
+    node.add_child("inputs", input_to_ptree<unsigned>(input));
+
+    pt::write_json(proof_data, node);
+    proof_data.close();
+}
+
 template<typename ppT>
 void print_vk_to_json(libsnark::r1cs_ppzksnark_verification_key<ppT> vk, const std::string &file_path)
 {

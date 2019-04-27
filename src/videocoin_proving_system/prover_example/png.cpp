@@ -12,7 +12,7 @@ int width, height;
 png_structp png_ptr;
 png_infop info_ptr;
 
-png_bytep *read_png_file(char *file_name) {
+png_bytep *read_png_file(const char *file_name) {
     png_bytep *row_pointers;
     png_byte header[8];    // 8 is the maximum size that can be checked
 

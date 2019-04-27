@@ -22,7 +22,7 @@ typedef struct
     unsigned char *v_buffer;
 } YV12_BUFFER_CONFIG;
 
-png_bytep *read_png_file(char *file_name);
+png_bytep *read_png_file(const char *file_name);
 void png_to_YV12(png_bytep *row_pointers, png_bytep *row_pointers2, YV12_BUFFER_CONFIG &src, YV12_BUFFER_CONFIG &dest);
 void clear_YV12(YV12_BUFFER_CONFIG &buffer);
 

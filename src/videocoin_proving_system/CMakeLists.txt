@@ -78,7 +78,7 @@ add_executable(
         prover_example/png.cpp
 )
 
-target_link_libraries(prover_example -lprover -lpng -lkyotocabinet -lpapi -lleveldb -lgmp -lff)
+target_link_libraries(prover_example -lprover -lpng -lkyotocabinet -lpapi -lleveldb -lgmp -lff -lboost_program_options)
 
 add_executable(
         genproof
