@@ -34,15 +34,27 @@ mkdir temp
 
 ### Generate proving and verification keys
 
+Usage of `keygen` binary:
+
 ```
-./build/keygen ssim16x16 temp/v.key temp/p.key temp/vk_data
+General options:
+  -h [ --help ]                   produce help message
+
+Generator options:
+  -m [ --mode ] arg               set algorithm type <ssim16x16 | ssim32x32 | 
+                                  ssim64x64>
+  -v [ --vkey ] arg               path to verification key
+  -p [ --pkey ] arg               path to proving key
+  -u [ --uncompressed-vkey ] arg  path to uncompressed verification key
+  -j [ --json-vkey ] arg          path to json verification key
 ```
 
-`v.key` is a verification key which is required for verification and used by standalone verifier.
+Key generation:
 
-`p.key` is a proving key which is required got proof generation. 
+```
+./build/keygen -m ssim16x16 -v temp/v.key -p temp/p.key -u temp/vk_data -j temp/v.json
+```
 
-`vk_data` is verification key in uncompressed format which is required for truffle tests.
 
 ### Calculate SSIM for two video samples and generate proof
 

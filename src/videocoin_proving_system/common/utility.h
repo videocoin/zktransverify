@@ -202,8 +202,14 @@ pt::ptree input_to_ptree(std::vector<double> &input) {
 }
 
 template<typename ppT>
-pt::ptree vk_to_ptree(libsnark::r1cs_ppzksnark_verification_key<ppT> vk)
+void print_vk_to_json(libsnark::r1cs_ppzksnark_verification_key<ppT> vk, const std::string &file_path)
 {
+    std::ofstream vk_file(file_path);
+    if (!vk_file.is_open()) {
+        std::cerr << "WARNING: unable to open file at path: " << file_path << std::endl;
+        return;
+    }
+
     pt::ptree node;
 
     libff::G2<ppT> A(vk.alphaA_g2);
@@ -241,18 +247,22 @@ pt::ptree vk_to_ptree(libsnark::r1cs_ppzksnark_verification_key<ppT> vk)
         libff::G1<ppT> IC_N(IC.rest[i]);
         IC_N.to_affine_coordinates();
 
-        sprintf(buf, "IC_%zu", i);
+        sprintf(buf, "IC_%zu", i+1);
         node.add_child(buf, point_to_ptree<ppT>(IC_N));
     }
 
-    return std::move(node);
+    pt::write_json(vk_file, node);
+    vk_file.close();
 }
 
 template<typename ppT>
-void print_vk_to_file(libsnark::r1cs_ppzksnark_verification_key<ppT> vk, std::string pathToFile)
+void print_vk_to_file(libsnark::r1cs_ppzksnark_verification_key<ppT> vk, const std::string &file_path)
 {
-    std::ofstream vk_data;
-    vk_data.open(pathToFile);
+    std::ofstream vk_data(file_path);
+    if (!vk_data.is_open()) {
+        std::cerr << "WARNING: unable to open file at path: " << file_path << std::endl;
+        return;
+    }
 
     libff::G2<ppT> A(vk.alphaA_g2);
     A.to_affine_coordinates();
@@ -306,46 +316,17 @@ void print_vk_to_file(libsnark::r1cs_ppzksnark_verification_key<ppT> vk, std::st
         vk_data << coord_to_string(IC_N.Y) << std::endl;
     }
 
-//    vk_data << A.X << std::endl;
-//    vk_data << A.Y << std::endl;
-//
-//    vk_data << B.X << std::endl;
-//    vk_data << B.Y << std::endl;
-//
-//    vk_data << C.X << std::endl;
-//    vk_data << C.Y << std::endl;
-//
-//    vk_data << gamma.X << std::endl;
-//    vk_data << gamma.Y << std::endl;
-//
-//    vk_data << gamma_beta_1.X << std::endl;
-//    vk_data << gamma_beta_1.Y << std::endl;
-//
-//    vk_data << gamma_beta_2.X << std::endl;
-//    vk_data << gamma_beta_2.Y << std::endl;
-//
-//    vk_data << Z.X << std::endl;
-//    vk_data << Z.Y << std::endl;
-//
-//    vk_data << IC_0.X << std::endl;
-//    vk_data << IC_0.Y << std::endl;
-//
-//    for(size_t i=0; i<IC.size(); i++) {
-//        libff::G1<ppT> IC_N(IC.rest[i]);
-//        IC_N.to_affine_coordinates();
-//        vk_data << IC_N.X << std::endl;
-//        vk_data << IC_N.Y << std::endl;
-//    }
-
-
     vk_data.close();
 }
 
 template<typename ppT>
-void print_proof_to_file(libsnark::r1cs_ppzksnark_proof<ppT> proof, std::string pathToFile)
+void print_proof_to_file(libsnark::r1cs_ppzksnark_proof<ppT> proof, const std::string &file_path)
 {
-    std::ofstream proof_data;
-    proof_data.open(pathToFile);
+    std::ofstream proof_data(file_path);
+    if (!proof_data.is_open()) {
+        std::cerr << "WARNING: unable to open file at path: " << file_path << std::endl;
+        return;
+    }
 
     libff::G1<ppT> A_g(proof.g_A.g);
     A_g.to_affine_coordinates();

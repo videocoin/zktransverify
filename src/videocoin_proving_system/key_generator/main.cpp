@@ -1,5 +1,8 @@
 #include <iostream>
 #include <fstream>
+#include <exception>
+
+#include <boost/program_options.hpp>
 
 #include <libsnark/relations/constraint_satisfaction_problems/r1cs/r1cs.hpp>
 #include <libsnark/common/default_types/r1cs_ppzksnark_pp.hpp>
@@ -8,19 +11,13 @@
 #include <common/utility.h>
 #include <common/defs.h>
 
+namespace po = boost::program_options;
 
-void print_usage(char *argv[]) {
-    std::cout << "usage: " << std::endl
-              << argv[0]
-              << " <ssim16x16 | mb16x16> <verification key file> <proving key file> [<unprocessed verification key file>]"
-              << std::endl;
-}
 
 void generate_keys(std::string &app_path,
                    int num_constraints, int num_inputs,
                    int num_outputs, int num_vars, mpz_t p,
-                   std::string &vkey_file, std::string &pkey_file,
-                   std::string &unprocessed_vkey_file) {
+                   po::variables_map &vm) {
 
     std::ifstream Amat(app_path + "matrix_a");
     std::ifstream Bmat(app_path + "matrix_b");
@@ -176,52 +173,84 @@ void generate_keys(std::string &app_path,
             keypair.vk);
 
 
-    std::ofstream vkey(vkey_file);
-    std::ofstream pkey(pkey_file);
+    std::ofstream vkey(vm["vkey"].as<std::string>());
+    std::ofstream pkey(vm["pkey"].as<std::string>());
 
     vkey << pvk;
     pkey << keypair.pk;
     pkey.close();
     vkey.close();
 
-    if (unprocessed_vkey_file.length() > 0) {
-        print_vk_to_file(keypair.vk, unprocessed_vkey_file);
+    if (vm.count("uncompressed-vkey")) {
+        print_vk_to_file(keypair.vk, vm["uncompressed-vkey"].as<std::string>());
+    }
+
+    if (vm.count("json-vkey")) {
+        print_vk_to_json(keypair.vk, vm["json-vkey"].as<std::string>());
     }
 }
 
 int main(int argc, char *argv[]) {
-    if (argc < 4) {
-        print_usage(argv);
-        exit(1);
-    }
+    try {
+        po::options_description general("General options");
+        po::options_description generator("Generator options");
+        po::options_description all;
+        po::variables_map vm;
 
-    ssim_mode mode = ssim_mode::from_str(argv[1]);
+        general.add_options()
+                ("help,h", "produce help message");
 
-    initialize_env();
-    std::string app_path = application_dir + mode.str() + "/";
-    std::string params = app_path + "params";
-    struct comp_params p = parse_params(params.c_str());
+        generator.add_options()
+                ("mode,m", po::value<std::string>(),
+                 "set algorithm type <ssim16x16 | ssim32x32 | ssim64x64>")
+                ("vkey,v", po::value<std::string>(), "path to verification key")
+                ("pkey,p", po::value<std::string>(), "path to proving key")
+                ("uncompressed-vkey,u", po::value<std::string>(), "path to uncompressed verification key")
+                ("json-vkey,j", po::value<std::string>(), "path to json verification key");
 
-    mpz_t prime;
-    mpz_init_set_str(prime, prime_str, 10);
+        all.add(general).add(generator);
 
-    if (mode.is_valid() || !strcmp(argv[1], "mb16x16")) {
-        if (argc != 4 && argc != 5) {
-            print_usage(argv);
+        po::store(po::parse_command_line(argc, argv, all), vm);
+        po::notify(vm);
+
+        if (vm.count("help")) {
+            std::cout << all << std::endl;
+            exit(0);
+        }
+
+        // check mandatory options
+        for (auto &e: {"mode", "vkey", "pkey"}) {
+            if (!vm.count(e)) {
+                std::cerr << "error: the option '--" << e << "' is required but missing\n" << all << std::endl;
+                exit(1);
+            }
+        }
+
+        ssim_mode mode = ssim_mode::from_str(vm["mode"].as<std::string>().c_str());
+        if (!mode.is_valid()) {
+            std::cerr << "error: the option '--mode' has invalid value: " << vm["mode"].as<std::string>() << std::endl
+                      << all << std::endl;
             exit(1);
         }
-        std::string verification_key_fn = std::string(argv[2]);
-        std::string proving_key_fn = std::string(argv[3]);
-        std::string unprocessed_vkey_fn;
-        if (argc == 5) {
-            unprocessed_vkey_fn = std::string(argv[4]);
-        }
-        std::cout << "Creating proving/verification keys, will write to " << verification_key_fn
-                  << ", " << proving_key_fn << std::endl;
-        generate_keys(app_path, p.n_constraints, p.n_inputs, p.n_outputs, p.n_vars, prime, verification_key_fn,
-                      proving_key_fn, unprocessed_vkey_fn);
-    } else {
-        print_usage(argv);
+
+        initialize_env();
+        std::string app_path = application_dir + mode.str() + "/";
+        std::string params = app_path + "params";
+        comp_params p = parse_params(params.c_str());
+
+        mpz_t prime;
+        mpz_init_set_str(prime, prime_str, 10);
+
+        std::cout << "Creating proving/verification keys\n";
+        generate_keys(app_path, p.n_constraints, p.n_inputs, p.n_outputs, p.n_vars, prime, vm);
+    }
+    catch (std::exception &e) {
+        std::cerr << "error: " << e.what() << "\n";
         exit(1);
     }
+    catch (...) {
+        std::cerr << "Exception of unknown type!\n";
+        exit(1);
+    }
+    return 0;
 }
