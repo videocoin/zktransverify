@@ -19,10 +19,6 @@
 
 namespace po = boost::program_options;
 
-void print_usage() {
-    printf("Usage: program_name <ssim16x16 | ssim32x32 | ssim64x64> <file1> <file2> <proving key> <output> <proof>\n");
-}
-
 int main(int argc, char *argv[]) {
     try {
         std::vector<std::string> files;

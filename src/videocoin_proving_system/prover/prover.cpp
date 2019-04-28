@@ -63,14 +63,19 @@ double generate_ssim_proof(const char *pk_fn,
         exit(-1);
     }
 
+    libff::start_profiling();
     libsnark::r1cs_ppzksnark_proving_key<libsnark::default_r1cs_ppzksnark_pp> pk;
-    std::cout << "reading proving key from file..." << std::endl;
+    libff::enter_block("Reading proving key from file");
     pkey >> pk;
+    libff::leave_block("Reading proving key from file");
 
     std::vector<double> input;
     std::vector<double> output;
 
+    libff::enter_block("Call to write_to_auxiliary_input");
     write_to_auxiliary_input(src1, src1_len, src2, src2_len);
+    libff::leave_block("Call to write_to_auxiliary_input");
+
     input.emplace_back(src1[0]);
 
     libsnark::r1cs_ppzksnark_proof<libsnark::default_r1cs_ppzksnark_pp> proof;
@@ -128,8 +133,11 @@ void generate_proof_internal(const comp_params &p,
     mpz_t prime;
     mpz_init_set_str(prime, prime_str, 10);
 
+    libff::start_profiling();
+    libff::enter_block("Compute algorithm");
     ComputationProver prover(p.n_vars, p.n_constraints, p.n_inputs, p.n_outputs, prime, input);
     prover.compute_from_pws(pws_fn);
+    libff::leave_block("Compute algorithm");
 
     libsnark::r1cs_ppzksnark_primary_input<ppT> primary_input;
     libsnark::r1cs_ppzksnark_auxiliary_input<ppT> aux_input;
