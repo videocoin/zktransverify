@@ -61,12 +61,13 @@ Prover options:
   -u [ --uncompressed-proof ] arg  path to uncompressed proof file
   -j [ --json-proof ] arg          path to json proof file
   -w [ --witness ] arg             path to witness file
+  -s [ --ssim-level ] arg          threshold ssim level [0-100]
 ```
 
 Proof generation:
 
 ```
-./genproof -f ../extools/SampleVideo_1280x720_1mb.mp4 ../extools/SampleVideo_1280x720_1mb.mp4 -p p.key -i inputs.txt -P ssim.proof -u ssim.proof.uncompressed -j ssim.proof.json
+./genproof --files ../test_vectors/crowd_run_2160p50_40M.ts ../test_vectors/crowd_run_2160p50_20M_correct.ts -p p.key -s 80 -w witness -i inputs.txt -P ssim.proof -u ssim.proof.uncompressed
 ```
 
 **Note**: Add more video samples.
