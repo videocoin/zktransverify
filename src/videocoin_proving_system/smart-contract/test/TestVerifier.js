@@ -142,6 +142,28 @@ contract('Verifier', function(accounts) {
 			assert.equal(wrongInput, false, "The incorrect input was verified");
 		});
 	});
+
+	it("should produce correct result basing on SSIM threshold and proof", function() {
+		var verifier;
+
+		return Verifier.deployed().then(function(instance) {
+			verifier = instance;
+		}).then(function() {
+			if (input[3] == "1")
+				console.log("Should satisfy SSIM threshold and verify proof");
+			else
+				console.log("Should not satisfy SSIM threshold");
+
+			return verifier.verifySSIMTx.call(A_g, A_h, B_g, B_h, C_g, C_h,
+				H, K,
+				input_vector);
+		}).then(function(result) {
+			if (input_vector[3] == "1")
+				assert.equal(result, true, "The correct proof did not verify");
+			else
+				assert.equal(result, false, "The SSIM threshold did not verify");
+		});
+	});
 });
 
 function parseG1Point(data) {
