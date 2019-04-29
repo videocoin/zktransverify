@@ -118,6 +118,8 @@ void h264_ssim16x16_compute(struct In *input, struct Out *output) {
         }
     }
 
-    output->ssim = ssim;
-    output->counter = (height - 1) * (width - 1);
+    unsigned int counter = (height - 1) * (width - 1);
+    output->ssim = fix_div(ssim, counter << 16);
+    output->ssim = (output->ssim * 100) >> 16;
+    output->accepted = output->ssim > input->ref_ssim;
 }

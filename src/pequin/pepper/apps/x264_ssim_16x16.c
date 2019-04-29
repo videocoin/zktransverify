@@ -21,12 +21,12 @@
 
 
 struct In {
-    uint32_t input_num[1];
+    int32_t ref_ssim;
 };
 
 struct Out {
     fix_t ssim;
-    unsigned int counter;
+    uint32_t satisfied;
 };
 
 struct input_elm {
@@ -114,7 +114,8 @@ fix_t ssim_end4( int *sum0, int *sum1, int width )
 }
 
 void compute(struct In *input, struct Out *output) {
-    uint32_t *exo0_inputs[1] = { input->input_num };
+    uint32_t dummy[1];
+    uint32_t *exo0_inputs[1] = { dummy };
     uint32_t lens[1] = {0};
 
     struct input_elm inputs[1];
@@ -153,6 +154,8 @@ void compute(struct In *input, struct Out *output) {
         }
     }
 
-    output->ssim = ssim;
-    output->counter = (height - 1) * (width - 1);
+    unsigned int counter = (height - 1) * (width - 1);
+    output->ssim = fix_div(ssim, int_to_fix(counter));
+    output->ssim = fix_to_int(output->ssim * 100);
+    output->satisfied = output->ssim > input->ref_ssim;
 }

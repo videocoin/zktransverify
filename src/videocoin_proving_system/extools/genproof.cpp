@@ -24,11 +24,12 @@ std::string proof;
 std::string uncompressed_proof;
 std::string json_proof;
 std::string witness;
+int ref_ssim;
 
 
 void parse_options(int argc, const char *argv[]);
 
-void save_witness(const char *filename, int refssim, int dbgssim, unsigned char *p1, unsigned char *p2);
+void save_witness(const char *filename, int refssim, int dbgssim);
 
 void parse_options(int argc, const char *argv[]) {
     try {
@@ -47,7 +48,8 @@ void parse_options(int argc, const char *argv[]) {
                 ("proof,P", po::value<std::string>(&proof), "path to proof file")
                 ("uncompressed-proof,u", po::value<std::string>(&uncompressed_proof), "path to uncompressed proof file")
                 ("json-proof,j", po::value<std::string>(&json_proof), "path to json proof file")
-                ("witness,w", po::value<std::string>(&witness), "path to witness file");
+                ("witness,w", po::value<std::string>(&witness), "path to witness file")
+                ("ssim-level,s", po::value<int>(&ref_ssim), "threshold ssim level [0-100]");
 
         all.add(general).add(prover);
 
@@ -60,7 +62,7 @@ void parse_options(int argc, const char *argv[]) {
         }
 
         // check mandatory options
-        for (auto &e: {"files", "pkey"}) {
+        for (auto &e: {"files", "pkey", "ssim-level", "witness"}) {
             if (!vm.count(e)) {
                 std::cerr << "error: the option '--" << e << "' is required but missing\n" << all << std::endl;
                 exit(1);
@@ -83,18 +85,11 @@ void parse_options(int argc, const char *argv[]) {
     }
 }
 
-void save_witness(const char *filename, int refssim, int dbgssim, unsigned char *p1, unsigned char *p2) {
+void save_witness(const char *filename, int refssim, int dbgssim) {
     FILE *f = fopen(filename, "w+");
     if (f != NULL) {
         int i;
-        fprintf(f, "%d %d ", refssim, dbgssim);
-        for (i = 0; i < 256; i++) {
-            fprintf(f, "%d ", p1[i]);
-        }
-        for (i = 0; i < 256; i++) {
-            fprintf(f, "%d ", p2[i]);
-        }
-
+        fprintf(f, "%d\n%d\n", refssim, dbgssim);
         fclose(f);
     }
 
@@ -122,19 +117,21 @@ int main(int argc, const char *argv[]) {
     if (mbSrc.mb_data) free(mbSrc.mb_data);
     if (mbTrans.mb_data) free(mbTrans.mb_data);
 
+    unsigned int accepted;
     initialize_prover();
-    double ssim = generate_ssim_proof(
+    int ssim = generate_ssim_proof(
             proving_key_path.c_str(),
+            ref_ssim,
             srcRawY, sizeof(srcRawY),
             transRawY, sizeof(transRawY),
+            &accepted,
             input.empty() ? nullptr : input.c_str(),
             proof.empty() ? nullptr : proof.c_str(),
             uncompressed_proof.empty() ? nullptr : uncompressed_proof.c_str(),
             json_proof.empty() ? nullptr : json_proof.c_str());
 
-    printf("{\"witness\":[\"%d\"]}\n", (int) (ssim * 100));
-    if (!witness.empty())
-        save_witness(witness.c_str(), 80, (int) (ssim * 100), srcRawY, transRawY);
+    printf("{\"witness\":[\"%d\"]}\n", ssim);
+    save_witness(witness.c_str(), ref_ssim, ssim);
 
     // TODO Call ethereum smart-contract/verifier or stand-alone verifier and submit the proof
 }

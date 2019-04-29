@@ -33,9 +33,11 @@ void initialize_prover() {
     libsnark::default_r1cs_ppzksnark_pp::init_public_params();
 }
 
-double generate_ssim_proof(const char *pk_fn,
+int generate_ssim_proof(const char *pk_fn,
+                           int ref_ssim,
                            const unsigned char *src1, unsigned long src1_len,
                            const unsigned char *src2, unsigned long src2_len,
+                           unsigned int *accepted,
                            const char *input_fn,
                            const char *proof_bin_fn,
                            const char *proof_uncompressed_fn,
@@ -76,7 +78,7 @@ double generate_ssim_proof(const char *pk_fn,
     write_to_auxiliary_input(src1, src1_len, src2, src2_len);
     libff::leave_block("Call to write_to_auxiliary_input");
 
-    input.emplace_back(src1[0]);
+    input.emplace_back(ref_ssim);
 
     libsnark::r1cs_ppzksnark_proof<libsnark::default_r1cs_ppzksnark_pp> proof;
     generate_proof_internal<libsnark::default_r1cs_ppzksnark_pp>(p, pws.c_str(), pk, input, output, proof);
@@ -117,10 +119,9 @@ double generate_ssim_proof(const char *pk_fn,
         print_proof_to_json(proof, input, proof_json_fn);
     }
 
-    double ssim;
-    ssim = output[1] / 0x10000;
-    ssim /= output[2];
-    return ssim;
+    if (accepted != nullptr)
+        *accepted = output[2];
+    return output[1];
 }
 
 template <typename ppT>
