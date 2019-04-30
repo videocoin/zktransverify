@@ -149,10 +149,6 @@ contract('Verifier', function(accounts) {
 		return Verifier.deployed().then(function(instance) {
 			verifier = instance;
 		}).then(function() {
-			if (input[3] == "1")
-				console.log("Should satisfy SSIM threshold and verify proof");
-			else
-				console.log("Should not satisfy SSIM threshold");
 
 			return verifier.verifySSIMTx.call(A_g, A_h, B_g, B_h, C_g, C_h,
 				H, K,
