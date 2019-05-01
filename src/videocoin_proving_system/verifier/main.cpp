@@ -5,21 +5,22 @@
 #include <boost/program_options.hpp>
 
 #include <libsnark/relations/constraint_satisfaction_problems/r1cs/r1cs.hpp>
-#include <libsnark/common/default_types/r1cs_ppzksnark_pp.hpp>
-#include <libsnark/zk_proof_systems/ppzksnark/r1cs_ppzksnark/r1cs_ppzksnark.hpp>
+#include <libsnark/common/default_types/r1cs_gg_ppzksnark_pp.hpp>
+#include <libsnark/zk_proof_systems/ppzksnark/r1cs_gg_ppzksnark/r1cs_gg_ppzksnark.hpp>
 
 #include <common/utility.h>
 #include <common/defs.h>
 
 namespace po = boost::program_options;
 
+template <typename ppT>
 void verify(const std::string &verification_key_fn, const std::string &inputs_fn,
             const std::string &proof_fn, int num_inputs, mpz_t prime) {
 
-    libsnark::default_r1cs_ppzksnark_pp::init_public_params();
+    ppT::init_public_params();
 
     libsnark::r1cs_variable_assignment<FieldT> inputvec;
-    libsnark::r1cs_ppzksnark_proof<libsnark::default_r1cs_ppzksnark_pp> proof;
+    libsnark::r1cs_ppzksnark_proof<ppT> proof;
 
     std::cout << "loading proof from file: " << proof_fn << std::endl;
     std::ifstream proof_file(proof_fn);
@@ -52,14 +53,13 @@ void verify(const std::string &verification_key_fn, const std::string &inputs_fn
 
     std::cout << "loading vk from file: " << verification_key_fn << std::endl;
     std::ifstream vkey(verification_key_fn);
-    libsnark::r1cs_ppzksnark_processed_verification_key<libsnark::default_r1cs_ppzksnark_pp> pvk;
+    libsnark::r1cs_ppzksnark_processed_verification_key<ppT> pvk;
     vkey >> pvk;
     vkey.close();
 
     std::cout << "verifying..." << std::endl;
     libff::start_profiling();
-    bool result = libsnark::r1cs_ppzksnark_online_verifier_strong_IC<libsnark::default_r1cs_ppzksnark_pp>(pvk, inputvec,
-                                                                                                          proof);
+    bool result = libsnark::r1cs_ppzksnark_online_verifier_strong_IC<ppT>(pvk, inputvec, proof);
     std::cout << "VERIFICATION " << (result ? "SUCCESSFUL" : "FAILED") << std::endl;
 }
 
@@ -115,7 +115,7 @@ int main(int argc, char *argv[]) {
         std::string verification_key_fn = argv[2];
         std::string inputs_fn = argv[3];
         std::string proof_fn = argv[4];
-        verify(vm["vkey"].as<std::string>(), vm["input-output"].as<std::string>(), vm["proof"].as<std::string>(),
+        verify<libsnark::default_r1cs_gg_ppzksnark_pp>(vm["vkey"].as<std::string>(), vm["input-output"].as<std::string>(), vm["proof"].as<std::string>(),
                p.n_inputs + p.n_outputs, prime);
     }
     catch (std::exception &e) {

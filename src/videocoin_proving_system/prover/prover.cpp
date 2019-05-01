@@ -8,8 +8,8 @@
 #include <sys/stat.h>
 
 #include <libsnark/relations/constraint_satisfaction_problems/r1cs/r1cs.hpp>
-#include <libsnark/common/default_types/r1cs_ppzksnark_pp.hpp>
-#include <libsnark/zk_proof_systems/ppzksnark/r1cs_ppzksnark/r1cs_ppzksnark.hpp>
+#include <libsnark/common/default_types/r1cs_gg_ppzksnark_pp.hpp>
+#include <libsnark/zk_proof_systems/ppzksnark/r1cs_gg_ppzksnark/r1cs_gg_ppzksnark.hpp>
 
 #include <common/defs.h>
 #include <common/utility.h>
@@ -30,7 +30,7 @@ static void clear_auxiliary_input();
 
 void initialize_prover() {
     initialize_env();
-    libsnark::default_r1cs_ppzksnark_pp::init_public_params();
+    libsnark::default_r1cs_gg_ppzksnark_pp::init_public_params();
 }
 
 int generate_ssim_proof(const char *pk_fn,
@@ -66,7 +66,7 @@ int generate_ssim_proof(const char *pk_fn,
     }
 
     libff::start_profiling();
-    libsnark::r1cs_ppzksnark_proving_key<libsnark::default_r1cs_ppzksnark_pp> pk;
+    libsnark::r1cs_ppzksnark_proving_key<libsnark::default_r1cs_gg_ppzksnark_pp> pk;
     libff::enter_block("Reading proving key from file");
     pkey >> pk;
     libff::leave_block("Reading proving key from file");
@@ -80,8 +80,8 @@ int generate_ssim_proof(const char *pk_fn,
 
     input.emplace_back(ref_ssim);
 
-    libsnark::r1cs_ppzksnark_proof<libsnark::default_r1cs_ppzksnark_pp> proof;
-    generate_proof_internal<libsnark::default_r1cs_ppzksnark_pp>(p, pws.c_str(), pk, input, output, proof);
+    libsnark::r1cs_ppzksnark_proof<libsnark::default_r1cs_gg_ppzksnark_pp> proof;
+    generate_proof_internal<libsnark::default_r1cs_gg_ppzksnark_pp>(p, pws.c_str(), pk, input, output, proof);
 
     clear_auxiliary_input();
 

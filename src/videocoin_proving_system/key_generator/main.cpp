@@ -5,15 +5,15 @@
 #include <boost/program_options.hpp>
 
 #include <libsnark/relations/constraint_satisfaction_problems/r1cs/r1cs.hpp>
-#include <libsnark/common/default_types/r1cs_ppzksnark_pp.hpp>
-#include <libsnark/zk_proof_systems/ppzksnark/r1cs_ppzksnark/r1cs_ppzksnark.hpp>
+#include <libsnark/common/default_types/r1cs_gg_ppzksnark_pp.hpp>
+#include <libsnark/zk_proof_systems/ppzksnark/r1cs_gg_ppzksnark/r1cs_gg_ppzksnark.hpp>
 
 #include <common/utility.h>
 #include <common/defs.h>
 
 namespace po = boost::program_options;
 
-
+template <typename ppT>
 void generate_keys(std::string &app_path,
                    int num_constraints, int num_inputs,
                    int num_outputs, int num_vars, mpz_t p,
@@ -23,7 +23,7 @@ void generate_keys(std::string &app_path,
     std::ifstream Bmat(app_path + "matrix_b");
     std::ifstream Cmat(app_path + "matrix_c");
 
-    libsnark::default_r1cs_ppzksnark_pp::init_public_params();
+    libsnark::default_r1cs_gg_ppzksnark_pp::init_public_params();
     libsnark::r1cs_constraint_system<FieldT> q;
 
     int Ai, Aj, Bi, Bj, Ci, Cj;
@@ -167,10 +167,8 @@ void generate_keys(std::string &app_path,
     Cmat.close();
 
     libff::start_profiling();
-    libsnark::r1cs_ppzksnark_keypair<libsnark::default_r1cs_ppzksnark_pp> keypair = libsnark::r1cs_ppzksnark_generator<libsnark::default_r1cs_ppzksnark_pp>(
-            q);
-    libsnark::r1cs_ppzksnark_processed_verification_key<libsnark::default_r1cs_ppzksnark_pp> pvk = libsnark::r1cs_ppzksnark_verifier_process_vk<libsnark::default_r1cs_ppzksnark_pp>(
-            keypair.vk);
+    auto keypair = libsnark::r1cs_ppzksnark_generator<ppT>(q);
+    auto pvk = libsnark::r1cs_ppzksnark_verifier_process_vk<ppT>(keypair.vk);
 
 
     std::ofstream vkey(vm["vkey"].as<std::string>());
@@ -242,7 +240,7 @@ int main(int argc, char *argv[]) {
         mpz_init_set_str(prime, prime_str, 10);
 
         std::cout << "Creating proving/verification keys\n";
-        generate_keys(app_path, p.n_constraints, p.n_inputs, p.n_outputs, p.n_vars, prime, vm);
+        generate_keys<libsnark::default_r1cs_gg_ppzksnark_pp>(app_path, p.n_constraints, p.n_inputs, p.n_outputs, p.n_vars, prime, vm);
     }
     catch (std::exception &e) {
         std::cerr << "error: " << e.what() << "\n";
