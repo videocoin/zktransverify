@@ -17,13 +17,13 @@
 #include "computation_prover.h"
 #include "prover.h"
 
-template <typename ppT>
+template <typename ppT, template <typename> typename ppT_proof, template <typename> typename ppT_key>
 void generate_proof_internal(const comp_params &p,
                              const char *pws_fn,
-                             libsnark::r1cs_ppzksnark_proving_key<ppT> &pk,
+                             ppT_key<ppT> &pk,
                              const std::vector<double> &input,
                              std::vector<double> &output,
-                             libsnark::r1cs_ppzksnark_proof<ppT> &proof);
+                             ppT_proof<ppT> &proof);
 
 static void write_to_auxiliary_input(const unsigned char *src1, size_t len1, const unsigned char *src2, size_t len2);
 static void clear_auxiliary_input();
@@ -66,7 +66,7 @@ int generate_ssim_proof(const char *pk_fn,
     }
 
     libff::start_profiling();
-    libsnark::r1cs_ppzksnark_proving_key<libsnark::default_r1cs_gg_ppzksnark_pp> pk;
+    libsnark::r1cs_gg_ppzksnark_proving_key<libsnark::default_r1cs_gg_ppzksnark_pp> pk;
     libff::enter_block("Reading proving key from file");
     pkey >> pk;
     libff::leave_block("Reading proving key from file");
@@ -80,7 +80,7 @@ int generate_ssim_proof(const char *pk_fn,
 
     input.emplace_back(ref_ssim);
 
-    libsnark::r1cs_ppzksnark_proof<libsnark::default_r1cs_gg_ppzksnark_pp> proof;
+    libsnark::r1cs_gg_ppzksnark_proof<libsnark::default_r1cs_gg_ppzksnark_pp> proof;
     generate_proof_internal<libsnark::default_r1cs_gg_ppzksnark_pp>(p, pws.c_str(), pk, input, output, proof);
 
     clear_auxiliary_input();
@@ -124,13 +124,13 @@ int generate_ssim_proof(const char *pk_fn,
     return output[1];
 }
 
-template <typename ppT>
+template <typename ppT, template <typename> typename ppT_proof, template <typename> typename ppT_key>
 void generate_proof_internal(const comp_params &p,
                              const char *pws_fn,
-                             libsnark::r1cs_ppzksnark_proving_key<ppT> &pk,
+                             ppT_key<ppT> &pk,
                              const std::vector<double> &input,
                              std::vector<double> &output,
-                             libsnark::r1cs_ppzksnark_proof<ppT> &proof) {
+                             ppT_proof<ppT> &proof) {
     mpz_t prime;
     mpz_init_set_str(prime, prime_str, 10);
 
@@ -163,7 +163,7 @@ void generate_proof_internal(const comp_params &p,
     }
 
     libff::start_profiling();
-    proof = libsnark::r1cs_ppzksnark_prover<ppT>(pk, primary_input, aux_input);
+    proof = libsnark::r1cs_gg_ppzksnark_prover<ppT>(pk, primary_input, aux_input);
 }
 
 void write_to_auxiliary_input(const unsigned char *src1, size_t len1, const unsigned char *src2, size_t len2) {

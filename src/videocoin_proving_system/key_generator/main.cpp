@@ -167,8 +167,8 @@ void generate_keys(std::string &app_path,
     Cmat.close();
 
     libff::start_profiling();
-    auto keypair = libsnark::r1cs_ppzksnark_generator<ppT>(q);
-    auto pvk = libsnark::r1cs_ppzksnark_verifier_process_vk<ppT>(keypair.vk);
+    auto keypair = libsnark::r1cs_gg_ppzksnark_generator<ppT>(q);
+    auto pvk = libsnark::r1cs_gg_ppzksnark_verifier_process_vk<ppT>(keypair.vk);
 
 
     std::ofstream vkey(vm["vkey"].as<std::string>());

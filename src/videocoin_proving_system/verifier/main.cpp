@@ -20,7 +20,7 @@ void verify(const std::string &verification_key_fn, const std::string &inputs_fn
     ppT::init_public_params();
 
     libsnark::r1cs_variable_assignment<FieldT> inputvec;
-    libsnark::r1cs_ppzksnark_proof<ppT> proof;
+    libsnark::r1cs_gg_ppzksnark_proof<ppT> proof;
 
     std::cout << "loading proof from file: " << proof_fn << std::endl;
     std::ifstream proof_file(proof_fn);
@@ -53,13 +53,13 @@ void verify(const std::string &verification_key_fn, const std::string &inputs_fn
 
     std::cout << "loading vk from file: " << verification_key_fn << std::endl;
     std::ifstream vkey(verification_key_fn);
-    libsnark::r1cs_ppzksnark_processed_verification_key<ppT> pvk;
+    libsnark::r1cs_gg_ppzksnark_processed_verification_key<ppT> pvk;
     vkey >> pvk;
     vkey.close();
 
     std::cout << "verifying..." << std::endl;
     libff::start_profiling();
-    bool result = libsnark::r1cs_ppzksnark_online_verifier_strong_IC<ppT>(pvk, inputvec, proof);
+    bool result = libsnark::r1cs_gg_ppzksnark_online_verifier_strong_IC<ppT>(pvk, inputvec, proof);
     std::cout << "VERIFICATION " << (result ? "SUCCESSFUL" : "FAILED") << std::endl;
 }
 

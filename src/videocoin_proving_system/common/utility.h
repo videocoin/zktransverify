@@ -10,7 +10,9 @@
 #include <fstream>
 #include <libsnark/relations/constraint_satisfaction_problems/r1cs/r1cs.hpp>
 #include <libsnark/common/default_types/r1cs_ppzksnark_pp.hpp>
+#include <libsnark/common/default_types/r1cs_gg_ppzksnark_pp.hpp>
 #include <libsnark/zk_proof_systems/ppzksnark/r1cs_ppzksnark/r1cs_ppzksnark.hpp>
+#include <libsnark/zk_proof_systems/ppzksnark/r1cs_gg_ppzksnark/r1cs_gg_ppzksnark.hpp>
 #include <libff/algebra/curves/public_params.hpp>
 #include <boost/property_tree/ptree.hpp>
 #include <boost/property_tree/json_parser.hpp>
@@ -91,6 +93,15 @@ void assert_zero(int value);
 std::string coord_to_string(libff::alt_bn128_Fq2 &coord);
 std::string coord_to_string(libff::alt_bn128_Fq &coord);
 #endif
+
+template<typename ppt>
+pt::ptree point_to_ptree(libff::GT<ppt> &point) {
+    pt::ptree x_node, y_node;
+    pt::ptree node;
+
+
+    return std::move(node);
+}
 
 template<typename ppt>
 pt::ptree point_to_ptree(libff::G1<ppt> &point) {
@@ -187,6 +198,18 @@ pt::ptree proof_to_ptree(libsnark::r1cs_ppzksnark_proof<ppT> &proof) {
     return std::move(node);
 }
 
+template<typename ppT>
+pt::ptree proof_to_ptree(libsnark::r1cs_gg_ppzksnark_proof<ppT> &proof) {
+
+    pt::ptree node;
+
+    node.add_child("A", point_to_ptree<ppT>(proof.g_A));
+    node.add_child("B", point_to_ptree<ppT>(proof.g_B));
+    node.add_child("C", point_to_ptree<ppT>(proof.g_C));
+
+    return std::move(node);
+}
+
 template<typename iT>
 pt::ptree input_to_ptree(std::vector<double> &input) {
 
@@ -201,8 +224,8 @@ pt::ptree input_to_ptree(std::vector<double> &input) {
     return node;
 }
 
-template <typename ppT>
-void print_proof_to_json(libsnark::r1cs_ppzksnark_proof<ppT> &proof, std::vector<double> &input, const std::string &file_path) {
+template <typename ppT, template <typename> typename ppT_proof>
+void print_proof_to_json(ppT_proof<ppT> &proof, std::vector<double> &input, const std::string &file_path) {
     std::ofstream proof_data(file_path);
     if (!proof_data.is_open()) {
         std::cerr << "WARNING: unable to open file at path: " << file_path << std::endl;
@@ -265,6 +288,44 @@ void print_vk_to_json(libsnark::r1cs_ppzksnark_verification_key<ppT> vk, const s
         IC_N.to_affine_coordinates();
 
         sprintf(buf, "IC_%zu", i+1);
+        node.add_child(buf, point_to_ptree<ppT>(IC_N));
+    }
+
+    pt::write_json(vk_file, node);
+    vk_file.close();
+}
+
+template<typename ppT>
+void print_vk_to_json(libsnark::r1cs_gg_ppzksnark_verification_key<ppT> vk, const std::string &file_path)
+{
+    std::ofstream vk_file(file_path);
+    if (!vk_file.is_open()) {
+        std::cerr << "WARNING: unable to open file at path: " << file_path << std::endl;
+        return;
+    }
+
+    pt::ptree node;
+
+    libff::GT<ppT> Alpha_G1_beta_G2(vk.alpha_g1_beta_g2);
+
+    libff::G2<ppT> gamma(vk.gamma_g2);
+    gamma.to_affine_coordinates();
+    libff::G2<ppT> delta(vk.delta_g2);
+    delta.to_affine_coordinates();
+
+    libsnark::accumulation_vector<libff::G1<ppT>> abc(vk.gamma_ABC_g1);
+
+    node.add_child("alpha_beta", point_to_ptree<ppT>(Alpha_G1_beta_G2));
+
+    node.add_child("gamma", point_to_ptree<ppT>(gamma));
+    node.add_child("delta", point_to_ptree<ppT>(delta));
+
+    for(size_t i=0; i<abc.size(); i++) {
+        char buf[10] = {0};
+        libff::G1<ppT> IC_N(abc.rest[i]);
+        IC_N.to_affine_coordinates();
+
+        sprintf(buf, "ABC_%zu", i);
         node.add_child(buf, point_to_ptree<ppT>(IC_N));
     }
 
@@ -337,6 +398,45 @@ void print_vk_to_file(libsnark::r1cs_ppzksnark_verification_key<ppT> vk, const s
 }
 
 template<typename ppT>
+void print_vk_to_file(libsnark::r1cs_gg_ppzksnark_verification_key<ppT> vk, const std::string &file_path)
+{
+    std::ofstream vk_data(file_path);
+    if (!vk_data.is_open()) {
+        std::cerr << "WARNING: unable to open file at path: " << file_path << std::endl;
+        return;
+    }
+
+    libff::GT<ppT> Alpha_G1_beta_G2(vk.alpha_g1_beta_g2);
+
+    libff::G2<ppT> gamma(vk.gamma_g2);
+    gamma.to_affine_coordinates();
+    libff::G2<ppT> delta(vk.delta_g2);
+    delta.to_affine_coordinates();
+
+    libsnark::accumulation_vector<libff::G1<ppT>> abc(vk.gamma_ABC_g1);
+
+    vk_data << coord_to_string(Alpha_G1_beta_G2.c0.c0) << std::endl;
+    vk_data << coord_to_string(Alpha_G1_beta_G2.c0.c1) << std::endl;
+    vk_data << coord_to_string(Alpha_G1_beta_G2.c1.c0) << std::endl;
+    vk_data << coord_to_string(Alpha_G1_beta_G2.c1.c1) << std::endl;
+
+    vk_data << coord_to_string(gamma.X) << std::endl;
+    vk_data << coord_to_string(gamma.Y) << std::endl;
+
+    vk_data << coord_to_string(delta.X) << std::endl;
+    vk_data << coord_to_string(delta.Y) << std::endl;
+
+    for(size_t i=0; i<abc.size(); i++) {
+        libff::G1<ppT> IC_N(abc.rest[i]);
+        IC_N.to_affine_coordinates();
+        vk_data << coord_to_string(IC_N.X) << std::endl;
+        vk_data << coord_to_string(IC_N.Y) << std::endl;
+    }
+
+    vk_data.close();
+}
+
+template<typename ppT>
 void print_proof_to_file(libsnark::r1cs_ppzksnark_proof<ppT> proof, const std::string &file_path)
 {
     std::ofstream proof_data(file_path);
@@ -388,6 +488,36 @@ void print_proof_to_file(libsnark::r1cs_ppzksnark_proof<ppT> proof, const std::s
 
     proof_data << coord_to_string(K.X) << std::endl;
     proof_data << coord_to_string(K.Y) << std::endl;
+
+    proof_data.close();
+}
+
+template<typename ppT>
+void print_proof_to_file(libsnark::r1cs_gg_ppzksnark_proof<ppT> proof, const std::string &file_path)
+{
+    std::ofstream proof_data(file_path);
+    if (!proof_data.is_open()) {
+        std::cerr << "WARNING: unable to open file at path: " << file_path << std::endl;
+        return;
+    }
+
+    libff::G1<ppT> A_g(proof.g_A);
+    A_g.to_affine_coordinates();
+
+    libff::G2<ppT> B_g(proof.g_B);
+    B_g.to_affine_coordinates();
+
+    libff::G1<ppT> C_g(proof.g_C);
+    C_g.to_affine_coordinates();
+
+    proof_data << coord_to_string(A_g.X) << std::endl;
+    proof_data << coord_to_string(A_g.Y) << std::endl;
+
+    proof_data << coord_to_string(B_g.X) << std::endl;
+    proof_data << coord_to_string(B_g.Y) << std::endl;
+
+    proof_data << coord_to_string(C_g.X) << std::endl;
+    proof_data << coord_to_string(C_g.Y) << std::endl;
 
     proof_data.close();
 }
