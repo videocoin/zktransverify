@@ -108,14 +108,6 @@ truffle test
 Google cloud instance, v8CPU:
 
 ```
-(leave) Call to r1cs_ppzksnark_prover           [4.1696s x5.62] (4.1696s x5.62 from start)
-(leave) Call to r1cs_ppzksnark_prover           [4.1477s x5.59] (4.1477s x5.59 from start)
-(leave) Call to r1cs_ppzksnark_prover           [4.1645s x5.64] (4.1645s x5.64 from start)
-(leave) Call to r1cs_ppzksnark_prover           [4.1482s x5.60] (4.1482s x5.60 from start)
-(leave) Call to r1cs_ppzksnark_prover           [4.1860s x5.61] (4.1860s x5.61 from start)
-(leave) Call to r1cs_ppzksnark_prover           [4.1550s x5.63] (4.1550s x5.63 from start)
-(leave) Call to r1cs_ppzksnark_prover           [4.0892s x5.58] (4.0892s x5.58 from start)
-(leave) Call to r1cs_ppzksnark_prover           [4.1394s x5.63] (4.1394s x5.63 from start)
 (leave) Call to r1cs_ppzksnark_prover           [4.1795s x5.60] (4.1795s x5.60 from start)
 (leave) Call to r1cs_ppzksnark_prover           [4.2008s x5.54] (4.2008s x5.54 from start)
 (leave) Call to r1cs_ppzksnark_prover           [4.1483s x5.62] (4.1483s x5.62 from start)
@@ -126,4 +118,19 @@ Google cloud instance, v8CPU:
 (leave) Call to r1cs_ppzksnark_prover           [4.1090s x5.58] (4.1090s x5.58 from start)
 (leave) Call to r1cs_ppzksnark_prover           [4.2088s x5.65] (4.2089s x5.65 from start)
 (leave) Call to r1cs_ppzksnark_prover           [4.1530s x5.58] (4.1530s x5.58 from start)
+```
+
+Google cloud instance, v16CPU
+
+```
+(leave) Call to r1cs_ppzksnark_prover           [3.2171s x9.03] (3.2171s x9.03 from start)
+(leave) Call to r1cs_ppzksnark_prover           [3.0921s x8.63] (3.0921s x8.63 from start)
+(leave) Call to r1cs_ppzksnark_prover           [3.0534s x8.51] (3.0535s x8.51 from start)
+(leave) Call to r1cs_ppzksnark_prover           [3.1457s x9.15] (3.1457s x9.15 from start)
+(leave) Call to r1cs_ppzksnark_prover           [3.1549s x9.25] (3.1549s x9.25 from start)
+(leave) Call to r1cs_ppzksnark_prover           [3.1922s x9.20] (3.1922s x9.20 from start)
+(leave) Call to r1cs_ppzksnark_prover           [3.0785s x8.51] (3.0785s x8.51 from start)
+(leave) Call to r1cs_ppzksnark_prover           [3.0543s x8.30] (3.0544s x8.30 from start)
+(leave) Call to r1cs_ppzksnark_prover           [3.1612s x9.23] (3.1612s x9.23 from start)
+(leave) Call to r1cs_ppzksnark_prover           [3.0549s x8.77] (3.0549s x8.77 from start)
 ```
