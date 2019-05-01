@@ -211,7 +211,7 @@ void print_proof_to_json(libsnark::r1cs_ppzksnark_proof<ppT> &proof, std::vector
 
     pt::ptree node;
 
-    node.add_child("proof", proof_to_ptree<libsnark::default_r1cs_ppzksnark_pp>(proof));
+    node.add_child("proof", proof_to_ptree<ppT>(proof));
     node.add_child("inputs", input_to_ptree<unsigned>(input));
 
     pt::write_json(proof_data, node);
