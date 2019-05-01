@@ -102,3 +102,28 @@ Proof verification:
 cd ../smart-contract
 truffle test
 ```
+
+### Proof generation benchmarking
+
+Google cloud instance, v8CPU:
+
+```
+(leave) Call to r1cs_ppzksnark_prover           [4.1696s x5.62] (4.1696s x5.62 from start)
+(leave) Call to r1cs_ppzksnark_prover           [4.1477s x5.59] (4.1477s x5.59 from start)
+(leave) Call to r1cs_ppzksnark_prover           [4.1645s x5.64] (4.1645s x5.64 from start)
+(leave) Call to r1cs_ppzksnark_prover           [4.1482s x5.60] (4.1482s x5.60 from start)
+(leave) Call to r1cs_ppzksnark_prover           [4.1860s x5.61] (4.1860s x5.61 from start)
+(leave) Call to r1cs_ppzksnark_prover           [4.1550s x5.63] (4.1550s x5.63 from start)
+(leave) Call to r1cs_ppzksnark_prover           [4.0892s x5.58] (4.0892s x5.58 from start)
+(leave) Call to r1cs_ppzksnark_prover           [4.1394s x5.63] (4.1394s x5.63 from start)
+(leave) Call to r1cs_ppzksnark_prover           [4.1795s x5.60] (4.1795s x5.60 from start)
+(leave) Call to r1cs_ppzksnark_prover           [4.2008s x5.54] (4.2008s x5.54 from start)
+(leave) Call to r1cs_ppzksnark_prover           [4.1483s x5.62] (4.1483s x5.62 from start)
+(leave) Call to r1cs_ppzksnark_prover           [4.1841s x5.66] (4.1841s x5.66 from start)
+(leave) Call to r1cs_ppzksnark_prover           [4.1767s x5.59] (4.1767s x5.59 from start)
+(leave) Call to r1cs_ppzksnark_prover           [4.2650s x5.55] (4.2650s x5.55 from start)
+(leave) Call to r1cs_ppzksnark_prover           [3.6660s x5.23] (3.6660s x5.23 from start)
+(leave) Call to r1cs_ppzksnark_prover           [4.1090s x5.58] (4.1090s x5.58 from start)
+(leave) Call to r1cs_ppzksnark_prover           [4.2088s x5.65] (4.2089s x5.65 from start)
+(leave) Call to r1cs_ppzksnark_prover           [4.1530s x5.58] (4.1530s x5.58 from start)
+```
