@@ -140,8 +140,8 @@ void generate_proof_internal(const comp_params &p,
     prover.compute_from_pws(pws_fn);
     libff::leave_block("Compute algorithm");
 
-    libsnark::r1cs_ppzksnark_primary_input<ppT> primary_input;
-    libsnark::r1cs_ppzksnark_auxiliary_input<ppT> aux_input;
+    libsnark::r1cs_gg_ppzksnark_primary_input<ppT> primary_input;
+    libsnark::r1cs_gg_ppzksnark_auxiliary_input<ppT> aux_input;
 
     for (int i = 0; i < p.n_inputs; i++) {
         FieldT currentVar(prover.input[i]);
