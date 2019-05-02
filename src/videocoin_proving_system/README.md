@@ -115,7 +115,7 @@ Google cloud instance, v8CPU:
 (leave) Call to r1cs_ppzksnark_prover           [4.1530s x5.58] (4.1530s x5.58 from start)
 ```
 
-Google cloud instance, v16CPU
+Google cloud instance, v16CPU:
 
 ```
 (leave) Call to r1cs_ppzksnark_prover           [3.1922s x9.20] (3.1922s x9.20 from start)
@@ -134,3 +134,13 @@ Google cloud instance, v8CPU, Groth16:
 (leave) Call to r1cs_gg_ppzksnark_prover        [4.6361s x5.79] (4.6361s x5.79 from start)
 (leave) Call to r1cs_gg_ppzksnark_prover        [4.6581s x5.75] (4.6581s x5.75 from start)
 ```
+ 
+ Google cloud instance, v16CPU, Groth16:
+ 
+ ```
+(leave) Call to r1cs_gg_ppzksnark_prover        [3.4591s x9.49] (3.4591s x9.49 from start)
+(leave) Call to r1cs_gg_ppzksnark_prover        [3.3320s x9.12] (3.3320s x9.12 from start)
+(leave) Call to r1cs_gg_ppzksnark_prover        [3.4591s x9.74] (3.4591s x9.74 from start)
+(leave) Call to r1cs_gg_ppzksnark_prover        [3.3138s x8.88] (3.3138s x8.88 from start)
+(leave) Call to r1cs_gg_ppzksnark_prover        [3.4126s x9.03] (3.4126s x9.03 from start)
+ ```
