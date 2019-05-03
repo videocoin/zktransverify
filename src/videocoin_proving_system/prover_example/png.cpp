@@ -7,7 +7,7 @@
 
 int x, y;
 
-int width, height;
+png_uint_32 width, height;
 
 png_structp png_ptr;
 png_infop info_ptr;
@@ -53,9 +53,14 @@ png_bytep *read_png_file(const char *file_name) {
 
     png_read_info(png_ptr, info_ptr);
 
+#if PNG_LIBPNG_VER > 10254
+    png_get_IHDR(png_ptr, info_ptr, &width, &height, NULL, NULL,
+                 NULL, NULL, NULL);
+#else
+
     width = info_ptr->width;
     height = info_ptr->height;
-
+#endif
     png_read_update_info(png_ptr, info_ptr);
 
 
@@ -66,7 +71,11 @@ png_bytep *read_png_file(const char *file_name) {
 
     row_pointers = (png_bytep *) malloc(sizeof(png_bytep) * height);
     for (y = 0; y < height; y++)
+#if PNG_LIBPNG_VER > 10254
+        row_pointers[y] = (png_byte *)png_malloc(png_ptr, png_get_rowbytes(png_ptr, info_ptr));
+#else
         row_pointers[y] = (png_byte *) malloc(info_ptr->rowbytes);
+#endif
 
     png_read_image(png_ptr, row_pointers);
 
