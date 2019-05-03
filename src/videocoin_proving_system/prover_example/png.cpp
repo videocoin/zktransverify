@@ -6,8 +6,11 @@
 #include <cstdlib>
 
 int x, y;
-
+#if PNG_LIBPNG_VER > 10254
 png_uint_32 width, height;
+#else
+int width, height;
+#endif
 
 png_structp png_ptr;
 png_infop info_ptr;
