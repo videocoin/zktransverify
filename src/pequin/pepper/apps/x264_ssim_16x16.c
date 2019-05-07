@@ -157,5 +157,5 @@ void compute(struct In *input, struct Out *output) {
     unsigned int counter = (height - 1) * (width - 1);
     output->ssim = fix_div(ssim, int_to_fix(counter));
     output->ssim = fix_to_int(output->ssim * 100);
-    output->satisfied = output->ssim > input->ref_ssim;
+    output->satisfied = output->ssim > input->ref_ssim && output->ssim < 100;
 }
