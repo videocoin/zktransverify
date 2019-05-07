@@ -105,7 +105,7 @@ contract('Verifier', function(accounts) {
 			K = parseG1Point(proof);
 			proof = proof.slice(2);
 
-			while(input != [] && input[0] != "") {
+			while(input != [] && input[0] != "" && input.length != 2) {
 				input_vector.push(input[0]);
 				input = input.slice(1);
 			}
@@ -134,30 +134,12 @@ contract('Verifier', function(accounts) {
 
 			return verifier.verifyTx.call(A_g, A_h, B_g, B_h, C_g, C_h,
 				H, K,
-				[105, 0, 0, 3]);
+				[32, 0, 12]);
 		}).then(function(result) {
 			wrongInput = result;
 		}).then(function() {
 			assert.equal(wrongProof, false, "The incorrect proof was verified");
 			assert.equal(wrongInput, false, "The incorrect input was verified");
-		});
-	});
-
-	it("should produce correct result basing on SSIM threshold and proof", function() {
-		var verifier;
-
-		return Verifier.deployed().then(function(instance) {
-			verifier = instance;
-		}).then(function() {
-
-			return verifier.verifySSIMTx.call(A_g, A_h, B_g, B_h, C_g, C_h,
-				H, K,
-				input_vector);
-		}).then(function(result) {
-			if (input_vector[3] == "1")
-				assert.equal(result, true, "The correct proof did not verify");
-			else
-				assert.equal(result, false, "The SSIM threshold did not verify");
 		});
 	});
 });
