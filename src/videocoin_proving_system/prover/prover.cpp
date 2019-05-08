@@ -17,15 +17,15 @@
 #include "computation_prover.h"
 #include "prover.h"
 
-template <typename ppT>
-void generate_proof_internal(const comp_params &p,
-                             const char *pws_fn,
-                             libsnark::r1cs_ppzksnark_proving_key<ppT> &pk,
-                             const std::vector<double> &input,
-                             std::vector<double> &output,
-                             libsnark::r1cs_ppzksnark_proof<ppT> &proof);
+template<typename ppT>
+int generate_proof_internal(const comp_params &p,
+                            const char *pws_fn,
+                            libsnark::r1cs_ppzksnark_proving_key<ppT> &pk,
+                            int ref_ssim,
+                            libsnark::r1cs_ppzksnark_proof<ppT> &proof);
 
 static void write_to_auxiliary_input(const unsigned char *src1, size_t len1, const unsigned char *src2, size_t len2);
+
 static void clear_auxiliary_input();
 
 void initialize_prover() {
@@ -34,14 +34,12 @@ void initialize_prover() {
 }
 
 int generate_ssim_proof(const char *pk_fn,
-                           int ref_ssim,
-                           const unsigned char *src1, unsigned long src1_len,
-                           const unsigned char *src2, unsigned long src2_len,
-                           unsigned int *accepted,
-                           const char *input_fn,
-                           const char *proof_bin_fn,
-                           const char *proof_uncompressed_fn,
-                           const char *proof_json_fn) {
+                        int ref_ssim,
+                        const unsigned char *src1, unsigned long src1_len,
+                        const unsigned char *src2, unsigned long src2_len,
+                        const char *proof_bin_fn,
+                        const char *proof_uncompressed_fn,
+                        const char *proof_json_fn) {
     if (src1 == nullptr || src2 == nullptr) {
         std::cerr << "ERROR: invalid source." << std::endl;
         exit(-1);
@@ -71,17 +69,12 @@ int generate_ssim_proof(const char *pk_fn,
     pkey >> pk;
     libff::leave_block("Reading proving key from file");
 
-    std::vector<double> input;
-    std::vector<double> output;
-
     libff::enter_block("Call to write_to_auxiliary_input");
     write_to_auxiliary_input(src1, src1_len, src2, src2_len);
     libff::leave_block("Call to write_to_auxiliary_input");
 
-    input.emplace_back(ref_ssim);
-
     libsnark::r1cs_ppzksnark_proof<libsnark::default_r1cs_ppzksnark_pp> proof;
-    generate_proof_internal<libsnark::default_r1cs_ppzksnark_pp>(p, pws.c_str(), pk, input, output, proof);
+    int ssim = generate_proof_internal(p, pws.c_str(), pk, ref_ssim, proof);
 
     clear_auxiliary_input();
 
@@ -95,44 +88,28 @@ int generate_ssim_proof(const char *pk_fn,
         }
     }
 
-    if (input_fn != nullptr) {
-        std::ofstream output_file(input_fn);
-        if (output_file.is_open()) {
-            for (int i = 0; i < p.n_inputs; i++) {
-                output_file << (unsigned) input[i] << std::endl;
-            }
-            for (int i = 0; i < p.n_outputs; i++) {
-                output_file << (unsigned) output[i] << std::endl;
-            }
-            output_file.close();
-        } else {
-            std::cerr << "WARNING: unable to open file at path: " << input_fn << std::endl;
-        }
-    }
-
     if (proof_uncompressed_fn != nullptr) {
         print_proof_to_file(proof, proof_uncompressed_fn);
     }
 
     if (proof_json_fn != nullptr) {
-        input.insert(input.end(), output.begin(), output.end());
-        print_proof_to_json(proof, input, proof_json_fn);
+        print_proof_to_json(proof, proof_json_fn);
     }
 
-    if (accepted != nullptr)
-        *accepted = output[2];
-    return output[1];
+    return ssim;
 }
 
-template <typename ppT>
-void generate_proof_internal(const comp_params &p,
-                             const char *pws_fn,
-                             libsnark::r1cs_ppzksnark_proving_key<ppT> &pk,
-                             const std::vector<double> &input,
-                             std::vector<double> &output,
-                             libsnark::r1cs_ppzksnark_proof<ppT> &proof) {
+template<typename ppT>
+int generate_proof_internal(const comp_params &p,
+                            const char *pws_fn,
+                            libsnark::r1cs_ppzksnark_proving_key<ppT> &pk,
+                            int ref_ssim,
+                            libsnark::r1cs_ppzksnark_proof<ppT> &proof) {
     mpz_t prime;
     mpz_init_set_str(prime, prime_str, 10);
+
+    std::vector<double> input;
+    input.emplace_back(ref_ssim);
 
     libff::start_profiling();
     libff::enter_block("Compute algorithm");
@@ -148,22 +125,25 @@ void generate_proof_internal(const comp_params &p,
         primary_input.push_back(currentVar);
     }
 
-    for (int i = 0; i < p.n_outputs; i++) {
+    for (int i = 0; i < p.n_outputs - 1; i++) {
         FieldT currentVar(prover.output[i]);
         primary_input.push_back(currentVar);
     }
+
+    mpz_t accepted;
+    alloc_init_scalar(accepted);
+    mpz_set_ui(accepted, 1);
+    primary_input.push_back(FieldT(accepted));
 
     for (int i = 0; i < p.n_vars; i++) {
         FieldT currentVar(prover.F1[i]);
         aux_input.push_back(currentVar);
     }
 
-    for (int i = 0; i < p.n_outputs; i++) {
-        output.emplace_back(mpq_get_d(prover.input_output_q[p.n_inputs + i]));
-    }
-
     libff::start_profiling();
     proof = libsnark::r1cs_ppzksnark_prover<ppT>(pk, primary_input, aux_input);
+
+    return mpq_get_d(prover.input_output_q[p.n_inputs + 1]);
 }
 
 void write_to_auxiliary_input(const unsigned char *src1, size_t len1, const unsigned char *src2, size_t len2) {
@@ -176,10 +156,10 @@ void write_to_auxiliary_input(const unsigned char *src1, size_t len1, const unsi
 
     aux << "#!/bin/sh" << std::endl << std::endl << std::endl;
     for (size_t i = 0; i < len1; ++i) {
-        aux << "echo " << (int)src1[i] << std::endl;
+        aux << "echo " << (int) src1[i] << std::endl;
     }
     for (size_t i = 0; i < len2; ++i) {
-        aux << "echo " << (int)src2[i] << std::endl;
+        aux << "echo " << (int) src2[i] << std::endl;
     }
 
     aux.close();

@@ -18,7 +18,6 @@
 namespace po = boost::program_options;
 
 std::vector<std::string> files;
-std::string input;
 std::string proving_key_path;
 std::string proof;
 std::string uncompressed_proof;
@@ -44,7 +43,6 @@ void parse_options(int argc, const char *argv[]) {
         prover.add_options()
                 ("pkey,p", po::value<std::string>(&proving_key_path), "path to proving key")
                 ("files,f", po::value<std::vector<std::string>>(&files)->multitoken(), "list of %file1, %file2")
-                ("input-output,i", po::value<std::string>(&input), "path to input-output file")
                 ("proof,P", po::value<std::string>(&proof), "path to proof file")
                 ("uncompressed-proof,u", po::value<std::string>(&uncompressed_proof), "path to uncompressed proof file")
                 ("json-proof,j", po::value<std::string>(&json_proof), "path to json proof file")
@@ -87,12 +85,10 @@ void parse_options(int argc, const char *argv[]) {
 
 void save_witness(const char *filename, int refssim, int dbgssim) {
     FILE *f = fopen(filename, "w+");
-    if (f != NULL) {
-        int i;
-        fprintf(f, "%d\n%d\n", refssim, dbgssim);
+    if (f != nullptr) {
+        fprintf(f, "%d\n%d\n%d\n%d\n", refssim, 0, dbgssim, 1);
         fclose(f);
     }
-
 }
 
 int main(int argc, const char *argv[]) {
@@ -117,15 +113,12 @@ int main(int argc, const char *argv[]) {
     if (mbSrc.mb_data) free(mbSrc.mb_data);
     if (mbTrans.mb_data) free(mbTrans.mb_data);
 
-    unsigned int accepted;
     initialize_prover();
     int ssim = generate_ssim_proof(
             proving_key_path.c_str(),
             ref_ssim,
             srcRawY, sizeof(srcRawY),
             transRawY, sizeof(transRawY),
-            &accepted,
-            input.empty() ? nullptr : input.c_str(),
             proof.empty() ? nullptr : proof.c_str(),
             uncompressed_proof.empty() ? nullptr : uncompressed_proof.c_str(),
             json_proof.empty() ? nullptr : json_proof.c_str());

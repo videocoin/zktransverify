@@ -94,8 +94,6 @@ int main(int argc, char *argv[]) {
                 ref_ssim,
                 src.y_buffer, src.y_width * src.y_height,
                 dest.y_buffer, dest.y_width * dest.y_height,
-                &accepted,
-                vm["input-output"].as<std::string>().c_str(),
                 vm["proof"].as<std::string>().c_str(),
                 vm.count("uncompressed-proof") ? vm["uncompressed-proof"].as<std::string>().c_str() : nullptr,
                 vm.count("json-proof") ? vm["json-proof"].as<std::string>().c_str() : nullptr);

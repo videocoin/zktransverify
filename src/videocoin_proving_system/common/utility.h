@@ -151,7 +151,7 @@ pt::ptree point_to_ptree(libff::G2<ppt> &point) {
 
     node2.push_back(std::make_pair("", node1));
 
-    return std::move(node2);
+    return node2;
 }
 
 template<typename ppT>
@@ -184,35 +184,18 @@ pt::ptree proof_to_ptree(libsnark::r1cs_ppzksnark_proof<ppT> &proof) {
     node.add_child("H", point_to_ptree<ppT>(proof.g_H));
     node.add_child("K", point_to_ptree<ppT>(proof.g_K));
 
-    return std::move(node);
-}
-
-template<typename iT>
-pt::ptree input_to_ptree(std::vector<double> &input) {
-
-    pt::ptree node;
-    for (auto &item: input) {
-        pt::basic_ptree<std::string, std::string> basic_node;
-
-        basic_node.put<iT>("", item);
-        node.push_back(std::make_pair("", basic_node));
-    }
-
     return node;
 }
 
 template <typename ppT>
-void print_proof_to_json(libsnark::r1cs_ppzksnark_proof<ppT> &proof, std::vector<double> &input, const std::string &file_path) {
+void print_proof_to_json(libsnark::r1cs_ppzksnark_proof<ppT> &proof, const std::string &file_path) {
     std::ofstream proof_data(file_path);
     if (!proof_data.is_open()) {
         std::cerr << "WARNING: unable to open file at path: " << file_path << std::endl;
         return;
     }
 
-    pt::ptree node;
-
-    node.add_child("proof", proof_to_ptree<libsnark::default_r1cs_ppzksnark_pp>(proof));
-    node.add_child("inputs", input_to_ptree<unsigned>(input));
+    pt::ptree node = proof_to_ptree<libsnark::default_r1cs_ppzksnark_pp>(proof);
 
     pt::write_json(proof_data, node);
     proof_data.close();

@@ -226,11 +226,10 @@ contract Verifier {
         proof.C_p = Pairing.G1Point(c_p[0], c_p[1]);
         proof.H = Pairing.G1Point(h[0], h[1]);
         proof.K = Pairing.G1Point(k[0], k[1]);
-        uint[] memory inputValues = new uint[](input.length+1);
+        uint[] memory inputValues = new uint[](input.length);
         for(uint i = 0; i < input.length; i++){
             inputValues[i] = input[i];
         }
-        inputValues[input.length] = 1;
         if (verify(inputValues, proof) == 0) {
             emit Verified("Transaction successfully verified.");
             return true;

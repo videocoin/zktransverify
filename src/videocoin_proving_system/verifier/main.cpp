@@ -78,7 +78,7 @@ int main(int argc, char *argv[]) {
                  "set algorithm type <ssim16x16 | ssim32x32 | ssim64x64>")
                 ("vkey,v", po::value<std::string>(), "path to verification key")
                 ("proof,p", po::value<std::string>(), "path to proof")
-                ("input-output,i", po::value<std::string>(), "path to input-output file");
+                ("witness,w", po::value<std::string>(), "path to witness file");
 
         all.add(general).add(verifier);
 
@@ -91,7 +91,7 @@ int main(int argc, char *argv[]) {
         }
 
         // check mandatory options
-        for (auto &e: {"mode", "vkey", "proof", "input-output"}) {
+        for (auto &e: {"mode", "vkey", "proof", "witness"}) {
             if (!vm.count(e)) {
                 std::cerr << "error: the option '--" << e << "' is required but missing\n" << all << std::endl;
                 exit(1);
@@ -115,7 +115,7 @@ int main(int argc, char *argv[]) {
         std::string verification_key_fn = argv[2];
         std::string inputs_fn = argv[3];
         std::string proof_fn = argv[4];
-        verify(vm["vkey"].as<std::string>(), vm["input-output"].as<std::string>(), vm["proof"].as<std::string>(),
+        verify(vm["vkey"].as<std::string>(), vm["witness"].as<std::string>(), vm["proof"].as<std::string>(),
                p.n_inputs + p.n_outputs, prime);
     }
     catch (std::exception &e) {

@@ -31,19 +31,19 @@ contract('Verifier', function(accounts) {
 		console.log("proof_data:");
 		console.log(proof);
 	});
-	fs.readFile("../build/inputs.txt", function(err, data) {
+	fs.readFile("../build/witness.txt", function(err, data) {
 		if(err) {
 			console.log("Error reading input_data");
 		}
 		input = data.toString().replace(/\n/g, " ").split(" ");
-		console.log("input_data:");
+		console.log("witness_data:");
 		console.log(input);
 	});
 
 	it("should have vk and proof data", function() {
 		assert.isAtLeast(vk.length, 24, "vk_data not correct size");
 		assert.isAtLeast(proof.length, 18, "proof_data not correct size");
-		assert.isAtLeast(input.length, 3, "input_data not correct size");
+		assert.isAtLeast(input.length, 3, "witness_data not correct size");
 	});
 
 	it("should set verifying key", function() {
@@ -105,7 +105,7 @@ contract('Verifier', function(accounts) {
 			K = parseG1Point(proof);
 			proof = proof.slice(2);
 
-			while(input != [] && input[0] != "" && input.length != 2) {
+			while(input != [] && input[0] != "") {
 				input_vector.push(input[0]);
 				input = input.slice(1);
 			}
@@ -134,7 +134,7 @@ contract('Verifier', function(accounts) {
 
 			return verifier.verifyTx.call(A_g, A_h, B_g, B_h, C_g, C_h,
 				H, K,
-				[32, 0, 12]);
+				[32, 0, 12, 1]);
 		}).then(function(result) {
 			wrongInput = result;
 		}).then(function() {
