@@ -97,4 +97,4 @@ in_to_tree: https://media.xiph.org/video/derf/y4m/in_to_tree_2160p50.y4m
 ## Appendix B:
 A one time zkSNARK setup operation will be performed that generates proving and verification keys as described below:
 
- - TODO -
+ Follow this [link](./src/videocoin_proving_system/README.md) to run test setup.
