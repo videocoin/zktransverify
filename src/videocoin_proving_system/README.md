@@ -56,7 +56,6 @@ General options:
 Prover options:
   -p [ --pkey ] arg                path to proving key
   -f [ --files ] arg               list of %file1, %file2
-  -i [ --input-output ] arg        path to input-output file
   -P [ --proof ] arg               path to proof file
   -u [ --uncompressed-proof ] arg  path to uncompressed proof file
   -j [ --json-proof ] arg          path to json proof file
@@ -67,10 +66,8 @@ Prover options:
 Proof generation:
 
 ```
-./genproof --files ../test_vectors/crowd_run_2160p50_40M.ts ../test_vectors/crowd_run_2160p50_20M_correct.ts -p p.key -s 80 -w witness -i inputs.txt -P ssim.proof -u ssim.proof.uncompressed
+./genproof --files ../test_vectors/crowd_run_2160p50_40M.ts ../test_vectors/crowd_run_2160p50_20M_correct.ts -p p.key -s 80 -w witness.txt -P ssim.proof -u ssim.proof.uncompressed
 ```
-
-**Note**: Add more video samples.
 
 ### Verify proof using standalone verifier
 
@@ -85,13 +82,13 @@ Verifier options:
                              ssim64x64>
   -v [ --vkey ] arg          path to verification key
   -p [ --proof ] arg         path to proof
-  -i [ --input-output ] arg  path to input-output file
+  -w [ --witness ] arg       path to witness file
 ```
 
 Proof verification:
 
 ```
-./verifier -m ssim16x16 -v v.key -p ssim.proof -i inputs.txt 
+./verifier -m ssim16x16 -v v.key -p ssim.proof -w witness.txt 
 ```
 
 ### Verify proof using Truffle Tests
@@ -101,6 +98,28 @@ Proof verification:
 ```
 cd ../smart-contract
 truffle test
+```
+
+### Testing attack vectors
+
+Following proof generations will generate incorrect proofs. Verification using truffle test or standalone verifier will show this.
+
+**Low Quality Attack** - Transcodes using presets which produce low quality streams:
+
+```
+./genproof --files ../test_vectors/crowd_run_2160p50_40M.ts ../test_vectors/crowd_run_2160p50_20M_attack_lq.ts -p p.key -s 80 -w witness.txt -P ssim.proof -u ssim.proof.uncompressed
+```
+
+**Wrong Stream Attack** - Submits a stream not produced from source A stream unrelated to source stream is submitted as transcoded stream:
+
+```
+./genproof --files ../test_vectors/crowd_run_2160p50_40M.ts ../test_vectors/ducks_take_off_2160p50_40M.ts -p p.key -s 80 -w witness.txt -P ssim.proof -u ssim.proof.uncompressed
+```
+
+**No Transcode Attack** - Submits source stream as transcoded stream The source stream is submitted as transcoded stream:
+
+```
+./genproof --files ../test_vectors/crowd_run_2160p50_40M.ts ../test_vectors/crowd_run_2160p50_40M.ts -p p.key -s 80 -w witness.txt -P ssim.proof -u ssim.proof.uncompressed
 ```
 
 ### Proof generation benchmarking
