@@ -31,8 +31,6 @@ int main(int argc, char *argv[]) {
                 ("help,h", "produce help message");
 
         prover.add_options()
-                ("mode,m", po::value<std::string>(),
-                 "set algorithm type <ssim16x16 | ssim32x32 | ssim64x64>")
                 ("pkey,p", po::value<std::string>(), "path to proving key")
                 ("files,f", po::value<std::vector<std::string>>(&files)->multitoken(), "list of %file1, %file2")
                 ("input-output,i", po::value<std::string>(), "path to input-output file")
@@ -51,19 +49,14 @@ int main(int argc, char *argv[]) {
         }
 
         // check mandatory options
-        for (auto &e: {"mode", "files", "pkey", "input-output", "proof"}) {
+        for (auto &e: {"files", "pkey", "input-output", "proof"}) {
             if (!vm.count(e)) {
                 std::cerr << "error: the option '--" << e << "' is required but missing\n" << all << std::endl;
                 exit(1);
             }
         }
 
-        ssim_mode mode = ssim_mode::from_str(vm["mode"].as<std::string>().c_str());
-        if (!mode.is_valid()) {
-            std::cerr << "error: the option '--mode' has invalid value: " << vm["mode"].as<std::string>() << std::endl
-                      << all << std::endl;
-            exit(1);
-        }
+        ssim_mode mode(ssim_mode::_x16);
 
         if (files.size() != 2) {
             std::cerr << "error: the option '--files' has invalid number files\n"
@@ -86,10 +79,10 @@ int main(int argc, char *argv[]) {
         unsigned int accepted;
         ///////////////////////////////////////////////////////////////////////////////////
         // Calculate SSIM using prover library.
-
+        printf("\n\nArithmetic based SSIM\n");
 
         initialize_prover();
-        double ssim = generate_ssim_proof(
+        generate_ssim_proof(
                 vm["pkey"].as<std::string>().c_str(),
                 ref_ssim,
                 src.y_buffer, src.y_width * src.y_height,
@@ -97,11 +90,10 @@ int main(int argc, char *argv[]) {
                 vm["proof"].as<std::string>().c_str(),
                 vm.count("uncompressed-proof") ? vm["uncompressed-proof"].as<std::string>().c_str() : nullptr,
                 vm.count("json-proof") ? vm["json-proof"].as<std::string>().c_str() : nullptr);
-        printf("\n\nArithmetic based SSIM\n");
-        printf("ssim: %f; accepted: %d\n", ssim, accepted);
 
         printf("\n\nPepper based SSIM\n");
 
+        double ssim;
         if (mode.is_16()) {
             In in;
             Out out;
@@ -110,7 +102,6 @@ int main(int argc, char *argv[]) {
             memcpy(in.pix2, dest.y_buffer, sizeof(in.pix2));
             h264_ssim16x16_compute(&in, &out);
             ssim = out.ssim;
-            accepted = out.accepted;
         } else if (mode.is_32()) {
             In32 in;
             Out32 out;
@@ -119,7 +110,6 @@ int main(int argc, char *argv[]) {
             memcpy(in.pix2, dest.y_buffer, sizeof(in.pix2));
             h264_ssim32x32_compute(&in, &out);
             ssim = out.ssim;
-            accepted = out.counter;
         } else if (mode.is_64()) {
             In64 in;
             Out64 out;
@@ -128,9 +118,8 @@ int main(int argc, char *argv[]) {
             memcpy(in.pix2, dest.y_buffer, sizeof(in.pix2));
             h264_ssim64x64_compute(&in, &out);
             ssim = out.ssim;
-            accepted = out.counter;
         }
-        printf("ssim: %f; accepted %d\n", ssim, accepted);
+        printf("ssim: %f\n", ssim);
 
         ///////////////////////////////////////////////////////////////////////////////////
         // Calculate SSIM using h264 implementation

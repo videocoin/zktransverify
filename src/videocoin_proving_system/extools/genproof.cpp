@@ -29,7 +29,7 @@ int ref_ssim;
 
 void parse_options(int argc, const char *argv[]);
 
-void save_witness(const char *filename, int refssim, int dbgssim);
+void save_witness(const char *filename, int refssim);
 
 void parse_options(int argc, const char *argv[]) {
     try {
@@ -89,10 +89,10 @@ void parse_options(int argc, const char *argv[]) {
     }
 }
 
-void save_witness(const char *filename, int refssim, int dbgssim) {
+void save_witness(const char *filename, int refssim) {
     FILE *f = fopen(filename, "w+");
     if (f != nullptr) {
-        fprintf(f, "%d\n%d\n%d\n%d\n", refssim, 0, dbgssim, 1);
+        fprintf(f, "%d\n%d\n%d\n", refssim, 1, 0);
         fclose(f);
     }
 }
@@ -120,7 +120,7 @@ int main(int argc, const char *argv[]) {
     if (mbTrans.mb_data) free(mbTrans.mb_data);
 
     initialize_prover();
-    int ssim = generate_ssim_proof(
+    generate_ssim_proof(
             proving_key_path.c_str(),
             ref_ssim,
             srcRawY, sizeof(srcRawY),
@@ -129,8 +129,5 @@ int main(int argc, const char *argv[]) {
             uncompressed_proof.empty() ? nullptr : uncompressed_proof.c_str(),
             json_proof.empty() ? nullptr : json_proof.c_str());
 
-    printf("{\"calculated ssim\":[\"%d\"]}\n", ssim);
-    save_witness(witness.c_str(), ref_ssim, ssim);
-
-    // TODO Call ethereum smart-contract/verifier or stand-alone verifier and submit the proof
+    save_witness(witness.c_str(), ref_ssim);
 }

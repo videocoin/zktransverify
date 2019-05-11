@@ -18,7 +18,7 @@
 #include "prover.h"
 
 template<typename ppT>
-int generate_proof_internal(const comp_params &p,
+void generate_proof_internal(const comp_params &p,
                             const char *pws_fn,
                             libsnark::r1cs_ppzksnark_proving_key<ppT> &pk,
                             int ref_ssim,
@@ -33,7 +33,7 @@ void initialize_prover() {
     libsnark::default_r1cs_ppzksnark_pp::init_public_params();
 }
 
-int generate_ssim_proof(const char *pk_fn,
+void generate_ssim_proof(const char *pk_fn,
                         int ref_ssim,
                         const unsigned char *src1, unsigned long src1_len,
                         const unsigned char *src2, unsigned long src2_len,
@@ -74,7 +74,7 @@ int generate_ssim_proof(const char *pk_fn,
     libff::leave_block("Call to write_to_auxiliary_input");
 
     libsnark::r1cs_ppzksnark_proof<libsnark::default_r1cs_ppzksnark_pp> proof;
-    int ssim = generate_proof_internal(p, pws.c_str(), pk, ref_ssim, proof);
+    generate_proof_internal(p, pws.c_str(), pk, ref_ssim, proof);
 
     clear_auxiliary_input();
 
@@ -95,12 +95,10 @@ int generate_ssim_proof(const char *pk_fn,
     if (proof_json_fn != nullptr) {
         print_proof_to_json(proof, proof_json_fn);
     }
-
-    return ssim;
 }
 
 template<typename ppT>
-int generate_proof_internal(const comp_params &p,
+void generate_proof_internal(const comp_params &p,
                             const char *pws_fn,
                             libsnark::r1cs_ppzksnark_proving_key<ppT> &pk,
                             int ref_ssim,
@@ -124,16 +122,20 @@ int generate_proof_internal(const comp_params &p,
         FieldT currentVar(prover.input[i]);
         primary_input.push_back(currentVar);
     }
-
+/*
     for (int i = 0; i < p.n_outputs - 1; i++) {
         FieldT currentVar(prover.output[i]);
         primary_input.push_back(currentVar);
     }
-
+*/
     mpz_t accepted;
     alloc_init_scalar(accepted);
     mpz_set_ui(accepted, 1);
     primary_input.push_back(FieldT(accepted));
+
+    mpz_t dummy;
+    alloc_init_scalar(dummy);
+    primary_input.push_back(FieldT(dummy));
 
     for (int i = 0; i < p.n_vars; i++) {
         FieldT currentVar(prover.F1[i]);
@@ -142,8 +144,6 @@ int generate_proof_internal(const comp_params &p,
 
     libff::start_profiling();
     proof = libsnark::r1cs_ppzksnark_prover<ppT>(pk, primary_input, aux_input);
-
-    return mpq_get_d(prover.input_output_q[p.n_inputs + 1]);
 }
 
 void write_to_auxiliary_input(const unsigned char *src1, size_t len1, const unsigned char *src2, size_t len2) {
