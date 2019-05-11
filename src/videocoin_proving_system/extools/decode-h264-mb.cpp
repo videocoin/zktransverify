@@ -83,7 +83,7 @@ int getParam(AVFrame *frame, const char *key)
 	return -1;
 }
 
-int getMbFromStream(const char *file_name, int key_frame_num, int mb_num, MB_T *pMb,  unsigned char *pRawY)
+int getMbFromStream(const char *file_name, int key_frame_num, int mb_num, MB_T *pMb,  unsigned char *pRawY, bool verbose)
 {
 
 	AVFormatContext* fmt_ctx;
@@ -223,10 +223,12 @@ int getMbFromStream(const char *file_name, int key_frame_num, int mb_num, MB_T *
 							char *macroblock = ent->value;
 							if (macroblock) {
 								//printf("macroblockd=%s\n", macroblock);
-								printf("macroblock=");
+								if (verbose)
+								    printf("macroblock=");
 
 								av_base64_decode((uint8_t *)pMb->mb_data, macroblock, pMb->mb_size);
-								hexDump((unsigned char *)pMb->mb_data, 16*16*4);
+								if(verbose)
+								    hexDump((unsigned char *)pMb->mb_data, 16*16*4);
 
 								if(pRawY){
 									int mb_locn_x = 0;
@@ -238,7 +240,8 @@ int getMbFromStream(const char *file_name, int key_frame_num, int mb_num, MB_T *
 											*pDst++ = *pSrc++;
 										}
 									}
-									hexDump(pRawY, 256);
+									if(verbose)
+									    hexDump(pRawY, 256);
 								}
 							}
 						}

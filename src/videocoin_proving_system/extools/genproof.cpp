@@ -23,6 +23,7 @@ std::string proof;
 std::string uncompressed_proof;
 std::string json_proof;
 std::string witness;
+bool verbose = false;
 int ref_ssim;
 
 
@@ -38,7 +39,8 @@ void parse_options(int argc, const char *argv[]) {
         po::variables_map vm;
 
         general.add_options()
-                ("help,h", "produce help message");
+                ("help,h", "produce help message")
+                ("verbose,v", "print additional information");
 
         prover.add_options()
                 ("pkey,p", po::value<std::string>(&proving_key_path), "path to proving key")
@@ -57,6 +59,10 @@ void parse_options(int argc, const char *argv[]) {
         if (vm.count("help")) {
             std::cout << all << std::endl;
             exit(0);
+        }
+
+        if (vm.count("verbose")) {
+            verbose = true;
         }
 
         // check mandatory options
@@ -108,8 +114,8 @@ int main(int argc, const char *argv[]) {
 
     memset(srcRawY, 0x00, 256);
     memset(transRawY, 0x00, 256);
-    getMbFromStream(files.front().c_str(), 1, 10, &mbSrc, srcRawY);
-    getMbFromStream(files.back().c_str(), 1, 10, &mbTrans, transRawY);
+    getMbFromStream(files.front().c_str(), 1, 10, &mbSrc, srcRawY, verbose);
+    getMbFromStream(files.back().c_str(), 1, 10, &mbTrans, transRawY, verbose);
     if (mbSrc.mb_data) free(mbSrc.mb_data);
     if (mbTrans.mb_data) free(mbTrans.mb_data);
 
@@ -123,7 +129,7 @@ int main(int argc, const char *argv[]) {
             uncompressed_proof.empty() ? nullptr : uncompressed_proof.c_str(),
             json_proof.empty() ? nullptr : json_proof.c_str());
 
-    printf("{\"witness\":[\"%d\"]}\n", ssim);
+    printf("{\"calculated ssim\":[\"%d\"]}\n", ssim);
     save_witness(witness.c_str(), ref_ssim, ssim);
 
     // TODO Call ethereum smart-contract/verifier or stand-alone verifier and submit the proof
