@@ -1,0 +1,3 @@
+[submodule "src/videocoin_proving_system/thirdparty/ffmpeg-zksnarks"]
+	path = src/videocoin_proving_system/thirdparty/ffmpeg-zksnarks
+	url = git@github.com:VideoCoin/ffmpeg-zksnarks.git
