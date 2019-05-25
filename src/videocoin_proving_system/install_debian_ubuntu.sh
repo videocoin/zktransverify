@@ -5,7 +5,7 @@ set -e
 PACKAGES="build-essential gcc g++ gcc-multilib g++-multilib\
           libboost-all-dev libgmp10 libgmp-dev rar unrar-free libbz2-dev\
           zlib1g zlib1g-dev libssl-dev cmake libx11-dev\
-	  yasm libass-dev libfdk-aac-dev libmp3lame-dev libopus-dev libvorbis-dev libvpx-dev libx264-dev libx265-dev"
+	      yasm libass-dev libfdk-aac-dev libmp3lame-dev libopus-dev libvorbis-dev libvpx-dev libx264-dev libx265-dev"
 
 sudo apt-get install $PACKAGES
 

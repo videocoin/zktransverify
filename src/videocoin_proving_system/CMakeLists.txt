@@ -20,7 +20,7 @@ include_directories(
         ${THIRDPARTY_DIR}/libsnark
         ${THIRDPARTY_DIR}/libsnark/depends/libff
         ${THIRDPARTY_DIR}/libsnark/depends/libfqfft
-        ${THIRDPARTY_DIR}/ffmpeg
+        ${THIRDPARTY_DIR}/ffmpeg-zksnarks
 )
 
 link_directories(
@@ -29,13 +29,13 @@ link_directories(
         ${THIRDPARTY_DIR}/libsnark/build/libsnark
         ${THIRDPARTY_DIR}/libsnark/build/depends
         ${THIRDPARTY_DIR}/libsnark/build/depends/libff/libff
-        ${THIRDPARTY_DIR}/ffmpeg/libavcodec
-        ${THIRDPARTY_DIR}/ffmpeg/libavfilter
-        ${THIRDPARTY_DIR}/ffmpeg/libavformat
-        ${THIRDPARTY_DIR}/ffmpeg/libswscale
-        ${THIRDPARTY_DIR}/ffmpeg/libpostproc
-        ${THIRDPARTY_DIR}/ffmpeg/libswresample
-        ${THIRDPARTY_DIR}/ffmpeg/libavutil
+        ${THIRDPARTY_DIR}/ffmpeg-zksnarks/libavcodec
+        ${THIRDPARTY_DIR}/ffmpeg-zksnarks/libavfilter
+        ${THIRDPARTY_DIR}/ffmpeg-zksnarks/libavformat
+        ${THIRDPARTY_DIR}/ffmpeg-zksnarks/libswscale
+        ${THIRDPARTY_DIR}/ffmpeg-zksnarks/libpostproc
+        ${THIRDPARTY_DIR}/ffmpeg-zksnarks/libswresample
+        ${THIRDPARTY_DIR}/ffmpeg-zksnarks/libavutil
 )
 
 add_library(
