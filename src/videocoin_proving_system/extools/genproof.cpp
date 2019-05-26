@@ -114,8 +114,8 @@ int main(int argc, const char *argv[]) {
 
     memset(srcRawY, 0x00, 256);
     memset(transRawY, 0x00, 256);
-    getMbFromStream(files.front().c_str(), 1, 10, &mbSrc, srcRawY, verbose);
-    getMbFromStream(files.back().c_str(), 1, 10, &mbTrans, transRawY, verbose);
+    getMbFromStream(files.front().c_str(), frame_offset, mb_offset, &mbSrc, srcRawY, verbose);
+    getMbFromStream(files.back().c_str(), frame_offset, mb_offset, &mbTrans, transRawY, verbose);
     if (mbSrc.mb_data) free(mbSrc.mb_data);
     if (mbTrans.mb_data) free(mbTrans.mb_data);
 
