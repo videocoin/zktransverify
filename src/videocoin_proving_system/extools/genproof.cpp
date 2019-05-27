@@ -14,6 +14,7 @@
 
 #include "decode-h264-mb.h"
 #include "sha256-util.h"
+#include "sha256-circuit.h"
 
 namespace po = boost::program_options;
 
@@ -97,6 +98,18 @@ void save_witness(const char *filename, int refssim) {
     }
 }
 
+void test_sha256_circuit(unsigned char *data, unsigned int size) {
+    unsigned char sha[65];
+    struct In input;
+    struct Out output;
+    memcpy(input.mb, data, size);
+    compute(&input, &output);
+
+    sha256_string(data, size, sha);
+    printf("%s\n", sha);
+    hexDump(output.hash, sizeof(output.hash));
+}
+
 int main(int argc, const char *argv[]) {
     MB_T mbSrc = {0};
     MB_T mbTrans = {0};
@@ -114,8 +127,9 @@ int main(int argc, const char *argv[]) {
 
     memset(srcRawY, 0x00, 256);
     memset(transRawY, 0x00, 256);
-    getMbFromStream(files.front().c_str(), frame_offset, mb_offset, &mbSrc, srcRawY, verbose);
-    getMbFromStream(files.back().c_str(), frame_offset, mb_offset, &mbTrans, transRawY, verbose);
+    getMbFromStream(files.front().c_str(), 1, 10, &mbSrc, srcRawY, verbose);
+    test_sha256_circuit(srcRawY, 256);
+    getMbFromStream(files.back().c_str(), 1, 10, &mbTrans, transRawY, verbose);
     if (mbSrc.mb_data) free(mbSrc.mb_data);
     if (mbTrans.mb_data) free(mbTrans.mb_data);
 

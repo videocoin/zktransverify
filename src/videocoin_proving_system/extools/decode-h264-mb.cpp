@@ -43,7 +43,6 @@ extern "C" {
 #include "decode-h264-mb.h"
 
 
-void hexDump (unsigned char *pData, int n);
 static char* itoa(int val, int base);
 int getParam(AVFrame *frame, char *key);
 

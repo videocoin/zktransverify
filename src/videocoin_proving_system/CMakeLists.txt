@@ -86,6 +86,7 @@ add_executable(
         extools/genproof.cpp
         extools/decode-h264-mb.cpp
         extools/sha256-util.cpp
+        extools/sha256-circuit.cpp
 )
 
 add_executable(
