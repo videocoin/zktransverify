@@ -1,8 +1,7 @@
 #include <stdint.h>
 
 #define LUMA 16
-#define CHROMA 4
-#define MB_SIZE (LUMA * LUMA + 2 * CHROMA * CHROMA)
+#define MB_SIZE (LUMA * LUMA)
 
 /****************************** MACROS ******************************/
 #define ROTLEFT(a,b) (((a) << (b)) | ((a) >> (32-(b))))
@@ -15,7 +14,7 @@
 #define SIG0(x) (ROTRIGHT(x,7) ^ ROTRIGHT(x,18) ^ ((x) >> 3))
 #define SIG1(x) (ROTRIGHT(x,17) ^ ROTRIGHT(x,19) ^ ((x) >> 10))
 
-const uint32_t k[64] = {
+uint32_t k[64] = {
         0x428a2f98,0x71374491,0xb5c0fbcf,0xe9b5dba5,0x3956c25b,0x59f111f1,0x923f82a4,0xab1c5ed5,
         0xd807aa98,0x12835b01,0x243185be,0x550c7dc3,0x72be5d74,0x80deb1fe,0x9bdc06a7,0xc19bf174,
         0xe49b69c1,0xefbe4786,0x0fc19dc6,0x240ca1cc,0x2de92c6f,0x4a7484aa,0x5cb0a9dc,0x76f988da,
@@ -89,31 +88,22 @@ void sha256_transform(uint8_t *data)
     state[7] += h;
 }
 
-void compute(struct In *input, struct Out *output){
+void sha256_final(uint8_t *hash)
+{
+    uint32_t i;
     uint8_t data[64];
-    int i;
+
+    i = 0;
+
+    // Pad whatever data is left in the buffer.
+    data[i++] = 0x80;
+    while (i < 56)
+        data[i++] = 0x00;
+
     unsigned long long bitlen;
+    bitlen = 2048;
 
-    bitlen = MB_SIZE * 8;
-
-    sha256_init();
-
-    // 0 - 63
-    sha256_transform(input->mb);
-    // 64 - 127
-    sha256_transform(input->mb + 64);
-    // 128 - 191
-    sha256_transform(input->mb + 128);
-    // 192 - 255
-    sha256_transform(input->mb + 192);
-    // 256 - 287
-    for (i = 0; i < 64; ++i) {
-        if (i < 32)
-            data[i] = input->mb[256 + i];
-        if (i >= 32 && i < 56)
-            data[i] = 0x00;
-    }
-    // append bit length
+    // Append to the padding the total message's length in bits and transform.
     data[63] = bitlen;
     data[62] = bitlen >> 8;
     data[61] = bitlen >> 16;
@@ -127,13 +117,29 @@ void compute(struct In *input, struct Out *output){
     // Since this implementation uses little endian byte ordering and SHA uses big endian,
     // reverse all the bytes when copying the final state to the output hash.
     for (i = 0; i < 4; ++i) {
-        output->hash[i]      = (state[0] >> (24 - i * 8)) & 0x000000ff;
-        output->hash[i + 4]  = (state[1] >> (24 - i * 8)) & 0x000000ff;
-        output->hash[i + 8]  = (state[2] >> (24 - i * 8)) & 0x000000ff;
-        output->hash[i + 12] = (state[3] >> (24 - i * 8)) & 0x000000ff;
-        output->hash[i + 16] = (state[4] >> (24 - i * 8)) & 0x000000ff;
-        output->hash[i + 20] = (state[5] >> (24 - i * 8)) & 0x000000ff;
-        output->hash[i + 24] = (state[6] >> (24 - i * 8)) & 0x000000ff;
-        output->hash[i + 28] = (state[7] >> (24 - i * 8)) & 0x000000ff;
+        hash[i]      = (state[0] >> (24 - i * 8)) & 0x000000ff;
+        hash[i + 4]  = (state[1] >> (24 - i * 8)) & 0x000000ff;
+        hash[i + 8]  = (state[2] >> (24 - i * 8)) & 0x000000ff;
+        hash[i + 12] = (state[3] >> (24 - i * 8)) & 0x000000ff;
+        hash[i + 16] = (state[4] >> (24 - i * 8)) & 0x000000ff;
+        hash[i + 20] = (state[5] >> (24 - i * 8)) & 0x000000ff;
+        hash[i + 24] = (state[6] >> (24 - i * 8)) & 0x000000ff;
+        hash[i + 28] = (state[7] >> (24 - i * 8)) & 0x000000ff;
     }
+}
+
+void compute(struct In *input, struct Out *output)
+{
+    sha256_init();
+
+    // 0 - 63
+    sha256_transform(input->mb);
+    // 64 - 127
+    sha256_transform(input->mb + 64);
+    // 128 - 191
+    sha256_transform(input->mb + 128);
+    // 192 - 255
+    sha256_transform(input->mb + 192);
+
+    sha256_final(output->hash);
 }
