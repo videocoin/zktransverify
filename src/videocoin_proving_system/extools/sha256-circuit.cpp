@@ -121,8 +121,20 @@ void sha256_final(uint8_t *hash)
     }
 }
 
+uint32_t sha265_equal(uint8_t *lhs, uint8_t *rhs)
+{
+    int i, counter;
+    i = 0;
+    counter = 0;
+    for (; i < SHA256_LEN; ++i) {
+        if (lhs[i] == rhs[i]) ++counter;
+    }
+    return counter == SHA256_LEN;
+}
+
 void compute(struct In *input, struct Out *output)
 {
+    uint8_t hash[SHA256_LEN];
     sha256_init();
 
     // 0 - 63
@@ -134,5 +146,7 @@ void compute(struct In *input, struct Out *output)
     // 192 - 255
     sha256_transform(input->mb + 192);
 
-    sha256_final(output->hash);
+    sha256_final(hash);
+
+    output->accepted = sha265_equal(input->hash, hash);
 }

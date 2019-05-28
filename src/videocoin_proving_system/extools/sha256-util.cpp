@@ -10,15 +10,20 @@
 #include "sha256-util.h"
 
 
-void sha256_hash_string (unsigned char hash[SHA256_DIGEST_LENGTH], unsigned char outputBuffer[65]);
+void sha256_hash_string(unsigned char hash[SHA256_DIGEST_LENGTH], unsigned char outputBuffer[65]);
 
-void sha256_string(unsigned char *pData, int len, unsigned char outputBuffer[65])
+void sha256_bytes(unsigned char *pData, int len, unsigned char hash[SHA256_DIGEST_LENGTH])
 {
-    unsigned char hash[SHA256_DIGEST_LENGTH];
     SHA256_CTX sha256;
     SHA256_Init(&sha256);
     SHA256_Update(&sha256, pData, len);
     SHA256_Final(hash, &sha256);
+}
+
+void sha256_string(unsigned char *pData, int len, unsigned char outputBuffer[65])
+{
+    unsigned char hash[SHA256_DIGEST_LENGTH];
+    sha256_bytes(pData, len, hash);
     int i = 0;
     for(i = 0; i < SHA256_DIGEST_LENGTH; i++) {
         sprintf((char *)outputBuffer + (i * 2), "%02x", hash[i]);
@@ -26,7 +31,7 @@ void sha256_string(unsigned char *pData, int len, unsigned char outputBuffer[65]
     outputBuffer[64] = 0;
 }
 
-void sha256_hash_string (unsigned char hash[SHA256_DIGEST_LENGTH], unsigned char outputBuffer[65])
+void sha256_hash_string(unsigned char hash[SHA256_DIGEST_LENGTH], unsigned char outputBuffer[65])
 {
     int i = 0;
 

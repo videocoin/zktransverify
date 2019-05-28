@@ -99,15 +99,17 @@ void save_witness(const char *filename, int refssim) {
 }
 
 void test_sha256_circuit(unsigned char *data, unsigned int size) {
-    unsigned char sha[65];
+    unsigned char sha[32];
     struct In input;
     struct Out output;
+
+    sha256_bytes(data, size, sha);
+
     memcpy(input.mb, data, size);
+    memcpy(input.hash, sha, sizeof(sha));
     compute(&input, &output);
 
-    sha256_string(data, size, sha);
-    printf("%s\n", sha);
-    hexDump(output.hash, sizeof(output.hash));
+    printf("Identical: %s\n", output.accepted ? "true" : "false");
 }
 
 int main(int argc, const char *argv[]) {
