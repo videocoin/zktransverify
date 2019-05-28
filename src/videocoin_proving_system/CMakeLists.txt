@@ -1,5 +1,8 @@
 cmake_minimum_required(VERSION 3.5)
-project(videocoin_prooving_system)
+project(videocoin_prooving_system
+        VERSION 0.1.0)
+
+message(STATUS "Building ${PROJECT_NAME} v${PROJECT_VERSION}")
 
 # according to libsnark's documentation, we need to use the same conditional defines libsnark was compiled with, as found in
 # thirdparty/libsnark/build/libsnark/CMakeFiles/snark.dir/flags.make
