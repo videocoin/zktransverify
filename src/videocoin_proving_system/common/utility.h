@@ -30,9 +30,8 @@ class ssim_mode {
 public:
     enum value {
         _invalid,
-        _x16 = 16,
-        _x32 = 32,
-        _x64 = 64
+        _ssim,
+        _h264
     };
 
     std::string str() const;
@@ -43,11 +42,9 @@ public:
 
     bool is_valid() const { return _value != _invalid; }
 
-    bool is_16() const { return _value == _x16; }
+    bool is_ssim() const { return _value == _ssim; }
 
-    bool is_32() const { return _value == _x32; }
-
-    bool is_64() const { return _value == _x64; }
+    bool is_h264() const { return _value == _h264; }
 
     int as_int() const { return _value; }
 

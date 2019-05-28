@@ -30,8 +30,7 @@ General options:
   -h [ --help ]                   produce help message
 
 Generator options:
-  -m [ --mode ] arg               set algorithm type <ssim16x16 | ssim32x32 | 
-                                  ssim64x64>
+  -m [ --mode ] arg               set algorithm type <ssim | h264>
   -v [ --vkey ] arg               path to verification key
   -p [ --pkey ] arg               path to proving key
   -u [ --uncompressed-vkey ] arg  path to uncompressed verification key
@@ -41,7 +40,7 @@ Generator options:
 Key generation:
 
 ```
-./keygen -m ssim16x16 -v v.key -p p.key -u v.key.uncompressed -j v.key.json
+./keygen -m ssim -v v.key -p p.key -u v.key.uncompressed -j v.key.json
 ```
 
 
@@ -78,8 +77,7 @@ General options:
   -h [ --help ]              produce help message
 
 Verifier options:
-  -m [ --mode ] arg          set algorithm type <ssim16x16 | ssim32x32 | 
-                             ssim64x64>
+  -m [ --mode ] arg          set algorithm type <ssim | h264>
   -v [ --vkey ] arg          path to verification key
   -p [ --proof ] arg         path to proof
   -w [ --witness ] arg       path to witness file
@@ -88,7 +86,7 @@ Verifier options:
 Proof verification:
 
 ```
-./verifier -m ssim16x16 -v v.key -p ssim.proof -w witness.txt 
+./verifier -m ssim -v v.key -p ssim.proof -w witness.txt 
 ```
 
 ### Verify proof using Truffle Tests

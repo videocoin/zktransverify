@@ -24,38 +24,31 @@ comp_params parse_params(const char *params_filename) {
 
 std::string ssim_mode::str() const {
     switch (_value) {
-        case _x16   :
-            return "ssim16x16";
-        case _x32   :
-            return "ssim32x32";
-        case _x64   :
-            return "ssim64x64";
+        case _ssim   :
+            return "ssim";
+        case _h264   :
+            return "h264";
         default:
             return "invalid";
     }
 }
 
 ssim_mode ssim_mode::from_str(const char *v) {
-    if (!strcmp("ssim16x16", v)) {
-        return ssim_mode(value::_x16);
+    if (!strcmp("ssim", v)) {
+        return ssim_mode(value::_ssim);
     }
-    if (!strcmp("ssim32x32", v)) {
-        return ssim_mode(value::_x32);
-    }
-    if (!strcmp("ssim64x64", v)) {
-        return ssim_mode(value::_x64);
+    if (!strcmp("h264", v)) {
+        return ssim_mode(value::_h264);
     }
     return ssim_mode();
 }
 
 ssim_mode ssim_mode::from_int(const int v) {
     switch (v) {
-        case _x16:
-            return ssim_mode(_x16);
-        case _x32:
-            return ssim_mode(_x32);
-        case _x64:
-            return ssim_mode(_x64);
+        case _ssim:
+            return ssim_mode(_ssim);
+        case _h264:
+            return ssim_mode(_h264);
         default:
             return ssim_mode();
     }

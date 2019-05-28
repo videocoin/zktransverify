@@ -75,7 +75,7 @@ int main(int argc, char *argv[]) {
 
         verifier.add_options()
                 ("mode,m", po::value<std::string>(),
-                 "set algorithm type <ssim16x16 | ssim32x32 | ssim64x64>")
+                 "set algorithm type <ssim | h264>")
                 ("vkey,v", po::value<std::string>(), "path to verification key")
                 ("proof,p", po::value<std::string>(), "path to proof")
                 ("witness,w", po::value<std::string>(), "path to witness file");

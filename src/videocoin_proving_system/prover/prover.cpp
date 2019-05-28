@@ -50,7 +50,7 @@ void generate_ssim_proof(const char *pk_fn,
         exit(-1);
     }
 
-    auto mode = ssim_mode::from_int(sqrt(src1_len));
+    auto mode = ssim_mode::from_str("ssim");
 
     std::string app_path = application_dir + mode.str() + "/";
     std::string params = app_path + "params";

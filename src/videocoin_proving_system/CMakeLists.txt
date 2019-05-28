@@ -73,17 +73,6 @@ add_executable(
 )
 
 add_executable(
-        prover_example
-
-        prover_example/ssim_example.cpp
-        prover_example/h264_ssim16x16_from_prover.cpp
-        prover_example/h264_ssim32x32_from_prover.cpp
-        prover_example/h264_ssim64x64_from_prover.cpp
-        prover_example/h264_ssim_original.cpp
-        prover_example/png.cpp
-)
-
-add_executable(
         genproof
 
         extools/genproof.cpp
@@ -129,12 +118,6 @@ target_link_libraries(
 )
 
 target_link_libraries(
-        prover_example
-
-        -lprover -lpng -lkyotocabinet -lpapi -lleveldb -lgmp -lff -lboost_program_options
-)
-
-target_link_libraries(
         genproof
 
         -lprover -lff -lleveldb -lkyotocabinet -lpapi -lgmp
@@ -151,7 +134,5 @@ target_link_libraries(
         -lcrypto -lm -ldl -lbz2 -lpthread -lX11 -lvpx -lx264 -lx265
         -lz -laom -lvorbis -lvorbisenc -lopus -lmp3lame -lfdk-aac
 )
-
-add_dependencies(prover_example prover)
 
 add_dependencies(genproof prover)

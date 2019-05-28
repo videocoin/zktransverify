@@ -202,7 +202,7 @@ int main(int argc, char *argv[]) {
 
         generator.add_options()
                 ("mode,m", po::value<std::string>(),
-                 "set algorithm type <ssim16x16 | ssim32x32 | ssim64x64>")
+                 "set algorithm type <ssim | h264>")
                 ("vkey,v", po::value<std::string>(), "path to verification key")
                 ("pkey,p", po::value<std::string>(), "path to proving key")
                 ("uncompressed-vkey,u", po::value<std::string>(), "path to uncompressed verification key")
