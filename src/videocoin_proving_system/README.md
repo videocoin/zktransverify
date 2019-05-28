@@ -122,7 +122,9 @@ Following proof generations will generate incorrect proofs. Verification using t
 
 ### Proof generation benchmarking
 
-Google cloud instance, v8CPU:
+TBD
+
+(SSIM only)Google cloud instance, v8CPU:
 
 ```
 (leave) Call to r1cs_ppzksnark_prover           [4.2650s x5.55] (4.2650s x5.55 from start)
@@ -132,7 +134,7 @@ Google cloud instance, v8CPU:
 (leave) Call to r1cs_ppzksnark_prover           [4.1530s x5.58] (4.1530s x5.58 from start)
 ```
 
-Google cloud instance, v16CPU:
+(SSIM only)Google cloud instance, v16CPU:
 
 ```
 (leave) Call to r1cs_ppzksnark_prover           [3.1922s x9.20] (3.1922s x9.20 from start)
@@ -142,7 +144,7 @@ Google cloud instance, v16CPU:
 (leave) Call to r1cs_ppzksnark_prover           [3.0549s x8.77] (3.0549s x8.77 from start)
 ```
 
-Google cloud instance, v8CPU, Groth16:
+(SSIM only)Google cloud instance, v8CPU, Groth16:
 
 ```
 (leave) Call to r1cs_gg_ppzksnark_prover        [4.0300s x5.29] (4.0300s x5.29 from start)
@@ -152,7 +154,7 @@ Google cloud instance, v8CPU, Groth16:
 (leave) Call to r1cs_gg_ppzksnark_prover        [4.6581s x5.75] (4.6581s x5.75 from start)
 ```
  
- Google cloud instance, v16CPU, Groth16:
+(SSIM only)Google cloud instance, v16CPU, Groth16:
  
  ```
 (leave) Call to r1cs_gg_ppzksnark_prover        [3.4591s x9.49] (3.4591s x9.49 from start)
@@ -162,7 +164,7 @@ Google cloud instance, v8CPU, Groth16:
 (leave) Call to r1cs_gg_ppzksnark_prover        [3.4126s x9.03] (3.4126s x9.03 from start)
  ```
 
-Google cloud instance, v64CPU, Groth16:
+(SSIM only)Google cloud instance, v64CPU, Groth16:
 
 ```
 (leave) Call to r1cs_gg_ppzksnark_prover        [2.6216s x30.93]        (2.6216s x30.93 from start)
