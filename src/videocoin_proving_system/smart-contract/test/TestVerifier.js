@@ -134,7 +134,7 @@ contract('Verifier', function(accounts) {
 
 			return verifier.verifyTx.call(A_g, A_h, B_g, B_h, C_g, C_h,
 				H, K,
-				[32, 0, 12, 1]);
+				[32, 0, 1]);
 		}).then(function(result) {
 			wrongInput = result;
 		}).then(function() {

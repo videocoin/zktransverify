@@ -40,7 +40,7 @@ Generator options:
 Key generation:
 
 ```
-./keygen -m ssim -v v.key -p p.key -u v.key.uncompressed -j v.key.json
+./keygen -m h264 -v v.key -p p.key -u v.key.uncompressed -j v.key.json
 ```
 
 
@@ -65,7 +65,7 @@ Prover options:
 Proof generation:
 
 ```
-./genproof --files ../test_vectors/crowd_run_2160p50_40M.ts ../test_vectors/crowd_run_2160p50_20M_correct.ts -p p.key -s 80 -w witness.txt -P ssim.proof -u ssim.proof.uncompressed
+./genproof --files ../test_vectors/crowd_run_2160p50_40M.ts ../test_vectors/crowd_run_2160p50_20M_correct.ts -p p.key -s 80 -w witness.txt -P h264.proof -u h264.proof.uncompressed
 ```
 
 ### Verify proof using standalone verifier
@@ -86,7 +86,7 @@ Verifier options:
 Proof verification:
 
 ```
-./verifier -m ssim -v v.key -p ssim.proof -w witness.txt 
+./verifier -m h264 -v v.key -p h264.proof -w witness.txt 
 ```
 
 ### Verify proof using Truffle Tests
@@ -105,19 +105,19 @@ Following proof generations will generate incorrect proofs. Verification using t
 **Low Quality Attack** - Transcodes using presets which produce low quality streams:
 
 ```
-./genproof --files ../test_vectors/crowd_run_2160p50_40M.ts ../test_vectors/crowd_run_2160p50_20M_attack_lq.ts -p p.key -s 80 -w witness.txt -P ssim.proof -u ssim.proof.uncompressed
+./genproof --files ../test_vectors/crowd_run_2160p50_40M.ts ../test_vectors/crowd_run_2160p50_20M_attack_lq.ts -p p.key -s 80 -w witness.txt -P h264.proof -u h264.proof.uncompressed
 ```
 
 **Wrong Stream Attack** - Submits a stream not produced from source A stream unrelated to source stream is submitted as transcoded stream:
 
 ```
-./genproof --files ../test_vectors/crowd_run_2160p50_40M.ts ../test_vectors/ducks_take_off_2160p50_40M.ts -p p.key -s 80 -w witness.txt -P ssim.proof -u ssim.proof.uncompressed
+./genproof --files ../test_vectors/crowd_run_2160p50_40M.ts ../test_vectors/ducks_take_off_2160p50_40M.ts -p p.key -s 80 -w witness.txt -P h264.proof -u h264.proof.uncompressed
 ```
 
 **No Transcode Attack** - Submits source stream as transcoded stream The source stream is submitted as transcoded stream:
 
 ```
-./genproof --files ../test_vectors/crowd_run_2160p50_40M.ts ../test_vectors/crowd_run_2160p50_40M.ts -p p.key -s 80 -w witness.txt -P ssim.proof -u ssim.proof.uncompressed
+./genproof --files ../test_vectors/crowd_run_2160p50_40M.ts ../test_vectors/crowd_run_2160p50_40M.ts -p p.key -s 80 -w witness.txt -P h264.proof -u h264.proof.uncompressed
 ```
 
 ### Proof generation benchmarking
