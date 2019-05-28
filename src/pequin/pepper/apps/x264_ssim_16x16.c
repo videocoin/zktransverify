@@ -113,7 +113,7 @@ fix_t ssim_end4( int *sum0, int *sum1, int width )
     return ssim;
 }
 
-uint32_t compute(struct In *input, struct Out *output) {
+uint32_t compute_ssim(struct In *input) {
     uint32_t dummy[1];
     uint32_t *exo0_inputs[1] = { dummy };
     uint32_t lens[1] = {0};
@@ -159,4 +159,8 @@ uint32_t compute(struct In *input, struct Out *output) {
     ssim = fix_to_int(ssim * 100);
     printf("SSIM %Zd", ssim);
     return ssim > input->ref_ssim && ssim < 100;
+}
+
+uint32_t compute(struct In *input, struct Out *output) {
+    return compute_ssim(input);
 }
