@@ -14,7 +14,6 @@
 
 #include "decode-h264-mb.h"
 #include "sha256-util.h"
-#include "sha256-circuit.h"
 
 namespace po = boost::program_options;
 
@@ -98,25 +97,12 @@ void save_witness(const char *filename, int refssim) {
     }
 }
 
-void test_sha256_circuit(unsigned char *data, unsigned int size) {
-    unsigned char sha[32];
-    struct In input;
-    struct Out output;
-
-    sha256_bytes(data, size, sha);
-
-    memcpy(input.mb, data, size);
-    memcpy(input.hash, sha, sizeof(sha));
-    compute(&input, &output);
-
-    printf("Identical: %s\n", output.accepted ? "true" : "false");
-}
-
 int main(int argc, const char *argv[]) {
     MB_T mbSrc = {0};
     MB_T mbTrans = {0};
     unsigned char srcRawY[256];
     unsigned char transRawY[256];
+    unsigned char srcDigest[32];
     int frame_offset = 0;
     int mb_offset = 0;
 
@@ -130,15 +116,18 @@ int main(int argc, const char *argv[]) {
     memset(srcRawY, 0x00, 256);
     memset(transRawY, 0x00, 256);
     getMbFromStream(files.front().c_str(), 1, 10, &mbSrc, srcRawY, verbose);
-    test_sha256_circuit(srcRawY, 256);
     getMbFromStream(files.back().c_str(), 1, 10, &mbTrans, transRawY, verbose);
+    sha256_bytes(srcRawY, 256, srcDigest);
+
     if (mbSrc.mb_data) free(mbSrc.mb_data);
     if (mbTrans.mb_data) free(mbTrans.mb_data);
 
     initialize_prover();
-    generate_ssim_proof(
+
+    generate_h264_proof(
             proving_key_path.c_str(),
             ref_ssim,
+            srcDigest, 32,
             srcRawY, sizeof(srcRawY),
             transRawY, sizeof(transRawY),
             proof.empty() ? nullptr : proof.c_str(),

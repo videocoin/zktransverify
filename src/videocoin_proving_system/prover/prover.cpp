@@ -19,12 +19,14 @@
 
 template<typename ppT>
 void generate_proof_internal(const comp_params &p,
-                            const char *pws_fn,
-                            libsnark::r1cs_ppzksnark_proving_key<ppT> &pk,
-                            int ref_ssim,
-                            libsnark::r1cs_ppzksnark_proof<ppT> &proof);
+                             const char *pws_fn,
+                             libsnark::r1cs_ppzksnark_proving_key<ppT> &pk,
+                             int ref_ssim,
+                             libsnark::r1cs_ppzksnark_proof<ppT> &proof);
 
-static void write_to_auxiliary_input(const unsigned char *src1, size_t len1, const unsigned char *src2, size_t len2);
+static void write_to_auxiliary_input(const unsigned char *src1, size_t len1,
+                                     const unsigned char *src2, size_t len2,
+                                     const unsigned char *digest, size_t digest_len);
 
 static void clear_auxiliary_input();
 
@@ -33,13 +35,88 @@ void initialize_prover() {
     libsnark::default_r1cs_ppzksnark_pp::init_public_params();
 }
 
+void generate_h264_proof(const char *pk_fn,
+                         int ref_ssim,
+                         const unsigned char *ref_digest, unsigned long digest_len,
+                         const unsigned char *src1, unsigned long src1_len,
+                         const unsigned char *src2, unsigned long src2_len,
+                         const char *proof_bin_fn,
+                         const char *proof_uncompressed_fn,
+                         const char *proof_json_fn) {
+    if (src1 == nullptr || src2 == nullptr) {
+        std::cerr << "ERROR: invalid source." << std::endl;
+        exit(-1);
+    }
+
+    if (src1_len != src2_len && src1_len != 256) {
+        std::cerr << "ERROR: src1 and src2 should be same length and 256 bytes long." << std::endl;
+        exit(-1);
+    }
+
+    if (ref_digest == nullptr || digest_len != 32) {
+        std::cerr << "ERROR: invalid reference digest." << std::endl;
+        exit(-1);
+    }
+
+    if (src1_len != src2_len) {
+        std::cerr << "ERROR: src1 and src2 should be same length." << std::endl;
+        exit(-1);
+    }
+
+    auto mode = ssim_mode::from_str("h264");
+
+    std::string app_path = application_dir + mode.str() + "/";
+    std::string params = app_path + "params";
+    std::string pws = app_path + "pws";
+    comp_params p = parse_params(params.c_str());
+
+    std::ifstream pkey(pk_fn);
+    if (!pkey.is_open()) {
+        std::cerr << "ERROR: " << pk_fn << " not found." << std::endl;
+        exit(-1);
+    }
+
+    libff::start_profiling();
+    libsnark::r1cs_ppzksnark_proving_key<libsnark::default_r1cs_ppzksnark_pp> pk;
+    libff::enter_block("Reading proving key from file");
+    pkey >> pk;
+    libff::leave_block("Reading proving key from file");
+
+    libff::enter_block("Call to write_to_auxiliary_input");
+    write_to_auxiliary_input(src1, src1_len, src2, src2_len, ref_digest, digest_len);
+    libff::leave_block("Call to write_to_auxiliary_input");
+
+    libsnark::r1cs_ppzksnark_proof<libsnark::default_r1cs_ppzksnark_pp> proof;
+    generate_proof_internal(p, pws.c_str(), pk, ref_ssim, proof);
+
+    clear_auxiliary_input();
+
+    if (proof_bin_fn != nullptr) {
+        std::ofstream proof_file(proof_bin_fn);
+        if (proof_file.is_open()) {
+            proof_file << proof;
+            proof_file.close();
+        } else {
+            std::cerr << "WARNING: unable to open file at path: " << proof_bin_fn << std::endl;
+        }
+    }
+
+    if (proof_uncompressed_fn != nullptr) {
+        print_proof_to_file(proof, proof_uncompressed_fn);
+    }
+
+    if (proof_json_fn != nullptr) {
+        print_proof_to_json(proof, proof_json_fn);
+    }
+}
+
 void generate_ssim_proof(const char *pk_fn,
-                        int ref_ssim,
-                        const unsigned char *src1, unsigned long src1_len,
-                        const unsigned char *src2, unsigned long src2_len,
-                        const char *proof_bin_fn,
-                        const char *proof_uncompressed_fn,
-                        const char *proof_json_fn) {
+                         int ref_ssim,
+                         const unsigned char *src1, unsigned long src1_len,
+                         const unsigned char *src2, unsigned long src2_len,
+                         const char *proof_bin_fn,
+                         const char *proof_uncompressed_fn,
+                         const char *proof_json_fn) {
     if (src1 == nullptr || src2 == nullptr) {
         std::cerr << "ERROR: invalid source." << std::endl;
         exit(-1);
@@ -70,7 +147,7 @@ void generate_ssim_proof(const char *pk_fn,
     libff::leave_block("Reading proving key from file");
 
     libff::enter_block("Call to write_to_auxiliary_input");
-    write_to_auxiliary_input(src1, src1_len, src2, src2_len);
+    write_to_auxiliary_input(src1, src1_len, src2, src2_len, nullptr, 0);
     libff::leave_block("Call to write_to_auxiliary_input");
 
     libsnark::r1cs_ppzksnark_proof<libsnark::default_r1cs_ppzksnark_pp> proof;
@@ -99,10 +176,10 @@ void generate_ssim_proof(const char *pk_fn,
 
 template<typename ppT>
 void generate_proof_internal(const comp_params &p,
-                            const char *pws_fn,
-                            libsnark::r1cs_ppzksnark_proving_key<ppT> &pk,
-                            int ref_ssim,
-                            libsnark::r1cs_ppzksnark_proof<ppT> &proof) {
+                             const char *pws_fn,
+                             libsnark::r1cs_ppzksnark_proving_key<ppT> &pk,
+                             int ref_ssim,
+                             libsnark::r1cs_ppzksnark_proof<ppT> &proof) {
     mpz_t prime;
     mpz_init_set_str(prime, prime_str, 10);
 
@@ -146,7 +223,9 @@ void generate_proof_internal(const comp_params &p,
     proof = libsnark::r1cs_ppzksnark_prover<ppT>(pk, primary_input, aux_input);
 }
 
-void write_to_auxiliary_input(const unsigned char *src1, size_t len1, const unsigned char *src2, size_t len2) {
+void write_to_auxiliary_input(const unsigned char *src1, size_t len1,
+                              const unsigned char *src2, size_t len2,
+                              const unsigned char *digest, size_t digest_len) {
     std::string file = exo_dir + "exo3";
     std::ofstream aux(file);
     if (!aux.is_open()) {
@@ -160,6 +239,11 @@ void write_to_auxiliary_input(const unsigned char *src1, size_t len1, const unsi
     }
     for (size_t i = 0; i < len2; ++i) {
         aux << "echo " << (int) src2[i] << std::endl;
+    }
+    if (digest != nullptr) {
+        for (size_t i = 0; i < digest_len; ++i) {
+            aux << "echo " << (int) digest[i] << std::endl;
+        }
     }
 
     aux.close();
