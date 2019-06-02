@@ -49,8 +49,8 @@ cd $UP
 
 #ffmpeg
 echo "installing ffmpeg"
-$TAR ffmpeg.tar.gz
-cd ffmpeg
+git submodule update --init --recursive
+cd ffmpeg-zksnarks
 PATH="$HOME/bin:$PATH" PKG_CONFIG_PATH="$HOME/ffmpeg_build/lib/pkgconfig" ./configure \
   --prefix="$HOME/ffmpeg_build" \
   --pkg-config-flags="--static" \
