@@ -10,7 +10,14 @@ typedef struct _MB_T
 
 	int mb_type;
 	int intra16x16_pred_mode;
-	// TODO : Add othe required params
+
+    uint8_t         luma_decoded[16 * 16]; // will be used for debug. Circuit should generate identical data to this
+
+    // This data will be used to decode macroblock
+    uint8_t         luma_neighbour_top[16];
+    uint8_t         luma_neighbour_left[16];
+    int             luma_has_neighbour_top;
+    int             luma_has_neighbour_left;
 } MB_T;
 
 
