@@ -251,11 +251,10 @@ int getMbFromStream(const char *file_name, int key_frame_num, int mb_num, MB_T *
                         getParam(frame, "luma_decoded", pMb->luma_decoded, sizeof(pMb->luma_decoded));
                         getParam(frame, "luma_neighbour_top", pMb->luma_neighbour_top, sizeof(pMb->luma_neighbour_top));
                         getParam(frame, "luma_neighbour_left", pMb->luma_neighbour_left, sizeof(pMb->luma_neighbour_left));
+                        pMb->luma_neighbour_left_top = getParam(frame, "luma_neighbour_left_top");
 
                         pMb->mb_type = getParam(frame, "mb_type");
                         pMb->intra16x16_pred_mode = getParam(frame, "intra16x16_pred_mode");
-                        pMb->luma_has_neighbour_top = getParam(frame, "luma_has_neighbour_top");
-                        pMb->luma_has_neighbour_left = getParam(frame, "luma_has_neighbour_left");
                         break;
                     }
                 }
