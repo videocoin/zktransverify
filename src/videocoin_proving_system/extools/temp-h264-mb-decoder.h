@@ -20,8 +20,7 @@ typedef struct In {
     // This data will be used to decode macroblock
     uint8_t         luma_neighbour_top[16];
     uint8_t         luma_neighbour_left[16];
-    int             luma_has_neighbour_top;
-    int             luma_has_neighbour_left;
+    uint8_t         luma_neighbour_left_top; // from plane prediction mode
 } In;
 
 void decode_mb(In *in, uint8_t *luma);

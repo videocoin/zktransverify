@@ -124,38 +124,28 @@ void pred16x16_dc(uint8_t *left, uint8_t *top, uint8_t *res)
     }
 }
 
-void pred16x16_plane(uint8_t *left, uint8_t *top, uint8_t *res)
+void pred16x16_plane(uint8_t *left, uint8_t *top, uint8_t left_top, uint8_t *res)
 {
-//    int i, j, k;
-//    int a;
-//
-//    pixel * src0 = src +7-stride;
-//    pixel * src1 = src +8*stride-1;
-//    pixel * src2 = src1-2*stride;    // == src+6*stride-1;
-//    int H = src0[1] + src0[-1] * (-1);
-//    int V = src1[0] + src2[ 0] * (-1);
-//    for(k=2; k<=8; ++k) {
-//        src1 += stride; src2 -= stride;
-//        H += k*(src0[k] + src0[-k] * (-1));
-//        V += k*(src1[0] + src2[ 0] * (-1));
-//    }
-//
-//    H = ( 5*H+32 ) >> 6;
-//    V = ( 5*V+32 ) >> 6;
-////
-//    a = 16*(src1[0] + src2[16] + 1) - 7*(V+H);
-//    for(j=16; j>0; --j) {
-//        int b = a;
-//        a += V;
-//        for(i=-16; i<0; i+=4) {
-//            src[16+i] = clip_pixel((b    ) >> 5);
-//            src[17+i] = clip_pixel((b+  H) >> 5);
-//            src[18+i] = clip_pixel((b+2*H) >> 5);
-//            src[19+i] = clip_pixel((b+3*H) >> 5);
-//            b += 4*H;
-//        }
-//        src += stride;
-//    }
+    int a, b, c, H, V;
+    int x, y, stride;
+
+    stride = 16;
+    H = 8 * (top[15] - left_top);
+    V = 8 * (left[15] - left_top);
+    for (x = 0; x < 7; ++x) {
+        H += (x + 1)*(top[8+x] - top[6-x]);
+        V += (x + 1)*(left[8+x] - left[6-x]);
+    }
+
+    a = 16 * (left[15] + top[15]);
+    b = (5 * H + 32) >> 6;
+    c = (5 * V + 32) >> 6;
+
+    for (x = 0; x < 16; ++x) {
+        for (y = 0; y < 16; ++y) {
+            res[x + y*stride] = clip_pixel((a + b * (x - 7) + c * (y - 7) + 16)>>5);
+        }
+    }
 }
 
 void pred16x16_left_dc(uint8_t *left, uint8_t *res)
@@ -217,6 +207,7 @@ void pred16x16(In *in, uint8_t *res)
     int prediction_mode = in->intra16x16_pred_mode;
     uint8_t *left = in->luma_neighbour_left;
     uint8_t *top = in->luma_neighbour_top;
+    uint8_t left_top = in->luma_neighbour_left_top;
 
     if (prediction_mode == VERT_PRED16x16)
         pred16x16_vertical(top, res);
@@ -225,7 +216,7 @@ void pred16x16(In *in, uint8_t *res)
     else if (prediction_mode == DC_PRED16x16)
         pred16x16_dc(left, top, res);
     else if (prediction_mode == PLANE_PRED16x16)
-        pred16x16_plane(left, top, res);
+        pred16x16_plane(left, top, left_top, res);
     else if (prediction_mode == DC_LEFT_PRED16x16)
         pred16x16_left_dc(left, res);
     else if (prediction_mode == DC_TOP_PRED16x16)
