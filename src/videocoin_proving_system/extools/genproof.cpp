@@ -15,6 +15,8 @@
 #include "decode-h264-mb.h"
 #include "sha256-util.h"
 
+#include "temp-h264-mb-decoder.h"
+
 namespace po = boost::program_options;
 
 std::vector<std::string> files;
@@ -121,6 +123,11 @@ int main(int argc, const char *argv[]) {
 
     if (mbSrc.mb_data) free(mbSrc.mb_data);
     if (mbTrans.mb_data) free(mbTrans.mb_data);
+
+    uint8_t luma[256];
+    In in;
+    memcpy(&in, &mbTrans, sizeof(in));
+    decode_mb(&in, luma);
 
     initialize_prover();
 

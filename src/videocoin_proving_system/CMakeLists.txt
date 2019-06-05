@@ -78,7 +78,7 @@ add_executable(
         extools/genproof.cpp
         extools/decode-h264-mb.cpp
         extools/sha256-util.cpp
-)
+        extools/temp-h264-mb-decoder.cpp)
 
 add_executable(
         genwitness
