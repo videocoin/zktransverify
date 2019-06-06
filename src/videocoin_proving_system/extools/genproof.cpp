@@ -99,6 +99,30 @@ void save_witness(const char *filename, int refssim) {
     }
 }
 
+void dump_mb(In *in, uint8_t *mb) {
+
+    printf("[proof generator] prediction type: %d\n", in->intra16x16_pred_mode);
+    {
+        // print top
+        uint8_t *top = in->luma_neighbour_top;
+        printf("%02x  ", in->luma_neighbour_left_top);
+        for (int x = 0; x < 16; ++x) {
+            printf("%02x ", top[x]);
+        }
+        printf("\n");
+        printf("\n");
+    }
+
+    for (int y = 0; y < 16; ++y) {
+        printf("%02x  ", in->luma_neighbour_left[y]);
+        for (int x = 0; x < 16; ++x) {
+            printf("%02x ", mb[x]);
+        }
+        printf("\n");
+        mb += 16;
+    }
+}
+
 int main(int argc, const char *argv[]) {
     MB_T mbSrc = {0};
     MB_T mbTrans = {0};
@@ -129,10 +153,10 @@ int main(int argc, const char *argv[]) {
     memcpy(&in, &mbTrans, sizeof(in));
     decode_mb(&in, luma);
 
-    printf("decoded=\n");
-    hexDump(in.luma_decoded, sizeof(in.luma_decoded), 16);
+//    printf("decoded=\n");
+//    dump_mb(&in, in.luma_decoded);
     printf("calculated=\n");
-    hexDump(luma, sizeof(luma), 16);
+    dump_mb(&in, luma);
 
     initialize_prover();
 
