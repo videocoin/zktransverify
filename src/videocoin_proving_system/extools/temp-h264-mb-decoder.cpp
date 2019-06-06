@@ -8,9 +8,10 @@
 #define pixel  uint8_t
 #define pixel4 uint32_t
 
-#define VERT_PRED16x16      0
+// awkward situation. h264 uses PRED8x8 numeration and dont have definition for PRED16x16
+#define DC_PRED16x16        0
 #define HOR_PRED16x16       1
-#define DC_PRED16x16        2
+#define VERT_PRED16x16      2
 #define PLANE_PRED16x16     3
 #define DC_LEFT_PRED16x16   4
 #define DC_TOP_PRED16x16    5
@@ -71,6 +72,11 @@ uint8_t clip_pixel(int a) {
     return v;
 }
 
+/*
+ * Tested on crowd_run_2160p50_40M.ts
+ * [macro block decode] prediction type: 2
+ * [macro block decode] x: 239  y: 122  xy: 29641
+ */
 void pred16x16_vertical(uint8_t *top, uint8_t *res)
 {
     int i, stride = 16;
