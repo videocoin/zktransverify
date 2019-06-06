@@ -116,9 +116,14 @@ void pred16x16_horizontal(uint8_t *left, uint8_t *res)
     }
 }
 
+/*
+ * Tested on crowd_run_2160p50_40M.ts
+ * [macro block decode] prediction type: 0
+ * [macro block decode] x: 073  y: 020  xy: 4893
+ */
 void pred16x16_dc(uint8_t *left, uint8_t *top, uint8_t *res)
 {
-    int i, dc=0;
+    int i, dc=0, stride = 16;
     pixel4 dcsplat;
 
     for(i=0;i<16; i++){
@@ -127,11 +132,11 @@ void pred16x16_dc(uint8_t *left, uint8_t *top, uint8_t *res)
     }
 
     dcsplat = PIXEL_SPLAT_X4((dc+16)>>5);
-    for(i=0; i<16; i++){
-        u32_to_u8(res+ 0, dcsplat);
-        u32_to_u8(res+ 4, dcsplat);
-        u32_to_u8(res+ 8, dcsplat);
-        u32_to_u8(res+12, dcsplat);
+    for (i=0; i<16; ++i) {
+        u32_to_u8(res + 0*stride + i, dcsplat, stride);
+        u32_to_u8(res + 4*stride + i, dcsplat, stride);
+        u32_to_u8(res + 8*stride + i, dcsplat, stride);
+        u32_to_u8(res + 12*stride + i, dcsplat, stride);
     }
 }
 
