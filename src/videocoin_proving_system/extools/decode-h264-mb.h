@@ -21,6 +21,7 @@ typedef struct _MB_T
 
 
 void hexDump (unsigned char *pData, int n);
+void hexDump(unsigned char *pData, int n, int row_len);
 int getMbFromStream(const char *file_name, int key_frame_num, int mb_num, MB_T *pMb, unsigned char *pRawY, bool verbose);
 
 #endif /* EXTOOLS_DECODE_H264_MB_H_ */

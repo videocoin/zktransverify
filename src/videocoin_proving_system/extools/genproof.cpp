@@ -129,6 +129,11 @@ int main(int argc, const char *argv[]) {
     memcpy(&in, &mbTrans, sizeof(in));
     decode_mb(&in, luma);
 
+    printf("decoded=\n");
+    hexDump(in.luma_decoded, sizeof(in.luma_decoded), 16);
+    printf("calculated=\n");
+    hexDump(luma, sizeof(luma), 16);
+
     initialize_prover();
 
     generate_h264_proof(

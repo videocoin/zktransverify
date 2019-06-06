@@ -45,7 +45,13 @@ extern "C" {
 
 static char *itoa(int val, int base);
 
-int getParam(AVFrame *frame, char *key);
+void hexDump(unsigned char *pData, int n, int row_len) {
+    for (int i = 0; i < n; i++) {
+        if (i % row_len == 0) printf("\n");
+        printf("%02x ", pData[i]);
+    }
+    printf("\n");
+}
 
 
 void hexDump(unsigned char *pData, int n) {
