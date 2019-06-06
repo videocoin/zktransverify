@@ -124,6 +124,11 @@ void pred16x16_dc(uint8_t *left, uint8_t *top, uint8_t *res)
     }
 }
 
+/*
+ * Tested on crowd_run_2160p50_40M.ts
+ * [macro block decode] prediction type: 3
+ * [macro block decode] x: 137  y: 134  xy: 32431
+ */
 void pred16x16_plane(uint8_t *left, uint8_t *top, uint8_t left_top, uint8_t *res)
 {
     int a, b, c, H, V;
