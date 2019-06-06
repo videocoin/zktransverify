@@ -88,6 +88,11 @@ void pred16x16_vertical(uint8_t *top, uint8_t *res)
     }
 }
 
+/*
+ * Tested on crowd_run_2160p50_40M.ts
+ * [macro block decode] prediction type: 1
+ * [macro block decode] x: 144  y: 133  xy: 32197
+ */
 void pred16x16_horizontal(uint8_t *left, uint8_t *res)
 {
     int i, stride = 16;
@@ -98,10 +103,10 @@ void pred16x16_horizontal(uint8_t *left, uint8_t *res)
     pixel4 d = u8_to_u32(left + 12);
     // copy column on the left to other columns
     for (i=0; i<16; ++i) {
-        u32_to_u8(res + 0 + i, a, stride);
-        u32_to_u8(res + 4 + i, b, stride);
-        u32_to_u8(res + 8 + i, c, stride);
-        u32_to_u8(res + 12 + i, d, stride);
+        u32_to_u8(res + 0*stride + i, a, stride);
+        u32_to_u8(res + 4*stride + i, b, stride);
+        u32_to_u8(res + 8*stride + i, c, stride);
+        u32_to_u8(res + 12*stride + i, d, stride);
     }
 }
 
