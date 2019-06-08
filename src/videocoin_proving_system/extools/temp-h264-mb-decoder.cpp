@@ -148,26 +148,42 @@ void pred16x16_plane(uint8_t *left, uint8_t *top, uint8_t left_top, uint8_t *res
     }
 }
 
+void pred16x16_left_dc(uint8_t *left, uint8_t *res)
+{
+    int i, dc = 0, stride = 16;
+    uint32_t dcsplat;
+    for (i = 0; i < 16; ++i) {
+        dc += left[i];
+    }
+
+    dcsplat = PIXEL_SPLAT_X4((dc+8)>>4);
+    for (i=0; i<16; ++i) {
+        u32_to_u8(res + 0*stride + i, dcsplat, stride);
+        u32_to_u8(res + 4*stride + i, dcsplat, stride);
+        u32_to_u8(res + 8*stride + i, dcsplat, stride);
+        u32_to_u8(res + 12*stride + i, dcsplat, stride);
+    }
+}
+
 /*
  * Tested on crowd_run_2160p50_40M.ts
  * [macro block decode] prediction type: 5
  * [macro block decode] x: 000  y: 110  xy: 26510
  */
-void pred16x16_left_top_dc(uint8_t *src, uint8_t *res, int stride)
+void pred16x16_top_dc(uint8_t *src, uint8_t *res)
 {
-    int i, dc = 0;
+    int i, dc = 0, stride = 16;
     uint32_t dcsplat;
     for (i = 0; i < 16; ++i) {
         dc += src[i];
     }
 
     dcsplat = PIXEL_SPLAT_X4((dc+8)>>4);
-    printf("dc: %x splat: %x\n", dc, dcsplat);
     for (i=0; i<16; ++i) {
-        u32_to_u8(res + 0*stride + i, dcsplat, stride);
-        u32_to_u8(res + 4*stride + i, dcsplat, stride);
-        u32_to_u8(res + 8*stride + i, dcsplat, stride);
-        u32_to_u8(res + 12*stride + i, dcsplat, stride);
+        u32_to_u8(res + i * stride + 0, dcsplat);
+        u32_to_u8(res + i * stride + 4, dcsplat);
+        u32_to_u8(res + i * stride + 8, dcsplat);
+        u32_to_u8(res + i * stride + 12, dcsplat);
     }
 }
 
@@ -200,9 +216,9 @@ void pred16x16(In *in, uint8_t *res)
     else if (prediction_mode == PLANE_PRED16x16)
         pred16x16_plane(left, top, top[-1], res);
     else if (prediction_mode == DC_LEFT_PRED16x16)
-        pred16x16_left_top_dc(left, res, 0);
+        pred16x16_left_dc(left, res);
     else if (prediction_mode == DC_TOP_PRED16x16)
-        pred16x16_left_top_dc(top, res, 16);
+        pred16x16_top_dc(top, res);
     else if (prediction_mode == DC_128_PRED16x16)
         pred16x16_128_dc(res);
     else
