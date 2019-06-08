@@ -208,7 +208,8 @@ int getMbFromStream(const char *file_name, int key_frame_num, int mb_num, MB_T *
                 int got_frame = 0;
 
                 // Add side_data to AVPacket which will be decoded
-                av_dict_set(&frameDict, "req_mb", itoa(mb_num, 10), 0);
+                av_dict_set_int(&frameDict, "req_mb", mb_num, 0);
+                av_dict_set_int(&frameDict, "debug", 0, 0);
                 int frameDictSize = 0;
                 uint8_t *frameDictData = av_packet_pack_dictionary(frameDict,
                                                                    &frameDictSize);
