@@ -5,8 +5,6 @@
 #include "temp-h264-mb-decoder.h"
 #include <assert.h>
 #include <stdio.h>
-#define __STDC_FORMAT_MACROS
-#include <inttypes.h>
 
 // awkward situation. h264 uses PRED8x8 numeration and dont have definition for PRED16x16
 #define DC_PRED16x16        0
@@ -20,25 +18,6 @@
 uint32_t PIXEL_SPLAT_X4(uint32_t x)
 {
     return x * 0x01010101U;
-}
-
-int32_t i16_a_to_i32(int16_t *src) {
-    int32_t v;
-    v = src[0];
-    v |= src[1] << 16;
-    return v;
-}
-
-void i32_to_i16_a(int16_t *dst, int32_t v) {
-    dst[0] = v & 0xFFFF;
-    dst[1] = v >> 16;
-}
-
-uint16_t u8_a_to_u16(uint8_t *src) {
-    uint16_t v;
-    v = src[0];
-    v |= src[1] << 8;
-    return v;
 }
 
 uint32_t u8_to_u32(uint8_t *src) {
@@ -62,47 +41,6 @@ void u32_to_u8(uint8_t *src, uint32_t v, int stride) {
     src[1*stride] = (v >> 8) & 0xFF;
     src[2*stride] = (v >> 16) & 0xFF;
     src[3*stride] = (v >> 24) & 0xFF;
-}
-
-uint64_t u8_to_u64(uint8_t *src) {
-    printf("[u8_to_u64]\n");
-    uint64_t v;
-    printf("src= ");
-    for (int i = 0; i < 8; ++i) {
-        printf("%02x ", src[i]);
-    }
-    printf("\n");
-    v = src[0];
-    v |= src[1] << 8;
-    v |= src[2] << 16;
-    v |= src[3] << 24;
-    v |= (uint64_t)(src[4]) << 32;
-    v |= (uint64_t)(src[5]) << 40;
-    v |= (uint64_t)(src[6]) << 48;
-    v |= (uint64_t)(src[7]) << 56;
-
-    printf("v = %"PRIx64"\n", v);
-
-    return v;
-}
-
-void u64_to_u8(uint8_t *src, uint64_t v) {
-    printf("[u64_to_u8]\n");
-    printf("v = %"PRIx64"\n", v);
-    src[0] = v & 0xFF;
-    src[1] = (v >> 8) & 0xFF;
-    src[2] = (v >> 16) & 0xFF;
-    src[3] = (v >> 24) & 0xFF;
-    src[4] = (v >> 32) & 0xFF;
-    src[5] = (v >> 40) & 0xFF;
-    src[6] = (v >> 48) & 0xFF;
-    src[7] = (v >> 56) & 0xFF;
-
-    printf("src= ");
-    for (int i = 0; i < 8; ++i) {
-        printf("%02x ", src[i]);
-    }
-    printf("\n");
 }
 
 uint8_t clip_pixel(int a) {
@@ -215,15 +153,16 @@ void pred16x16_plane(uint8_t *left, uint8_t *top, uint8_t left_top, uint8_t *res
  * [macro block decode] prediction type: 5
  * [macro block decode] x: 000  y: 110  xy: 26510
  */
-void pred16x16_left_top_dc(uint8_t *src, uint8_t *res)
+void pred16x16_left_top_dc(uint8_t *src, uint8_t *res, int stride)
 {
-    int i, dc = 0, stride = 0;
+    int i, dc = 0;
     uint32_t dcsplat;
     for (i = 0; i < 16; ++i) {
         dc += src[i];
     }
 
     dcsplat = PIXEL_SPLAT_X4((dc+8)>>4);
+    printf("dc: %x splat: %x\n", dc, dcsplat);
     for (i=0; i<16; ++i) {
         u32_to_u8(res + 0*stride + i, dcsplat, stride);
         u32_to_u8(res + 4*stride + i, dcsplat, stride);
@@ -261,9 +200,9 @@ void pred16x16(In *in, uint8_t *res)
     else if (prediction_mode == PLANE_PRED16x16)
         pred16x16_plane(left, top, top[-1], res);
     else if (prediction_mode == DC_LEFT_PRED16x16)
-        pred16x16_left_top_dc(left, res);
+        pred16x16_left_top_dc(left, res, 0);
     else if (prediction_mode == DC_TOP_PRED16x16)
-        pred16x16_left_top_dc(top, res);
+        pred16x16_left_top_dc(top, res, 16);
     else if (prediction_mode == DC_128_PRED16x16)
         pred16x16_128_dc(res);
     else
@@ -295,15 +234,13 @@ void XCHG(uint8_t a[8], uint8_t b[8], int xchg)
     }
 }
 
-uint8_t top_borders[8+16+8];
-
 void xchg_mb_border(In *in, int xchg)
 {
     int deblock_topleft = (in->mb_x > 0);
     int deblock_top = (in->mb_y > (in->mb_field_decoding_flag != 0));
-    uint8_t *top_border_m1 = top_borders;
-    uint8_t *top_border = top_borders + 8;
-    uint8_t *top_border_p1 = top_borders + 8 + 16;
+    uint8_t *top_border_m1 = in->top_border;
+    uint8_t *top_border = in->top_border + 8;
+    uint8_t *top_border_p1 = in->top_border + 8 + 16;
 
     uint8_t *src_y  = in->luma_top + 7;
     if (deblock_top) {
@@ -324,6 +261,14 @@ void dump_mb(In *in, uint8_t *mb) {
     printf("[proof generator] prediction type: %d\n", in->intra16x16_pred_mode);
     printf("[proof generator] x: %d y: %d xy: %d\n", in->mb_x, in->mb_y, in->mb_xy);
     {
+        for (int i = 0; i < 8; ++i) {
+            printf("%02x ", in->top_border[i]);
+        }
+        printf(" ");
+        for (int i = 8; i < 16+8+8; ++i) {
+            printf("%02x ", in->top_border[i]);
+        }
+        printf("\n");
         // print top
         uint8_t *top = in->luma_top;
 
@@ -352,25 +297,12 @@ void dump_mb(In *in, uint8_t *mb) {
     }
 }
 
-void init_top_borders(In *in) {
-    int i;
-    for (i = 0; i < 32; ++i) {
-        top_borders[i] = in->luma_top[i];
-    }
-}
-
 void decode_mb(In *in, uint8_t *luma) {
-    init_top_borders(in);
     dump_mb(in, luma);
     if (in->deblocking_filter) {
         xchg_mb_border(in, 1);
         dump_mb(in, luma);
     }
     pred16x16(in, luma);
-    if (in->deblocking_filter) {
-        dump_mb(in, luma);
-        xchg_mb_border(in, 0);
-
-    }
     dump_mb(in, luma);
 }

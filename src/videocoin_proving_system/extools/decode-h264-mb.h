@@ -20,6 +20,7 @@ typedef struct _MB_T
     uint8_t         luma_decoded[16 * 16]; // will be used for debug. Circuit should generate identical data to this
 
     // This data will be used to decode macroblock
+    uint8_t         top_border[8 + 16 + 8];
     uint8_t         luma_top[8 + 16 + 8];
     uint8_t         luma_left[16];
 } MB_T;
