@@ -99,30 +99,6 @@ void save_witness(const char *filename, int refssim) {
     }
 }
 
-void dump_mb(In *in, uint8_t *mb) {
-
-    printf("[proof generator] prediction type: %d\n", in->intra16x16_pred_mode);
-    {
-        // print top
-        uint8_t *top = in->luma_neighbour_top;
-        printf("%02x  ", in->luma_neighbour_left_top);
-        for (int x = 0; x < 16; ++x) {
-            printf("%02x ", top[x]);
-        }
-        printf("\n");
-        printf("\n");
-    }
-
-    for (int y = 0; y < 16; ++y) {
-        printf("%02x  ", in->luma_neighbour_left[y]);
-        for (int x = 0; x < 16; ++x) {
-            printf("%02x ", mb[x]);
-        }
-        printf("\n");
-        mb += 16;
-    }
-}
-
 int main(int argc, const char *argv[]) {
     MB_T mbSrc = {0};
     MB_T mbTrans = {0};
@@ -139,24 +115,25 @@ int main(int argc, const char *argv[]) {
     getRandomOffsets(files.front().c_str(), files.back().c_str(), &frame_offset, 10, &mb_offset, 1);
     printf("frame_offset=%d macroblock_offset=%d\n", frame_offset, mb_offset);
 
+    uint8_t luma[256] = {0};
+    In in;
+
     memset(srcRawY, 0x00, 256);
     memset(transRawY, 0x00, 256);
-    getMbFromStream(files.front().c_str(), 1, 10, &mbSrc, srcRawY, verbose);
-    getMbFromStream(files.back().c_str(), 1, 10, &mbTrans, transRawY, verbose);
+    getMbFromStream(files.front().c_str(), 1, 32431, &mbSrc, srcRawY, verbose);
+
+    memcpy(&in, &mbSrc, sizeof(in));
+    decode_mb(&in, luma);
+
+    getMbFromStream(files.back().c_str(), 1, 32431, &mbTrans, transRawY, verbose);
+
+    memcpy(&in, &mbTrans, sizeof(in));
+    decode_mb(&in, luma);
+
     sha256_bytes(srcRawY, 256, srcDigest);
 
     if (mbSrc.mb_data) free(mbSrc.mb_data);
     if (mbTrans.mb_data) free(mbTrans.mb_data);
-
-    uint8_t luma[256];
-    In in;
-    memcpy(&in, &mbTrans, sizeof(in));
-    decode_mb(&in, luma);
-
-//    printf("decoded=\n");
-//    dump_mb(&in, in.luma_decoded);
-    printf("calculated=\n");
-    dump_mb(&in, luma);
 
     initialize_prover();
 

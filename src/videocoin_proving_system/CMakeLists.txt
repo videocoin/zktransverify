@@ -10,10 +10,13 @@ set(CMAKE_CXX_STANDARD 11)
 
 set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -m64 -fopenmp -lstdc++\
     -DCURVE_ALT_BN128 -DBN_SUPPORT_SNARK -DBINARY_OUTPUT\
-    -DMONTGOMERY_OUTPUT -DNO_PROCPS -DUSE_ASM -DMULTICORE -ggdb3 -O3 -march=native -mtune=native")
+    -DMONTGOMERY_OUTPUT -DNO_PROCPS -DUSE_ASM -DMULTICORE -ggdb3 -march=native -mtune=native")
 
-# prover may generate invalid proofs, so to this we have to disable asserts 
-add_definitions(-DNDEBUG)
+# TODO: for debugging purposes it has to be commented out
+# TODO: Create proper DEBUG & RELEASE Configurations
+#set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -03")
+# prover may generate invalid proofs, so to this we have to disable asserts
+#add_definitions(-DNDEBUG)
 
 set(THIRDPARTY_DIR ${PROJECT_SOURCE_DIR}/thirdparty)
 
