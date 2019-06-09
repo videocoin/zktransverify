@@ -284,14 +284,14 @@ void dump_mb(In *in, uint8_t *mb, int reset_cache) {
         (b) = (a); \
     }
 
-    static uint8_t luma_m1_cache;
+    static uint8_t luma_m1_cache[16];
     static uint8_t luma_cache[16*16];
     static uint8_t top_border_cache[16*2];
     static uint8_t top_cache[16*2];
     static uint8_t left_cache[16];
 
     if (reset_cache) {
-        luma_m1_cache = 0;
+        memset(luma_m1_cache, 0, sizeof(luma_m1_cache));
         memset(luma_cache, 0, sizeof(luma_cache));
         memset(top_border_cache, 0, sizeof(top_border_cache));
         memset(top_cache, 0, sizeof(top_cache));
@@ -328,7 +328,7 @@ void dump_mb(In *in, uint8_t *mb, int reset_cache) {
         for (int i = 0; i < 7; ++i) {
             printf("   ");
         }
-        DUMP_CHANGE("%02x  ", in->luma_left[y], luma_m1_cache)
+        DUMP_CHANGE("%02x  ", in->luma_left[y], luma_m1_cache[y])
         for (int x = 0; x < 16; ++x) {
             DUMP_CHANGE("%02x ", mb[x], luma_cache[y + x*16])
         }
