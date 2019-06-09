@@ -1,6 +1,6 @@
 cmake_minimum_required(VERSION 3.5)
 project(videocoin_prooving_system
-        VERSION 0.3.7)
+        VERSION 0.3.8)
 
 message(STATUS "Building ${PROJECT_NAME} v${PROJECT_VERSION}")
 

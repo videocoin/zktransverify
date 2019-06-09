@@ -5,6 +5,7 @@
 #include "temp-h264-mb-decoder.h"
 #include <assert.h>
 #include <stdio.h>
+#include <memory.h>
 
 // awkward situation. h264 uses PRED8x8 numeration and dont have definition for PRED16x16
 #define DC_PRED16x16        0
@@ -272,29 +273,52 @@ void xchg_mb_border(In *in, int xchg)
     }
 }
 
-void dump_mb(In *in, uint8_t *mb) {
+void dump_mb(In *in, uint8_t *mb, int reset_cache) {
+
+#define DUMP_CHANGE(format, a, b) \
+    int changed = (a) != (b); \
+    if (changed) printf("\033[0;34m"); \
+    printf(format, (a)); \
+    if (changed) { \
+        printf("\033[0m"); \
+        (b) = (a); \
+    }
+
+    static uint8_t luma_m1_cache;
+    static uint8_t luma_cache[16*16];
+    static uint8_t top_border_cache[16*2];
+    static uint8_t top_cache[16*2];
+    static uint8_t left_cache[16];
+
+    if (reset_cache) {
+        luma_m1_cache = 0;
+        memset(luma_cache, 0, sizeof(luma_cache));
+        memset(top_border_cache, 0, sizeof(top_border_cache));
+        memset(top_cache, 0, sizeof(top_cache));
+        memset(left_cache, 0, sizeof(left_cache));
+    }
 
     printf("[proof generator] prediction type: %d\n", in->intra16x16_pred_mode);
     printf("[proof generator] x: %d y: %d xy: %d\n", in->mb_x, in->mb_y, in->mb_xy);
     {
         for (int i = 0; i < 8; ++i) {
-            printf("%02x ", in->top_border[i]);
+            DUMP_CHANGE("%02x ", in->top_border[i], top_border_cache[i])
         }
         printf(" ");
         for (int i = 8; i < 16+8+8; ++i) {
-            printf("%02x ", in->top_border[i]);
+            DUMP_CHANGE("%02x ", in->top_border[i], top_border_cache[i])
         }
         printf("\n");
         // print top
         uint8_t *top = in->luma_top;
 
         for (int i = 0; i < 8; ++i) {
-            printf("%02x ", top[i]);
+            DUMP_CHANGE("%02x ", top[i], top_cache[i])
         }
         printf(" ");
 
         for (int x = 8; x < 16+8+8; ++x) {
-            printf("%02x ", top[x]);
+            DUMP_CHANGE("%02x ", top[x], top_cache[x])
         }
         printf("\n");
         printf("\n");
@@ -304,9 +328,9 @@ void dump_mb(In *in, uint8_t *mb) {
         for (int i = 0; i < 7; ++i) {
             printf("   ");
         }
-        printf("%02x  ", in->luma_left[y]);
+        DUMP_CHANGE("%02x  ", in->luma_left[y], luma_m1_cache)
         for (int x = 0; x < 16; ++x) {
-            printf("%02x ", mb[x]);
+            DUMP_CHANGE("%02x ", mb[x], luma_cache[y + x*16])
         }
         printf("\n");
         mb += 16;
@@ -314,11 +338,11 @@ void dump_mb(In *in, uint8_t *mb) {
 }
 
 void decode_mb(In *in, uint8_t *luma) {
-    dump_mb(in, luma);
+    dump_mb(in, luma, 1);
     if (in->deblocking_filter) {
         xchg_mb_border(in, 1);
-        dump_mb(in, luma);
+        dump_mb(in, luma, 0);
     }
     pred16x16(in, luma);
-    dump_mb(in, luma);
+    dump_mb(in, luma, 0);
 }
