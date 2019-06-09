@@ -4,9 +4,8 @@
 
 typedef struct _MB_T
 {
-	char *mb_data; // Macroblock DCT Coefficients
-                   // 3 planes of 16x16 32bit coefficients
-	int  mb_size;
+	char mb_data[16 * 16 * 2]; // Macroblock DCT Coefficients
+                               // 1 planes of 16x16 16bit coefficients
 
 	int mb_type;
 	int intra16x16_pred_mode;

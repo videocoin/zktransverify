@@ -185,9 +185,6 @@ int getMbFromStream(const char *file_name, int key_frame_num, int mb_num, MB_T *
         fprintf(stderr, "Video stream not found.");
     }
 
-    pMb->mb_size = 16 * 16 * 2 * 2;
-    pMb->mb_data = (char *) malloc(pMb->mb_size);
-
     while (av_read_frame(fmt_ctx, pkt) >= 0) {
         // decode packet and other stuff
         printf("Stream=%d frame=%d idr_frame=%d size=0x%x\n", pkt->stream_index,
@@ -234,10 +231,10 @@ int getMbFromStream(const char *file_name, int key_frame_num, int mb_num, MB_T *
                         // Free side data from packet
                         av_packet_free_side_data(pkt);
 
-                        if (getParam(frame, "macroblock", (uint8_t *)pMb->mb_data, pMb->mb_size) != nullptr) {
+                        if (getParam(frame, "macroblock", (uint8_t *)pMb->mb_data, sizeof(pMb->mb_data)) != nullptr) {
                             if (verbose) {
                                 printf("macroblock=");
-                                hexDump((unsigned char *) pMb->mb_data, 16 * 16 * 4);
+                                hexDump((unsigned char *) pMb->mb_data, 16 * 16 * 2);
 
                                 if (pRawY) {
                                     int mb_locn_x = 0;
