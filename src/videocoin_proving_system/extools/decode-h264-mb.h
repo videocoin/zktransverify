@@ -2,26 +2,37 @@
 #ifndef EXTOOLS_DECODE_H264_MB_H_
 #define EXTOOLS_DECODE_H264_MB_H_
 
+typedef union _MB_DC {
+    uint8_t u8[16 * 16 * 2];
+    int16_t i16[16 * 16];
+} MB_DC;
+
+typedef union _MB_LUMA_DC {
+    uint8_t u8[16 * 2];
+    int16_t i16[16];
+} MB_LUMA_DC;
+
 typedef struct _MB_T
 {
-	char mb_data[16 * 16 * 2]; // Macroblock DCT Coefficients
-                               // 1 planes of 16x16 16bit coefficients
-
 	int mb_type;
-	int intra16x16_pred_mode;
 	int mb_x;
 	int mb_y;
     int mb_xy;
     int mb_width;
-    int mb_field_decoding_flag;
-    int deblocking_filter;
 
-    uint8_t         luma_decoded[16 * 16]; // will be used for debug. Circuit should generate identical data to this
+    MB_DC mb;  // Macroblock DCT Coefficients
+                                // 1 planes of 16x16 16bit coefficients
+    MB_LUMA_DC mb_luma_dc;
+    int dequant_coeff;
+    int non_zero_count_cache;
 
     // This data will be used to decode macroblock
     uint8_t         top_border[8 + 16 + 8];
     uint8_t         luma_top[8 + 16 + 8];
     uint8_t         luma_left[16];
+    int mb_field_decoding_flag;
+    int deblocking_filter;
+    int intra16x16_pred_mode;
 } MB_T;
 
 

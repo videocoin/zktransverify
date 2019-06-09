@@ -8,24 +8,25 @@
 #include <stdint.h>
 
 typedef struct In {
-    char mb_data[16 * 16 * 2]; // Macroblock DCT Coefficients
-    // 1 planes of 16x16 16bit coefficients
-
     int mb_type;
-    int intra16x16_pred_mode;
     int mb_x;
     int mb_y;
     int mb_xy;
     int mb_width;
-    int mb_field_decoding_flag;
-    int deblocking_filter;
 
-    uint8_t         luma_decoded[16 * 16]; // will be used for debug. Circuit should generate identical data to this
+    int16_t mb[16*16];  // Macroblock DCT Coefficients
+    // 1 planes of 16x16 16bit coefficients
+    int16_t mb_luma_dc[16];
+    int dequant_coeff;
+    int non_zero_count_cache;
 
     // This data will be used to decode macroblock
     uint8_t         top_border[8 + 16 + 8];
     uint8_t         luma_top[8 + 16 + 8];
     uint8_t         luma_left[16];
+    int mb_field_decoding_flag;
+    int deblocking_filter;
+    int intra16x16_pred_mode;
 } In;
 
 void decode_mb(In *in, uint8_t *luma);

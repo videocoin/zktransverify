@@ -231,10 +231,10 @@ int getMbFromStream(const char *file_name, int key_frame_num, int mb_num, MB_T *
                         // Free side data from packet
                         av_packet_free_side_data(pkt);
 
-                        if (getParam(frame, "macroblock", (uint8_t *)pMb->mb_data, sizeof(pMb->mb_data)) != nullptr) {
+                        if (getParam(frame, "macroblock", pMb->mb.u8, sizeof(pMb->mb)) != nullptr) {
                             if (verbose) {
                                 printf("macroblock=");
-                                hexDump((unsigned char *) pMb->mb_data, 16 * 16 * 2);
+                                hexDump(pMb->mb.u8, sizeof(pMb->mb));
 
                                 if (pRawY) {
                                     int mb_locn_x = 0;
@@ -252,7 +252,7 @@ int getMbFromStream(const char *file_name, int key_frame_num, int mb_num, MB_T *
                                 }
                             }
                         }
-                        getParam(frame, "luma_decoded", pMb->luma_decoded, sizeof(pMb->luma_decoded));
+                        getParam(frame, "mb_luma_dc", pMb->mb_luma_dc.u8, sizeof(pMb->mb_luma_dc));
                         getParam(frame, "luma_top", pMb->luma_top, sizeof(pMb->luma_top));
                         getParam(frame, "luma_left", pMb->luma_left, sizeof(pMb->luma_left));
                         getParam(frame, "top_border", pMb->top_border, sizeof(pMb->top_border));
@@ -265,6 +265,8 @@ int getMbFromStream(const char *file_name, int key_frame_num, int mb_num, MB_T *
                         pMb->mb_y = getParam(frame, "mb_y");
                         pMb->mb_xy = getParam(frame, "mb_xy");
                         pMb->mb_width = getParam(frame, "mb_width");
+                        pMb->dequant_coeff = getParam(frame, "dequant_coeff");
+                        pMb->non_zero_count_cache = getParam(frame, "non_zero_count_cache");
                         break;
                     }
                 }
