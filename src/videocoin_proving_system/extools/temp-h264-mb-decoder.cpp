@@ -72,18 +72,6 @@ void u32_to_u8arr(uint8_t *src, uint32_t v, int stride) {
     src[3*stride] = (v >> 24) & 0xFF;
 }
 
-int32_t i16arr_to_i32(int16_t *src) {
-    int32_t v;
-    v = src[0];
-    v |= src[1] << 16;
-    return v;
-}
-
-void i32_to_i16arr(int16_t *dst, int32_t v) {
-    dst[0] = v & 0xFFFF;
-    dst[1] = v >> 16;
-}
-
 uint8_t clip_pixel(int a) {
     int v = a;
     if (a & (~0xFF))
@@ -393,9 +381,9 @@ void h264_idct_add(uint8_t *dst, int16_t *block, int stride)
 
 void h264_idct_add16intra(uint8_t *dst, int16_t *block, uint8_t nnzc[15*8]){
     int i, stride = 16;
-    for(i=0; i<16; i++){
-        if(nnzc[ scan8[i] ]) h264_idct_add(dst + block_offset[i], block + i*16, stride);
-        else if(block[i*16]) h264_idct_dc_add(dst + block_offset[i], block + i*16, stride);
+    for (i=0; i<16; i++) {
+        if (nnzc[ scan8[i] ]) h264_idct_add(dst + block_offset[i], block + i*16, stride);
+        else if (block[i*16]) h264_idct_dc_add(dst + block_offset[i], block + i*16, stride);
     }
 }
 
