@@ -33,6 +33,17 @@ uint8_t scan8[16 * 3 + 3] = {
         0 +  0 * 8, 0 +  5 * 8, 0 + 10 * 8
 };
 
+int block_offset[16] = {
+        0, 4,
+        64, 68,
+        8, 12,
+        72, 76,
+        128, 132,
+        192, 196,
+        136, 140,
+        200, 204
+};
+
 uint32_t PIXEL_SPLAT_X4(uint32_t x)
 {
     return x * 0x01010101U;
@@ -383,8 +394,8 @@ void h264_idct_add(uint8_t *dst, int16_t *block, int stride)
 void h264_idct_add16intra(uint8_t *dst, int16_t *block, uint8_t nnzc[15*8]){
     int i, stride = 16;
     for(i=0; i<16; i++){
-        if(nnzc[ scan8[i] ]) h264_idct_add(dst, block + i*16, stride);
-        else if(block[i*16]) h264_idct_dc_add(dst, block + i*16, stride);
+        if(nnzc[ scan8[i] ]) h264_idct_add(dst + block_offset[i], block + i*16, stride);
+        else if(block[i*16]) h264_idct_dc_add(dst + block_offset[i], block + i*16, stride);
     }
 }
 
@@ -479,7 +490,16 @@ void dump_coefficients(In *in, int reset_cache)
     }
 }
 
+void init_blockoffset() {
+    int i = 0, linesize = 16;
+    for (i = 0; i < 16; i++) {
+        block_offset[i] = (4 * ((scan8[i] - scan8[0]) & 7)) + 4 * linesize * ((scan8[i] - scan8[0]) >> 3);
+    }
+}
+
+
 void decode_mb(In *in, uint8_t *luma) {
+    init_blockoffset();
     dump_mb(in, luma, 1);
     if (in->deblocking_filter) {
         xchg_mb_border(in, 1);
