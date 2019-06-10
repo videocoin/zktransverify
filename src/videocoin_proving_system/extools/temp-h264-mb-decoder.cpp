@@ -478,16 +478,7 @@ void dump_coefficients(In *in, int reset_cache)
     }
 }
 
-void init_blockoffset() {
-    int i = 0, linesize = 16;
-    for (i = 0; i < 16; i++) {
-        block_offset[i] = (4 * ((scan8[i] - scan8[0]) & 7)) + 4 * linesize * ((scan8[i] - scan8[0]) >> 3);
-    }
-}
-
-
 void decode_mb(In *in, uint8_t *luma) {
-    init_blockoffset();
     dump_mb(in, luma, 1);
     if (in->deblocking_filter) {
         xchg_mb_border(in, 1);
