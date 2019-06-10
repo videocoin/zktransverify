@@ -21,7 +21,7 @@ uint32_t PIXEL_SPLAT_X4(uint32_t x)
     return x * 0x01010101U;
 }
 
-uint32_t u8_to_u32(uint8_t *src) {
+uint32_t u8arr_to_u32(uint8_t *src) {
     uint32_t v;
     v = src[0];
     v |= src[1] << 8;
@@ -30,18 +30,30 @@ uint32_t u8_to_u32(uint8_t *src) {
     return v;
 }
 
-void u32_to_u8(uint8_t *src, uint32_t v) {
+void u32_to_u8arr(uint8_t *src, uint32_t v) {
     src[0] = v & 0xFF;
     src[1] = (v >> 8) & 0xFF;
     src[2] = (v >> 16) & 0xFF;
     src[3] = (v >> 24) & 0xFF;
 }
 
-void u32_to_u8(uint8_t *src, uint32_t v, int stride) {
+void u32_to_u8arr(uint8_t *src, uint32_t v, int stride) {
     src[0*stride] = v & 0xFF;
     src[1*stride] = (v >> 8) & 0xFF;
     src[2*stride] = (v >> 16) & 0xFF;
     src[3*stride] = (v >> 24) & 0xFF;
+}
+
+int32_t i16arr_to_i32(int16_t *src) {
+    int32_t v;
+    v = src[0];
+    v |= src[1] << 16;
+    return v;
+}
+
+void i32_to_i16arr(int16_t *dst, int32_t v) {
+    dst[0] = v & 0xFFFF;
+    dst[1] = v >> 16;
 }
 
 uint8_t clip_pixel(int a) {
@@ -61,16 +73,16 @@ void pred16x16_vertical(uint8_t *top, uint8_t *res)
 {
     int i, stride = 16;
     // read luma top row
-    uint32_t a = u8_to_u32(top + 0);
-    uint32_t b = u8_to_u32(top + 4);
-    uint32_t c = u8_to_u32(top + 8);
-    uint32_t d = u8_to_u32(top + 12);
+    uint32_t a = u8arr_to_u32(top + 0);
+    uint32_t b = u8arr_to_u32(top + 4);
+    uint32_t c = u8arr_to_u32(top + 8);
+    uint32_t d = u8arr_to_u32(top + 12);
     // propagate top row to all rows
     for (i=0; i<16; i++) {
-        u32_to_u8(res + i * stride + 0, a);
-        u32_to_u8(res + i * stride + 4, b);
-        u32_to_u8(res + i * stride + 8, c);
-        u32_to_u8(res + i * stride + 12, d);
+        u32_to_u8arr(res + i * stride + 0, a);
+        u32_to_u8arr(res + i * stride + 4, b);
+        u32_to_u8arr(res + i * stride + 8, c);
+        u32_to_u8arr(res + i * stride + 12, d);
     }
 }
 
@@ -83,16 +95,16 @@ void pred16x16_horizontal(uint8_t *left, uint8_t *res)
 {
     int i, stride = 16;
     // read column on the left
-    uint32_t a = u8_to_u32(left + 0);
-    uint32_t b = u8_to_u32(left + 4);
-    uint32_t c = u8_to_u32(left + 8);
-    uint32_t d = u8_to_u32(left + 12);
+    uint32_t a = u8arr_to_u32(left + 0);
+    uint32_t b = u8arr_to_u32(left + 4);
+    uint32_t c = u8arr_to_u32(left + 8);
+    uint32_t d = u8arr_to_u32(left + 12);
     // copy column on the left to other columns
     for (i=0; i<16; ++i) {
-        u32_to_u8(res + 0*stride + i, a, stride);
-        u32_to_u8(res + 4*stride + i, b, stride);
-        u32_to_u8(res + 8*stride + i, c, stride);
-        u32_to_u8(res + 12*stride + i, d, stride);
+        u32_to_u8arr(res + 0 * stride + i, a, stride);
+        u32_to_u8arr(res + 4 * stride + i, b, stride);
+        u32_to_u8arr(res + 8 * stride + i, c, stride);
+        u32_to_u8arr(res + 12 * stride + i, d, stride);
     }
 }
 
@@ -113,10 +125,10 @@ void pred16x16_dc(uint8_t *left, uint8_t *top, uint8_t *res)
 
     dcsplat = PIXEL_SPLAT_X4((dc+16)>>5);
     for (i=0; i<16; ++i) {
-        u32_to_u8(res + 0*stride + i, dcsplat, stride);
-        u32_to_u8(res + 4*stride + i, dcsplat, stride);
-        u32_to_u8(res + 8*stride + i, dcsplat, stride);
-        u32_to_u8(res + 12*stride + i, dcsplat, stride);
+        u32_to_u8arr(res + 0 * stride + i, dcsplat, stride);
+        u32_to_u8arr(res + 4 * stride + i, dcsplat, stride);
+        u32_to_u8arr(res + 8 * stride + i, dcsplat, stride);
+        u32_to_u8arr(res + 12 * stride + i, dcsplat, stride);
     }
 }
 
@@ -159,10 +171,10 @@ void pred16x16_left_dc(uint8_t *left, uint8_t *res)
 
     dcsplat = PIXEL_SPLAT_X4((dc+8)>>4);
     for (i=0; i<16; ++i) {
-        u32_to_u8(res + 0*stride + i, dcsplat, stride);
-        u32_to_u8(res + 4*stride + i, dcsplat, stride);
-        u32_to_u8(res + 8*stride + i, dcsplat, stride);
-        u32_to_u8(res + 12*stride + i, dcsplat, stride);
+        u32_to_u8arr(res + 0 * stride + i, dcsplat, stride);
+        u32_to_u8arr(res + 4 * stride + i, dcsplat, stride);
+        u32_to_u8arr(res + 8 * stride + i, dcsplat, stride);
+        u32_to_u8arr(res + 12 * stride + i, dcsplat, stride);
     }
 }
 
@@ -181,10 +193,10 @@ void pred16x16_top_dc(uint8_t *src, uint8_t *res)
 
     dcsplat = PIXEL_SPLAT_X4((dc+8)>>4);
     for (i=0; i<16; ++i) {
-        u32_to_u8(res + i * stride + 0, dcsplat);
-        u32_to_u8(res + i * stride + 4, dcsplat);
-        u32_to_u8(res + i * stride + 8, dcsplat);
-        u32_to_u8(res + i * stride + 12, dcsplat);
+        u32_to_u8arr(res + i * stride + 0, dcsplat);
+        u32_to_u8arr(res + i * stride + 4, dcsplat);
+        u32_to_u8arr(res + i * stride + 8, dcsplat);
+        u32_to_u8arr(res + i * stride + 12, dcsplat);
     }
 }
 
@@ -195,10 +207,10 @@ void pred16x16_128_dc(uint8_t *res)
     dcsplat = PIXEL_SPLAT_X4(8);
 
     for (i=0; i<16; ++i) {
-        u32_to_u8(res + 0*stride + i, dcsplat, stride);
-        u32_to_u8(res + 4*stride + i, dcsplat, stride);
-        u32_to_u8(res + 8*stride + i, dcsplat, stride);
-        u32_to_u8(res + 12*stride + i, dcsplat, stride);
+        u32_to_u8arr(res + 0 * stride + i, dcsplat, stride);
+        u32_to_u8arr(res + 4 * stride + i, dcsplat, stride);
+        u32_to_u8arr(res + 8 * stride + i, dcsplat, stride);
+        u32_to_u8arr(res + 12 * stride + i, dcsplat, stride);
     }
 }
 
@@ -273,7 +285,38 @@ void xchg_mb_border(In *in, int xchg)
     }
 }
 
-void dump_mb(In *in, uint8_t *mb, int reset_cache) {
+void luma_dc_dequant_idct(int16_t *output, int16_t *input, int qmul){
+#define stride 16
+    int i;
+    int temp[16];
+    uint8_t x_offset[4]={0, 2*stride, 8*stride, 10*stride};
+
+    for(i=0; i<4; i++){
+        int z0= input[4*i+0] + input[4*i+1];
+        int z1= input[4*i+0] + input[4*i+1] * (-1);
+        int z2= input[4*i+2] + input[4*i+3] * (-1);
+        int z3= input[4*i+2] + input[4*i+3];
+
+        temp[4*i+0]= z0+z3;
+        temp[4*i+1]= z0-z3;
+        temp[4*i+2]= z1-z2;
+        temp[4*i+3]= z1+z2;
+    }
+
+    for(i=0; i<4; i++){
+        int offset = x_offset[i];
+        int z0= temp[4*0+i] + temp[4*2+i];
+        int z1= temp[4*0+i] + temp[4*2+i] * (-1);
+        int z2= temp[4*1+i] + temp[4*3+i] * (-1);
+        int z3= temp[4*1+i] + temp[4*3+i];
+
+        output[stride* 0+offset]= (int)((z0 + z3)*qmul + 128 ) >> 8;
+        output[stride* 1+offset]= (int)((z1 + z2)*qmul + 128 ) >> 8;
+        output[stride* 4+offset]= (int)((z1 - z2)*qmul + 128 ) >> 8;
+        output[stride* 5+offset]= (int)((z0 - z3)*qmul + 128 ) >> 8;
+    }
+#undef stride
+}
 
 #define DUMP_CHANGE(format, a, b) \
     int changed = (a) != (b); \
@@ -283,6 +326,8 @@ void dump_mb(In *in, uint8_t *mb, int reset_cache) {
         printf("\033[0m"); \
         (b) = (a); \
     }
+
+void dump_mb(In *in, uint8_t *mb, int reset_cache) {
 
     static uint8_t luma_m1_cache[16];
     static uint8_t luma_cache[16*16];
@@ -337,6 +382,33 @@ void dump_mb(In *in, uint8_t *mb, int reset_cache) {
     }
 }
 
+void dump_coefficients(In *in, int reset_cache)
+{
+    static int16_t cache[16 * 16];
+    static int16_t mb_luma_dc_cache[16];
+    if (reset_cache) {
+        memset(cache, 0, sizeof(cache));
+        memset(mb_luma_dc_cache, 0, sizeof(mb_luma_dc_cache));
+    }
+
+    printf("[proof generator coefficients] prediction type: %d\n", in->intra16x16_pred_mode);
+    printf("[proof generator coefficients] x: %03d  y: %03d  xy: %03d\n", in->mb_x, in->mb_y, in->mb_xy);
+    printf("[coefficients] dequant coeff: %03d\n", in->dequant_coeff);
+    printf("[coefficients] mb_luma_dc:\n");
+
+    for (int x = 0; x < 16; ++x) {
+        DUMP_CHANGE("%05d ", in->mb_luma_dc[x], mb_luma_dc_cache[x])
+    }
+    printf("\n\n\n");
+
+    for (int x = 0; x < 16; ++x) {
+        for (int y = 0; y < 16; ++y) {
+            DUMP_CHANGE("%05d ", in->mb[y+x*16], cache[y+x*16])
+        }
+        printf("\n\n");
+    }
+}
+
 void decode_mb(In *in, uint8_t *luma) {
     dump_mb(in, luma, 1);
     if (in->deblocking_filter) {
@@ -345,4 +417,9 @@ void decode_mb(In *in, uint8_t *luma) {
     }
     pred16x16(in, luma);
     dump_mb(in, luma, 0);
+    if (in->non_zero_count_cache) {
+        dump_coefficients(in, 1);
+        luma_dc_dequant_idct(in->mb, in->mb_luma_dc, in->dequant_coeff);
+        dump_coefficients(in, 0);
+    }
 }
