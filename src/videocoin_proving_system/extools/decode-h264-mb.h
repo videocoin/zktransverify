@@ -24,7 +24,7 @@ typedef struct _MB_T
                                 // 1 planes of 16x16 16bit coefficients
     MB_LUMA_DC mb_luma_dc;
     int dequant_coeff;
-    int non_zero_count_cache;
+    uint8_t         non_zero_count_cache[15 * 8];
 
     // This data will be used to decode macroblock
     uint8_t         top_border[8 + 16 + 8];

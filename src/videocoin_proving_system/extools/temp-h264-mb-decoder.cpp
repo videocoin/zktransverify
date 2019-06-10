@@ -16,6 +16,23 @@
 #define DC_TOP_PRED16x16    5
 #define DC_128_PRED16x16    6
 
+// This table must be here because scan8[constant] must be known at compiletime
+uint8_t scan8[16 * 3 + 3] = {
+        4 +  1 * 8, 5 +  1 * 8, 4 +  2 * 8, 5 +  2 * 8,
+        6 +  1 * 8, 7 +  1 * 8, 6 +  2 * 8, 7 +  2 * 8,
+        4 +  3 * 8, 5 +  3 * 8, 4 +  4 * 8, 5 +  4 * 8,
+        6 +  3 * 8, 7 +  3 * 8, 6 +  4 * 8, 7 +  4 * 8,
+        4 +  6 * 8, 5 +  6 * 8, 4 +  7 * 8, 5 +  7 * 8,
+        6 +  6 * 8, 7 +  6 * 8, 6 +  7 * 8, 7 +  7 * 8,
+        4 +  8 * 8, 5 +  8 * 8, 4 +  9 * 8, 5 +  9 * 8,
+        6 +  8 * 8, 7 +  8 * 8, 6 +  9 * 8, 7 +  9 * 8,
+        4 + 11 * 8, 5 + 11 * 8, 4 + 12 * 8, 5 + 12 * 8,
+        6 + 11 * 8, 7 + 11 * 8, 6 + 12 * 8, 7 + 12 * 8,
+        4 + 13 * 8, 5 + 13 * 8, 4 + 14 * 8, 5 + 14 * 8,
+        6 + 13 * 8, 7 + 13 * 8, 6 + 14 * 8, 7 + 14 * 8,
+        0 +  0 * 8, 0 +  5 * 8, 0 + 10 * 8
+};
+
 uint32_t PIXEL_SPLAT_X4(uint32_t x)
 {
     return x * 0x01010101U;
@@ -318,6 +335,59 @@ void luma_dc_dequant_idct(int16_t *output, int16_t *input, int qmul){
 #undef stride
 }
 
+void h264_idct_dc_add(uint8_t *dst, int16_t *block, int stride){
+    int i, j;
+    int dc = (block[0] + 32) >> 6;
+    block[0] = 0;
+    for( j = 0; j < 4; j++ )
+    {
+        for( i = 0; i < 4; i++ )
+            dst[i] = clip_pixel( dst[i] + dc );
+        dst += stride;
+    }
+}
+
+void h264_idct_add(uint8_t *dst, int16_t *block, int stride)
+{
+    int i;
+
+    block[0] += 1 << 5;
+
+    for(i=0; i<4; i++){
+        int z0=  block[i + 4*0]     +  (unsigned)block[i + 4*2];
+        int z1=  block[i + 4*0]     -  (unsigned)block[i + 4*2];
+        int z2= (block[i + 4*1]>>1) -  (unsigned)block[i + 4*3];
+        int z3=  block[i + 4*1]     + (unsigned)(block[i + 4*3]>>1);
+
+        block[i + 4*0]= z0 + z3;
+        block[i + 4*1]= z1 + z2;
+        block[i + 4*2]= z1 - z2;
+        block[i + 4*3]= z0 - z3;
+    }
+
+    for(i=0; i<4; i++){
+        int z0=  block[0 + 4*i]     +  (int)block[2 + 4*i];
+        int z1=  block[0 + 4*i]     -  (int)block[2 + 4*i];
+        int z2= (block[1 + 4*i]>>1) -  (int)block[3 + 4*i];
+        int z3=  block[1 + 4*i]     + (int)(block[3 + 4*i]>>1);
+
+        dst[i + 0*stride]= clip_pixel(dst[i + 0*stride] + ((int)(z0 + z3) >> 6));
+        dst[i + 1*stride]= clip_pixel(dst[i + 1*stride] + ((int)(z1 + z2) >> 6));
+        dst[i + 2*stride]= clip_pixel(dst[i + 2*stride] + ((int)(z1 - z2) >> 6));
+        dst[i + 3*stride]= clip_pixel(dst[i + 3*stride] + ((int)(z0 - z3) >> 6));
+    }
+
+    memset(block, 0, 16 * sizeof(int16_t));
+}
+
+void h264_idct_add16intra(uint8_t *dst, int16_t *block, uint8_t nnzc[15*8]){
+    int i, stride = 16;
+    for(i=0; i<16; i++){
+        if(nnzc[ scan8[i] ]) h264_idct_add(dst, block + i*16, stride);
+        else if(block[i*16]) h264_idct_dc_add(dst, block + i*16, stride);
+    }
+}
+
 #define DUMP_CHANGE(format, a, b) \
     int changed = (a) != (b); \
     if (changed) printf("\033[0;34m"); \
@@ -417,9 +487,11 @@ void decode_mb(In *in, uint8_t *luma) {
     }
     pred16x16(in, luma);
     dump_mb(in, luma, 0);
-    if (in->non_zero_count_cache) {
+    if (in->non_zero_count_cache[0]) {
         dump_coefficients(in, 1);
         luma_dc_dequant_idct(in->mb, in->mb_luma_dc, in->dequant_coeff);
         dump_coefficients(in, 0);
     }
+    h264_idct_add16intra(luma, in->mb, in->non_zero_count_cache);
+    dump_mb(in, luma, 0);
 }

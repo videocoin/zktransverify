@@ -18,7 +18,7 @@ typedef struct In {
     // 1 planes of 16x16 16bit coefficients
     int16_t mb_luma_dc[16];
     int dequant_coeff;
-    int non_zero_count_cache;
+    uint8_t         non_zero_count_cache[15 * 8];
 
     // This data will be used to decode macroblock
     uint8_t         top_border[8 + 16 + 8];

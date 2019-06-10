@@ -253,6 +253,7 @@ int getMbFromStream(const char *file_name, int key_frame_num, int mb_num, MB_T *
                             }
                         }
                         getParam(frame, "mb_luma_dc", pMb->mb_luma_dc.u8, sizeof(pMb->mb_luma_dc));
+                        getParam(frame, "non_zero_count_cache", pMb->non_zero_count_cache, sizeof(pMb->non_zero_count_cache));
                         getParam(frame, "luma_top", pMb->luma_top, sizeof(pMb->luma_top));
                         getParam(frame, "luma_left", pMb->luma_left, sizeof(pMb->luma_left));
                         getParam(frame, "top_border", pMb->top_border, sizeof(pMb->top_border));
@@ -266,7 +267,6 @@ int getMbFromStream(const char *file_name, int key_frame_num, int mb_num, MB_T *
                         pMb->mb_xy = getParam(frame, "mb_xy");
                         pMb->mb_width = getParam(frame, "mb_width");
                         pMb->dequant_coeff = getParam(frame, "dequant_coeff");
-                        pMb->non_zero_count_cache = getParam(frame, "non_zero_count_cache");
                         break;
                     }
                 }
