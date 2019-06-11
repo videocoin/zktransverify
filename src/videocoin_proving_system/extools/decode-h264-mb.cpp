@@ -61,17 +61,6 @@ void hexDump(unsigned char *pData, int n) {
     printf("\n");
 }
 
-static char *itoa(int val, int base) {
-
-    static char buf[32] = {0};
-    int i = 30;
-
-    for (; val && i; --i, val /= base)
-        buf[i] = "0123456789abcdef"[val % base];
-
-    return &buf[i + 1];
-}
-
 int getParam(AVFrame *frame, const char *key) {
     AVDictionaryEntry *ent = av_dict_get(frame->metadata, key, nullptr, 0);
     if (ent) {
@@ -231,7 +220,7 @@ int getMbFromStream(const char *file_name, int key_frame_num, int mb_num, MB_T *
                         // Free side data from packet
                         av_packet_free_side_data(pkt);
 
-                        if (getParam(frame, "macroblock", pMb->mb.u8, sizeof(pMb->mb)) != nullptr) {
+                        if (getParam(frame, "mb", pMb->mb.u8, sizeof(pMb->mb)) != nullptr) {
                             if (verbose) {
                                 printf("macroblock=");
                                 hexDump(pMb->mb.u8, sizeof(pMb->mb));
