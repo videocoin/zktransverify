@@ -112,7 +112,7 @@ int main(int argc, const char *argv[]) {
 
     // Generate hash of hashes from input stream and transcoded stream
     //      and pick random keyframe and macroblock number
-    getRandomOffsets(files.front().c_str(), files.back().c_str(), &frame_offset, 10, &mb_offset, 1);
+    get_random_offsets(files.front().c_str(), files.back().c_str(), &frame_offset, 10, &mb_offset, 1);
     printf("frame_offset=%d macroblock_offset=%d\n", frame_offset, mb_offset);
 
     uint8_t luma[256] = {0};
@@ -120,12 +120,12 @@ int main(int argc, const char *argv[]) {
 
     memset(srcRawY, 0x00, 256);
     memset(transRawY, 0x00, 256);
-    getMbFromStream(files.front().c_str(), 1, 4893, &mbSrc, srcRawY, verbose);
+    get_mb_from_stream(files.front().c_str(), 1, 4893, &mbSrc, srcRawY, verbose);
 
     memcpy(&in, &mbSrc, sizeof(in));
     decode_mb(&in, luma);
 
-    getMbFromStream(files.back().c_str(), 1, 4893, &mbTrans, transRawY, verbose);
+    get_mb_from_stream(files.back().c_str(), 1, 4893, &mbTrans, transRawY, verbose);
 
     memcpy(&in, &mbTrans, sizeof(in));
     decode_mb(&in, luma);

@@ -64,7 +64,7 @@ int sha256_file(const char *path, unsigned char outputBuffer[65])
     return 0;
 }
 
-int getRandomOffsets(
+int get_random_offsets(
 		const char *ARG_VIDEO_PATH1,
 		const char *ARG_VIDEO_PATH2,
 		int *frameOffset,

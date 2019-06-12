@@ -376,7 +376,7 @@ void h264_idct_add(uint8_t *dst, int16_t *block, int stride)
         dst[i + 3*stride]= clip_pixel(dst[i + 3*stride] + ((int)(z0 - z3) >> 6));
     }
 
-    memset(block, 0, 16 * sizeof(int16_t));
+//    memset(block, 0, 16 * sizeof(int16_t));
 }
 
 void h264_idct_add16intra(uint8_t *dst, int16_t *block, uint8_t nnzc[15*8]){

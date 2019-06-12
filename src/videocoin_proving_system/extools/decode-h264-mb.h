@@ -2,16 +2,6 @@
 #ifndef EXTOOLS_DECODE_H264_MB_H_
 #define EXTOOLS_DECODE_H264_MB_H_
 
-typedef union _MB_DC {
-    uint8_t u8[16 * 16 * 2];
-    int16_t i16[16 * 16];
-} MB_DC;
-
-typedef union _MB_LUMA_DC {
-    uint8_t u8[16 * 2];
-    int16_t i16[16];
-} MB_LUMA_DC;
-
 typedef struct _MB_T
 {
 	int mb_type;
@@ -20,9 +10,8 @@ typedef struct _MB_T
     int mb_xy;
     int mb_width;
 
-    MB_DC mb;  // Macroblock DCT Coefficients
-                                // 1 planes of 16x16 16bit coefficients
-    MB_LUMA_DC mb_luma_dc;
+    int16_t mb[16 * 16];
+    int16_t mb_luma_dc[16];
     int dequant_coeff;
     uint8_t non_zero_count_cache[15 * 8];
 
@@ -36,7 +25,7 @@ typedef struct _MB_T
 } MB_T;
 
 
-void hexDump (unsigned char *pData, int n);
-int getMbFromStream(const char *file_name, int key_frame_num, int mb_num, MB_T *pMb, unsigned char *pRawY, bool verbose);
+void hex_dump(unsigned char *pData, int n);
+int get_mb_from_stream(const char *file_name, int key_frame_num, int mb_num, MB_T *pMb, unsigned char *pRawY, bool verbose);
 
 #endif /* EXTOOLS_DECODE_H264_MB_H_ */

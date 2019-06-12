@@ -7,7 +7,7 @@ void sha256_string(unsigned char *pData, int len, unsigned char outputBuffer[65]
 int sha256_file(const char *path, unsigned char outputBuffer[65]);
 void sha256_bytes(unsigned char *pData, int len, unsigned char hash[32]);
 
-int getRandomOffsets(
+int get_random_offsets(
 		const char *ARG_VIDEO_PATH1,
 		const char *ARG_VIDEO_PATH2,
 		int *frameOffset,

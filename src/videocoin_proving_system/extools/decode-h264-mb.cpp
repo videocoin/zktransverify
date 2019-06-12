@@ -43,18 +43,7 @@ extern "C" {
 #include "decode-h264-mb.h"
 
 
-static char *itoa(int val, int base);
-
-void hexDump(unsigned char *pData, int n, int row_len) {
-    for (int i = 0; i < n; i++) {
-        if (i % row_len == 0) printf("\n");
-        printf("%02x ", pData[i]);
-    }
-    printf("\n");
-}
-
-
-void hexDump(unsigned char *pData, int n) {
+void hex_dump(unsigned char *pData, int n) {
     for (int i = 0; i < n; i++) {
         printf("%02x ", pData[i]);
     }
@@ -87,7 +76,7 @@ uint8_t *getParam(AVFrame *frame, const char *key, uint8_t *data, size_t data_si
     return data;
 }
 
-int getMbFromStream(const char *file_name, int key_frame_num, int mb_num, MB_T *pMb, unsigned char *pRawY, bool verbose) {
+int get_mb_from_stream(const char *file_name, int key_frame_num, int mb_num, MB_T *pMb, unsigned char *pRawY, bool verbose) {
     AVFormatContext *fmt_ctx;
     int frame_offset = 0;
     int macroblock_offset = 0;
@@ -178,13 +167,13 @@ int getMbFromStream(const char *file_name, int key_frame_num, int mb_num, MB_T *
         // decode packet and other stuff
         printf("Stream=%d frame=%d idr_frame=%d size=0x%x\n", pkt->stream_index,
                frame_count, idr_frame, pkt->size);
-        hexDump(pkt->data, 16);
+        hex_dump(pkt->data, 16);
         if (pkt && pkt->size && ffmpeg_videoStreamIndex == pkt->stream_index) {
             if (h264bsfc) {
                 av_bitstream_filter_filter(h264bsfc,
                                            fmt_ctx->streams[ffmpeg_videoStreamIndex]->codec, NULL,
                                            &pkt->data, &pkt->size, pkt->data, pkt->size, 0);
-                hexDump(pkt->data, 16);
+                hex_dump(pkt->data, 16);
                 //read_debug_nal_unit(h, pkt->data + 4, pkt->size - 4);
                 uint8_t *p = pkt->data;
                 size_t sz = pkt->size;
@@ -195,7 +184,7 @@ int getMbFromStream(const char *file_name, int key_frame_num, int mb_num, MB_T *
 
                 // Add side_data to AVPacket which will be decoded
                 av_dict_set_int(&frameDict, "req_mb", mb_num, 0);
-                av_dict_set_int(&frameDict, "debug", 0, 0);
+                av_dict_set_int(&frameDict, "debug_luma", 1, 0);
                 int frameDictSize = 0;
                 uint8_t *frameDictData = av_packet_pack_dictionary(frameDict,
                                                                    &frameDictSize);
@@ -220,28 +209,28 @@ int getMbFromStream(const char *file_name, int key_frame_num, int mb_num, MB_T *
                         // Free side data from packet
                         av_packet_free_side_data(pkt);
 
-                        if (getParam(frame, "mb", pMb->mb.u8, sizeof(pMb->mb)) != nullptr) {
+                        if (getParam(frame, "mb", (uint8_t *)pMb->mb, sizeof(pMb->mb)) != nullptr) {
                             if (verbose) {
                                 printf("macroblock=");
-                                hexDump(pMb->mb.u8, sizeof(pMb->mb));
+                                hex_dump((uint8_t *)pMb->mb, sizeof(pMb->mb));
 
                                 if (pRawY) {
                                     int mb_locn_x = 0;
                                     int mb_locn_y = 0;
-                                    unsigned char *pDst = pRawY;
+                                    uint8_t *pDst = pRawY;
                                     for (int v = 0; v < 16; v++) {
-                                        unsigned char *pSrc =
+                                        uint8_t *pSrc =
                                                 frame->data[0] + (mb_locn_y + v) * frame->linesize[0] + mb_locn_x;
                                         for (int h = 0; h < 16; h++) {
                                             *pDst++ = *pSrc++;
                                         }
                                     }
                                     if (verbose)
-                                        hexDump(pRawY, 256);
+                                        hex_dump(pRawY, 256);
                                 }
                             }
                         }
-                        getParam(frame, "mb_luma_dc", pMb->mb_luma_dc.u8, sizeof(pMb->mb_luma_dc));
+                        getParam(frame, "mb_luma_dc", (uint8_t *)pMb->mb_luma_dc, sizeof(pMb->mb_luma_dc));
                         getParam(frame, "non_zero_count_cache", pMb->non_zero_count_cache, sizeof(pMb->non_zero_count_cache));
                         getParam(frame, "luma_top", pMb->luma_top, sizeof(pMb->luma_top));
                         getParam(frame, "luma_left", pMb->luma_left, sizeof(pMb->luma_left));

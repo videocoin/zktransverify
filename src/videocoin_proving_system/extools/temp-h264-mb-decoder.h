@@ -14,16 +14,14 @@ typedef struct In {
     int mb_xy;
     int mb_width;
 
-    int16_t mb[16*16];  // Macroblock DCT Coefficients
-    // 1 planes of 16x16 16bit coefficients
+    int16_t mb[16*16];
     int16_t mb_luma_dc[16];
     int dequant_coeff;
-    uint8_t         non_zero_count_cache[15 * 8];
+    uint8_t non_zero_count_cache[15 * 8];
 
-    // This data will be used to decode macroblock
-    uint8_t         top_border[8 + 16 + 8];
-    uint8_t         luma_top[8 + 16 + 8];
-    uint8_t         luma_left[16];
+    uint8_t top_border[8 + 16 + 8];
+    uint8_t luma_top[8 + 16 + 8];
+    uint8_t luma_left[16];
     int mb_field_decoding_flag;
     int deblocking_filter;
     int intra16x16_pred_mode;
