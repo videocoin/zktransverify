@@ -3,7 +3,6 @@
 //
 
 #include "temp-h264-mb-decoder.h"
-#include <assert.h>
 #include <stdio.h>
 #include <memory.h>
 
@@ -65,7 +64,7 @@ void u32_to_u8arr(uint8_t *src, uint32_t v) {
     src[3] = (v >> 24) & 0xFF;
 }
 
-void u32_to_u8arr(uint8_t *src, uint32_t v, int stride) {
+void u32_to_u8arr2(uint8_t *src, uint32_t v, int stride) {
     src[0*stride] = v & 0xFF;
     src[1*stride] = (v >> 8) & 0xFF;
     src[2*stride] = (v >> 16) & 0xFF;
@@ -109,7 +108,8 @@ void pred16x16_vertical(uint8_t *top, uint8_t *res)
  */
 void pred16x16_horizontal(uint8_t *left, uint8_t *res)
 {
-    int i, stride = 16;
+#define stride 16
+    int i;
     // read column on the left
     uint32_t a = u8arr_to_u32(left + 0);
     uint32_t b = u8arr_to_u32(left + 4);
@@ -117,11 +117,12 @@ void pred16x16_horizontal(uint8_t *left, uint8_t *res)
     uint32_t d = u8arr_to_u32(left + 12);
     // copy column on the left to other columns
     for (i=0; i<16; ++i) {
-        u32_to_u8arr(res + 0 * stride + i, a, stride);
-        u32_to_u8arr(res + 4 * stride + i, b, stride);
-        u32_to_u8arr(res + 8 * stride + i, c, stride);
-        u32_to_u8arr(res + 12 * stride + i, d, stride);
+        u32_to_u8arr2(res + 0 * stride + i, a, stride);
+        u32_to_u8arr2(res + 4 * stride + i, b, stride);
+        u32_to_u8arr2(res + 8 * stride + i, c, stride);
+        u32_to_u8arr2(res + 12 * stride + i, d, stride);
     }
+#undef stride
 }
 
 /*
@@ -131,7 +132,8 @@ void pred16x16_horizontal(uint8_t *left, uint8_t *res)
  */
 void pred16x16_dc(uint8_t *left, uint8_t *top, uint8_t *res)
 {
-    int i, dc=0, stride = 16;
+#define stride 16
+    int i, dc=0;
     uint32_t dcsplat;
 
     for(i=0;i<16; i++){
@@ -141,11 +143,12 @@ void pred16x16_dc(uint8_t *left, uint8_t *top, uint8_t *res)
 
     dcsplat = PIXEL_SPLAT_X4((dc+16)>>5);
     for (i=0; i<16; ++i) {
-        u32_to_u8arr(res + 0 * stride + i, dcsplat, stride);
-        u32_to_u8arr(res + 4 * stride + i, dcsplat, stride);
-        u32_to_u8arr(res + 8 * stride + i, dcsplat, stride);
-        u32_to_u8arr(res + 12 * stride + i, dcsplat, stride);
+        u32_to_u8arr2(res + 0 * stride + i, dcsplat, stride);
+        u32_to_u8arr2(res + 4 * stride + i, dcsplat, stride);
+        u32_to_u8arr2(res + 8 * stride + i, dcsplat, stride);
+        u32_to_u8arr2(res + 12 * stride + i, dcsplat, stride);
     }
+#undef stride
 }
 
 /*
@@ -155,10 +158,10 @@ void pred16x16_dc(uint8_t *left, uint8_t *top, uint8_t *res)
  */
 void pred16x16_plane(uint8_t *left, uint8_t *top, uint8_t left_top, uint8_t *res)
 {
+#define stride 16
     int a, b, c, H, V;
-    int x, y, stride;
+    int x, y;
 
-    stride = 16;
     H = 8 * (top[15] - left_top);
     V = 8 * (left[15] - left_top);
     for (x = 0; x < 7; ++x) {
@@ -175,11 +178,13 @@ void pred16x16_plane(uint8_t *left, uint8_t *top, uint8_t left_top, uint8_t *res
             res[x + y*stride] = clip_pixel((a + b * (x - 7) + c * (y - 7) + 16)>>5);
         }
     }
+#undef stride
 }
 
 void pred16x16_left_dc(uint8_t *left, uint8_t *res)
 {
-    int i, dc = 0, stride = 16;
+#define stride 16
+    int i, dc = 0;
     uint32_t dcsplat;
     for (i = 0; i < 16; ++i) {
         dc += left[i];
@@ -187,11 +192,12 @@ void pred16x16_left_dc(uint8_t *left, uint8_t *res)
 
     dcsplat = PIXEL_SPLAT_X4((dc+8)>>4);
     for (i=0; i<16; ++i) {
-        u32_to_u8arr(res + 0 * stride + i, dcsplat, stride);
-        u32_to_u8arr(res + 4 * stride + i, dcsplat, stride);
-        u32_to_u8arr(res + 8 * stride + i, dcsplat, stride);
-        u32_to_u8arr(res + 12 * stride + i, dcsplat, stride);
+        u32_to_u8arr2(res + 0 * stride + i, dcsplat, stride);
+        u32_to_u8arr2(res + 4 * stride + i, dcsplat, stride);
+        u32_to_u8arr2(res + 8 * stride + i, dcsplat, stride);
+        u32_to_u8arr2(res + 12 * stride + i, dcsplat, stride);
     }
+#undef stride
 }
 
 /*
@@ -201,7 +207,8 @@ void pred16x16_left_dc(uint8_t *left, uint8_t *res)
  */
 void pred16x16_top_dc(uint8_t *src, uint8_t *res)
 {
-    int i, dc = 0, stride = 16;
+#define stride 16
+    int i, dc = 0;
     uint32_t dcsplat;
     for (i = 0; i < 16; ++i) {
         dc += src[i];
@@ -214,23 +221,26 @@ void pred16x16_top_dc(uint8_t *src, uint8_t *res)
         u32_to_u8arr(res + i * stride + 8, dcsplat);
         u32_to_u8arr(res + i * stride + 12, dcsplat);
     }
+#undef stride
 }
 
 void pred16x16_128_dc(uint8_t *res)
 {
-    int i, stride = 16;
+#define stride 16
+    int i;
     uint32_t dcsplat;
     dcsplat = PIXEL_SPLAT_X4(8);
 
     for (i=0; i<16; ++i) {
-        u32_to_u8arr(res + 0 * stride + i, dcsplat, stride);
-        u32_to_u8arr(res + 4 * stride + i, dcsplat, stride);
-        u32_to_u8arr(res + 8 * stride + i, dcsplat, stride);
-        u32_to_u8arr(res + 12 * stride + i, dcsplat, stride);
+        u32_to_u8arr2(res + 0 * stride + i, dcsplat, stride);
+        u32_to_u8arr2(res + 4 * stride + i, dcsplat, stride);
+        u32_to_u8arr2(res + 8 * stride + i, dcsplat, stride);
+        u32_to_u8arr2(res + 12 * stride + i, dcsplat, stride);
     }
+#undef stride
 }
 
-void pred16x16(In *in, uint8_t *res)
+void pred16x16(struct In *in, uint8_t *res)
 {
     int prediction_mode = in->intra16x16_pred_mode;
     uint8_t *left = in->luma_left;
@@ -251,38 +261,31 @@ void pred16x16(In *in, uint8_t *res)
     else if (prediction_mode == DC_128_PRED16x16)
         pred16x16_128_dc(res);
     else
-        assert(false);
+        printf("Unknown prediction type: %Zd", prediction_mode);
 }
 
-void XCHG(uint8_t a[8], uint8_t b[8], int xchg)
+void XCHG(uint8_t a[8], uint8_t b[8])
 {
     int i;
-    if (xchg) {
-        uint8_t temp[8];
+    uint8_t temp[8];
 
-        for (i = 0; i < 8; ++i) {
-            temp[i] = a[i];
-        }
+    for (i = 0; i < 8; ++i) {
+        temp[i] = a[i];
+    }
 
-        for (i = 0; i < 8; ++i) {
-            a[i] = b[i];
-        }
+    for (i = 0; i < 8; ++i) {
+        a[i] = b[i];
+    }
 
-        for (i = 0; i < 8; ++i) {
-            b[i] = temp[i];
-        }
-
-    } else {
-        for (i = 0; i < 8; ++i) {
-            b[i] = a[i];
-        }
+    for (i = 0; i < 8; ++i) {
+        b[i] = temp[i];
     }
 }
 
-void xchg_mb_border(In *in, int xchg)
+void xchg_mb_border(struct In *in)
 {
-    int deblock_topleft = (in->mb_x > 0);
-    int deblock_top = (in->mb_y > (in->mb_field_decoding_flag != 0));
+    bool deblock_topleft = (bool)(in->mb_x > 0);
+    bool deblock_top = (bool)(in->mb_y > (in->mb_field_decoding_flag != 0));
     uint8_t *top_border_m1 = in->top_border;
     uint8_t *top_border = in->top_border + 8;
     uint8_t *top_border_p1 = in->top_border + 8 + 16;
@@ -290,13 +293,13 @@ void xchg_mb_border(In *in, int xchg)
     uint8_t *src_y  = in->luma_top + 7;
     if (deblock_top) {
         if (deblock_topleft) {
-            XCHG(top_border_m1, src_y - 7, 1);
+            XCHG(top_border_m1, src_y - 7);
         }
-        XCHG(top_border + 0, src_y + 1, xchg);
-        XCHG(top_border + 8, src_y + 9, 1);
+        XCHG(top_border + 0, src_y + 1);
+        XCHG(top_border + 8, src_y + 9);
 
         if (in->mb_x + 1 < in->mb_width) {
-            XCHG(top_border_p1, src_y + 17, 1);
+            XCHG(top_border_p1, src_y + 17);
         }
     }
 }
@@ -375,16 +378,16 @@ void h264_idct_add(uint8_t *dst, int16_t *block, int stride)
         dst[i + 2*stride]= clip_pixel(dst[i + 2*stride] + ((int)(z1 - z2) >> 6));
         dst[i + 3*stride]= clip_pixel(dst[i + 3*stride] + ((int)(z0 - z3) >> 6));
     }
-
-//    memset(block, 0, 16 * sizeof(int16_t));
 }
 
 void h264_idct_add16intra(uint8_t *dst, int16_t *block, uint8_t nnzc[15*8]){
-    int i, stride = 16;
+#define stride 16
+    int i;
     for (i=0; i<16; i++) {
         if (nnzc[ scan8[i] ]) h264_idct_add(dst + block_offset[i], block + i*16, stride);
         else if (block[i*16]) h264_idct_dc_add(dst + block_offset[i], block + i*16, stride);
     }
+#undef stride
 }
 
 #define DUMP_CHANGE(format, a, b) \
@@ -481,7 +484,7 @@ void dump_coefficients(In *in, int reset_cache)
 void decode_mb(In *in, uint8_t *luma) {
     dump_mb(in, luma, 1);
     if (in->deblocking_filter) {
-        xchg_mb_border(in, 1);
+        xchg_mb_border(in);
         dump_mb(in, luma, 0);
     }
     pred16x16(in, luma);

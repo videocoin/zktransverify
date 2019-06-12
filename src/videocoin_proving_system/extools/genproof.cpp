@@ -120,12 +120,12 @@ int main(int argc, const char *argv[]) {
 
     memset(srcRawY, 0x00, 256);
     memset(transRawY, 0x00, 256);
-    get_mb_from_stream(files.front().c_str(), 1, 4893, &mbSrc, srcRawY, verbose);
+    get_mb_from_stream(files.front().c_str(), 1, 29641, &mbSrc, srcRawY, verbose);
 
     memcpy(&in, &mbSrc, sizeof(in));
     decode_mb(&in, luma);
 
-    get_mb_from_stream(files.back().c_str(), 1, 4893, &mbTrans, transRawY, verbose);
+    get_mb_from_stream(files.back().c_str(), 1, 29641, &mbTrans, transRawY, verbose);
 
     memcpy(&in, &mbTrans, sizeof(in));
     decode_mb(&in, luma);
