@@ -337,7 +337,8 @@ void luma_dc_dequant_idct(int16_t *output, int16_t *input, int qmul){
 #undef stride
 }
 
-void h264_idct_dc_add(uint8_t *dst, int16_t *block, int stride){
+void h264_idct_dc_add(uint8_t *dst, int16_t *block, int stride)
+{
     int i, j;
     int dc = (block[0] + 32) >> 6;
     block[0] = 0;
@@ -356,10 +357,10 @@ void h264_idct_add(uint8_t *dst, int16_t *block, int stride)
     block[0] += 1 << 5;
 
     for(i=0; i<4; i++){
-        int z0=  block[i + 4*0]     +  (unsigned)block[i + 4*2];
-        int z1=  block[i + 4*0]     -  (unsigned)block[i + 4*2];
-        int z2= (block[i + 4*1]>>1) -  (unsigned)block[i + 4*3];
-        int z3=  block[i + 4*1]     + (unsigned)(block[i + 4*3]>>1);
+        int z0=  block[i + 4*0]     +  (unsigned int)block[i + 4*2];
+        int z1=  block[i + 4*0]     -  (unsigned int)block[i + 4*2];
+        int z2= (block[i + 4*1]>>1) -  (unsigned int)block[i + 4*3];
+        int z3=  block[i + 4*1]     + (unsigned int)(block[i + 4*3]>>1);
 
         block[i + 4*0]= z0 + z3;
         block[i + 4*1]= z1 + z2;
