@@ -6,7 +6,6 @@
 // Created by taras on 05.06.19.
 //
 
-#include <stdio.h>
 #include <stdint.h>
 
 // awkward situation. h264 uses PRED8x8 numeration and dont have definition for PRED16x16

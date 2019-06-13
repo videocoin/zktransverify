@@ -2,7 +2,6 @@
 // Created by taras on 13.06.19.
 //
 
-#include <stdio.h>
 #include <stdint.h>
 
 // awkward situation. h264 uses PRED8x8 numeration and dont have definition for PRED16x16
@@ -27,10 +26,10 @@ struct H264MBContext {
 
     int16_t mb[16*16];
     int16_t mb_luma_dc[16];
-    uint8_t non_zero_count_cache[15 * 8];
+    uint8_t non_zero_count_cache[15*8];
 
-    uint8_t top_border[8 + 16 + 8];
-    uint8_t luma_top[8 + 16 + 8];
+    uint8_t top_border[8+16+8];
+    uint8_t luma_top[8+16+8];
     uint8_t luma_left[16];
 };
 
@@ -57,7 +56,7 @@ void init_context(int *values) {
         context.mb_luma_dc[j] = values[i++];
     }
 
-    for (j = 0; j < 15 * 8; ++j) {
+    for (j = 0; j < 15*8; ++j) {
         context.non_zero_count_cache[j] = values[i++];
     }
 
@@ -299,7 +298,7 @@ void pred16x16_128_dc(uint8_t *res)
 #undef stride
 }
 
-void pred16x16(struct In *in, uint8_t *res)
+void pred16x16(struct H264MBContext *in, uint8_t *res)
 {
     int prediction_mode = in->intra16x16_pred_mode;
     uint8_t *left = in->luma_left;
@@ -341,7 +340,7 @@ void XCHG(uint8_t a[8], uint8_t b[8])
     }
 }
 
-void xchg_mb_border(struct In *in)
+void xchg_mb_border(struct H264MBContext *in)
 {
     bool deblock_topleft = (bool)(in->mb_x > 0);
     bool deblock_top = (bool)(in->mb_y > (in->mb_field_decoding_flag != 0));
