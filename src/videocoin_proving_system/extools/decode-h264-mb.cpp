@@ -50,6 +50,14 @@ void hex_dump(unsigned char *pData, int n) {
     printf("\n");
 }
 
+void hex_dump(unsigned char *pData, int n, int stride) {
+    for (int i = 0; i < n; i++) {
+        if (i % stride == 0) printf("\n");
+        printf("%02x ", pData[i]);
+    }
+    printf("\n");
+}
+
 int getParam(AVFrame *frame, const char *key) {
     AVDictionaryEntry *ent = av_dict_get(frame->metadata, key, nullptr, 0);
     if (ent) {
@@ -76,7 +84,7 @@ uint8_t *getParam(AVFrame *frame, const char *key, uint8_t *data, size_t data_si
     return data;
 }
 
-int get_mb_from_stream(const char *file_name, int key_frame_num, int mb_num, MB_T *pMb, unsigned char *pRawY, bool verbose) {
+int get_mb_from_stream(const char *file_name, int key_frame_num, int mb_num, MB_T *pMb, bool verbose) {
     AVFormatContext *fmt_ctx;
     int frame_offset = 0;
     int macroblock_offset = 0;
@@ -138,10 +146,10 @@ int get_mb_from_stream(const char *file_name, int key_frame_num, int mb_num, MB_
         exit(1);
     }
 
-//	if ((err = avformat_find_stream_info(fmt_ctx, NULL)) < 0) {
-//		fprintf(stderr, "Stream information not found.");
-//		exit(1);
-//	}
+	if ((err = avformat_find_stream_info(fmt_ctx, NULL)) < 0) {
+		fprintf(stderr, "Stream information not found.");
+		exit(1);
+	}
 
     for (int i = 0; i < fmt_ctx->nb_streams; i++) {
         AVCodecContext *codec_ctx = fmt_ctx->streams[i]->codec;
@@ -205,31 +213,10 @@ int get_mb_from_stream(const char *file_name, int key_frame_num, int mb_num, MB_
                     if (frame->key_frame)
                         key_frame_count++;
 
-                    if (key_frame_count == key_frame_num) {
+                    /*if (key_frame_count == key_frame_num)*/ {
                         // Free side data from packet
                         av_packet_free_side_data(pkt);
 
-                        if (getParam(frame, "mb", (uint8_t *)pMb->mb, sizeof(pMb->mb)) != nullptr) {
-                            if (verbose) {
-                                printf("macroblock=");
-                                hex_dump((uint8_t *)pMb->mb, sizeof(pMb->mb));
-
-                                if (pRawY) {
-                                    int mb_locn_x = 0;
-                                    int mb_locn_y = 0;
-                                    uint8_t *pDst = pRawY;
-                                    for (int v = 0; v < 16; v++) {
-                                        uint8_t *pSrc =
-                                                frame->data[0] + (mb_locn_y + v) * frame->linesize[0] + mb_locn_x;
-                                        for (int h = 0; h < 16; h++) {
-                                            *pDst++ = *pSrc++;
-                                        }
-                                    }
-                                    if (verbose)
-                                        hex_dump(pRawY, 256);
-                                }
-                            }
-                        }
                         getParam(frame, "mb_luma_dc", (uint8_t *)pMb->mb_luma_dc, sizeof(pMb->mb_luma_dc));
                         getParam(frame, "non_zero_count_cache", pMb->non_zero_count_cache, sizeof(pMb->non_zero_count_cache));
                         getParam(frame, "luma_top", pMb->luma_top, sizeof(pMb->luma_top));
@@ -244,7 +231,23 @@ int get_mb_from_stream(const char *file_name, int key_frame_num, int mb_num, MB_
                         pMb->mb_y = getParam(frame, "mb_y");
                         pMb->mb_xy = getParam(frame, "mb_xy");
                         pMb->mb_width = getParam(frame, "mb_width");
+                        pMb->mb_height = getParam(frame, "mb_height");
                         pMb->dequant_coeff = getParam(frame, "dequant_coeff");
+
+                        if (getParam(frame, "mb", (uint8_t *)pMb->mb, sizeof(pMb->mb)) != nullptr) {
+                            if (verbose) {
+                                printf("IDCT coeff=");
+                                hex_dump((uint8_t *) pMb->mb, sizeof(pMb->mb));
+                            }
+                        }
+
+                        if (getParam(frame, "luma_decoded", pMb->luma_decoded, sizeof(pMb->luma_decoded)) != nullptr) {
+                            if (verbose) {
+                                printf("Decoded luma=");
+                                hex_dump(pMb->luma_decoded, sizeof(pMb->luma_decoded), 16);
+                            }
+                        }
+
                         break;
                     }
                 }
@@ -256,4 +259,26 @@ int get_mb_from_stream(const char *file_name, int key_frame_num, int mb_num, MB_
         av_packet_unref(pkt);
     }
     return 0;
+}
+
+int find_intra16x16_mb_from_stream(const char *file_name, int *key_frame_num, int *mb_num, MB_T *pMb, bool verbose) {
+#define MB_TYPE_INTRA16x16 (1 <<  1)
+#define IS_INTRA16x16(a) ((a) & MB_TYPE_INTRA16x16)
+
+    int _key_frame_num = 0, _mb_num = 0;
+    while (!IS_INTRA16x16(pMb->mb_type)) {
+        if (!get_mb_from_stream(file_name, _key_frame_num, _mb_num, pMb, verbose)) {
+            if (!IS_INTRA16x16(pMb->mb_type) && pMb->mb_y >= pMb->mb_height) {
+                ++_key_frame_num;
+            } else if (!IS_INTRA16x16(pMb->mb_type)) {
+                ++_mb_num;
+            } else if (IS_INTRA16x16(pMb->mb_type)) {
+                *key_frame_num = _key_frame_num;
+                *mb_num = _mb_num;
+                return 0;
+            }
+        }
+    }
+    memset(pMb, 0, sizeof(MB_T));
+    return -1;
 }

@@ -102,8 +102,6 @@ void save_witness(const char *filename, int refssim) {
 int main(int argc, const char *argv[]) {
     MB_T mbSrc = {0};
     MB_T mbTrans = {0};
-    unsigned char srcRawY[256];
-    unsigned char transRawY[256];
     unsigned char srcDigest[32];
     int frame_offset = 0;
     int mb_offset = 0;
@@ -118,19 +116,17 @@ int main(int argc, const char *argv[]) {
     uint8_t luma[256] = {0};
     In in;
 
-    memset(srcRawY, 0x00, 256);
-    memset(transRawY, 0x00, 256);
-    get_mb_from_stream(files.front().c_str(), 1, 29641, &mbSrc, srcRawY, verbose);
-
-    memcpy(&in, &mbSrc, sizeof(in));
-    decode_mb(&in, luma);
-
-    get_mb_from_stream(files.back().c_str(), 1, 29641, &mbTrans, transRawY, verbose);
+    if (find_intra16x16_mb_from_stream(files.back().c_str(), &frame_offset, &mb_offset, &mbTrans, verbose) == -1) {
+        printf("No Intra16x16 macroblock found\n");
+        return 0;
+    }
 
     memcpy(&in, &mbTrans, sizeof(in));
     decode_mb(&in, luma);
 
-    sha256_bytes(srcRawY, 256, srcDigest);
+    get_mb_from_stream(files.front().c_str(), frame_offset, mb_offset, &mbSrc, verbose);
+
+    sha256_bytes(mbSrc.luma_decoded, sizeof(mbSrc.luma_decoded), srcDigest);
 
     initialize_prover();
 
@@ -138,8 +134,8 @@ int main(int argc, const char *argv[]) {
             proving_key_path.c_str(),
             ref_ssim,
             srcDigest, 32,
-            srcRawY, sizeof(srcRawY),
-            transRawY, sizeof(transRawY),
+            mbSrc.luma_decoded, sizeof(mbSrc.luma_decoded),
+            mbTrans.luma_decoded, sizeof(mbTrans.luma_decoded),
             proof.empty() ? nullptr : proof.c_str(),
             uncompressed_proof.empty() ? nullptr : uncompressed_proof.c_str(),
             json_proof.empty() ? nullptr : json_proof.c_str());

@@ -228,9 +228,9 @@ void pred16x16_128_dc(uint8_t *res)
 {
 #define stride 16
     int i;
-    uint32_t dcsplat;
-    dcsplat = PIXEL_SPLAT_X4(8);
+    uint32_t dcsplat = 0x80808080;
 
+    printf("dcsplat %x\n", dcsplat);
     for (i=0; i<16; ++i) {
         u32_to_u8arr2(res + 0 * stride + i, dcsplat, stride);
         u32_to_u8arr2(res + 4 * stride + i, dcsplat, stride);
@@ -261,7 +261,7 @@ void pred16x16(struct In *in, uint8_t *res)
     else if (prediction_mode == DC_128_PRED16x16)
         pred16x16_128_dc(res);
     else
-        printf("Unknown prediction type: %Zd", prediction_mode);
+        printf("Unknown prediction type: %d\n", prediction_mode);
 }
 
 void XCHG(uint8_t a[8], uint8_t b[8])
