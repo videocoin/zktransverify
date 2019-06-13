@@ -14,25 +14,65 @@
 #define DC_TOP_PRED16x16    5
 #define DC_128_PRED16x16    6
 
-struct Internal {
-    int mb_type;
+struct H264MBContext {
     int mb_x;
     int mb_y;
-    int mb_xy;
     int mb_width;
+
+    int dequant_coeff;
+
+    int mb_field_decoding_flag;
+    int deblocking_filter;
+    int intra16x16_pred_mode;
 
     int16_t mb[16*16];
     int16_t mb_luma_dc[16];
-    int dequant_coeff;
     uint8_t non_zero_count_cache[15 * 8];
 
     uint8_t top_border[8 + 16 + 8];
     uint8_t luma_top[8 + 16 + 8];
     uint8_t luma_left[16];
-    int mb_field_decoding_flag;
-    int deblocking_filter;
-    int intra16x16_pred_mode;
 };
+
+// Update this value if context structure changes
+#define H264CONTEXT_EXO_NUM (7 + 16*16 + 16 + 15*8 + 2*(8+16+8) + 16)
+
+struct H264MBContext context;
+void init_context(int *values) {
+    int i = 0, j;
+
+    context.mb_x = values[i++];
+    context.mb_y = values[i++];
+    context.mb_width = values[i++];
+    context.dequant_coeff = values[i++];
+    context.mb_field_decoding_flag = values[i++];
+    context.deblocking_filter = values[i++];
+    context.intra16x16_pred_mode = values[i++];
+
+    for (j = 0; j < 16*16; ++j) {
+        context.mb[j] = values[i++];
+    }
+
+    for (j = 0; j < 16; ++j) {
+        context.mb_luma_dc[j] = values[i++];
+    }
+
+    for (j = 0; j < 15 * 8; ++j) {
+        context.non_zero_count_cache[j] = values[i++];
+    }
+
+    for (j = 0; j < 8+16+8; ++j) {
+        context.top_border[j] = values[i++];
+    }
+
+    for (j = 0; j < 8+16+8; ++j) {
+        context.luma_top[j] = values[i++];
+    }
+
+    for (j = 0; j < 16; ++j) {
+        context.luma_left[j] = values[i++];
+    }
+}
 
 // This table must be here because scan8[constant] must be known at compiletime
 uint8_t scan8[16 * 3 + 3] = {
@@ -410,7 +450,7 @@ void h264_idct_add16intra(uint8_t *dst, int16_t *block, uint8_t nnzc[15*8]){
 #undef stride
 }
 
-void decode_mb(struct Internal *in, uint8_t *luma) {
+void decode_mb(struct H264MBContext *in, uint8_t *luma) {
     if (in->deblocking_filter) {
         xchg_mb_border(in);
     }
