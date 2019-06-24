@@ -146,10 +146,10 @@ int get_mb_from_stream(const char *file_name, int key_frame_num, int mb_num, MB_
         exit(1);
     }
 
-	if ((err = avformat_find_stream_info(fmt_ctx, NULL)) < 0) {
-		fprintf(stderr, "Stream information not found.");
-		exit(1);
-	}
+//	if ((err = avformat_find_stream_info(fmt_ctx, NULL)) < 0) {
+//		fprintf(stderr, "Stream information not found.");
+//		exit(1);
+//	}
 
     for (int i = 0; i < fmt_ctx->nb_streams; i++) {
         AVCodecContext *codec_ctx = fmt_ctx->streams[i]->codec;
@@ -192,6 +192,7 @@ int get_mb_from_stream(const char *file_name, int key_frame_num, int mb_num, MB_
 
                 // Add side_data to AVPacket which will be decoded
                 av_dict_set_int(&frameDict, "req_mb", mb_num, 0);
+                av_dict_set_int(&frameDict, "req_frame", key_frame_num, 0);
                 av_dict_set_int(&frameDict, "debug_luma", 1, 0);
                 int frameDictSize = 0;
                 uint8_t *frameDictData = av_packet_pack_dictionary(frameDict,
@@ -208,11 +209,7 @@ int get_mb_from_stream(const char *file_name, int key_frame_num, int mb_num, MB_
                     fprintf(stderr, "Frame decoded\n");
                 }
 
-
                 if (got_frame) {
-                    if (frame->key_frame)
-                        key_frame_count++;
-
                     /*if (key_frame_count == key_frame_num)*/ {
                         // Free side data from packet
                         av_packet_free_side_data(pkt);
@@ -265,7 +262,7 @@ int find_intra16x16_mb_from_stream(const char *file_name, int *key_frame_num, in
 #define MB_TYPE_INTRA16x16 (1 <<  1)
 #define IS_INTRA16x16(a) ((a) & MB_TYPE_INTRA16x16)
 
-    int _key_frame_num = 0, _mb_num = 0;
+    int _key_frame_num = -1, _mb_num = 0;
     while (!IS_INTRA16x16(pMb->mb_type)) {
         if (!get_mb_from_stream(file_name, _key_frame_num, _mb_num, pMb, verbose)) {
             if (!IS_INTRA16x16(pMb->mb_type) && pMb->mb_y >= pMb->mb_height) {
@@ -273,7 +270,7 @@ int find_intra16x16_mb_from_stream(const char *file_name, int *key_frame_num, in
             } else if (!IS_INTRA16x16(pMb->mb_type)) {
                 ++_mb_num;
             } else if (IS_INTRA16x16(pMb->mb_type)) {
-                *key_frame_num = _key_frame_num;
+                *key_frame_num = _key_frame_num + 1;
                 *mb_num = _mb_num;
                 return 0;
             }

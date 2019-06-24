@@ -230,7 +230,6 @@ void pred16x16_128_dc(uint8_t *res)
     int i;
     uint32_t dcsplat = 0x80808080;
 
-    printf("dcsplat %x\n", dcsplat);
     for (i=0; i<16; ++i) {
         u32_to_u8arr2(res + 0 * stride + i, dcsplat, stride);
         u32_to_u8arr2(res + 4 * stride + i, dcsplat, stride);

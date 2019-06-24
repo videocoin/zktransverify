@@ -103,8 +103,8 @@ int main(int argc, const char *argv[]) {
     MB_T mbSrc = {0};
     MB_T mbTrans = {0};
     unsigned char srcDigest[32];
-    int frame_offset = 0;
-    int mb_offset = 0;
+    int frame_offset = -1;
+    int mb_offset = -1;
 
     parse_options(argc, argv);
 
