@@ -11,7 +11,7 @@ sudo apt-get install $PACKAGES
 
 VIDEOCOIN_ENV=$HOME/.videocoin
 
-rar x apps.part01.rar
+rar x apps.part1.rar
 
 mkdir $VIDEOCOIN_ENV
 cp -R apps $VIDEOCOIN_ENV

@@ -63,7 +63,7 @@ void generate_h264_proof(const char *pk_fn,
         exit(-1);
     }
 
-    auto mode = ssim_mode::from_str("h264");
+    auto mode = prover_mode::from_str("h264");
 
     std::string app_path = application_dir + mode.str() + "/";
     std::string params = app_path + "params";
@@ -127,7 +127,7 @@ void generate_ssim_proof(const char *pk_fn,
         exit(-1);
     }
 
-    auto mode = ssim_mode::from_str("ssim");
+    auto mode = prover_mode::from_str("ssim");
 
     std::string app_path = application_dir + mode.str() + "/";
     std::string params = app_path + "params";

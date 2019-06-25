@@ -202,7 +202,7 @@ int main(int argc, char *argv[]) {
 
         generator.add_options()
                 ("mode,m", po::value<std::string>(),
-                 "set algorithm type <ssim | h264>")
+                 "set algorithm type <ssim | h264 | h264prover>")
                 ("vkey,v", po::value<std::string>(), "path to verification key")
                 ("pkey,p", po::value<std::string>(), "path to proving key")
                 ("uncompressed-vkey,u", po::value<std::string>(), "path to uncompressed verification key")
@@ -226,7 +226,7 @@ int main(int argc, char *argv[]) {
             }
         }
 
-        ssim_mode mode = ssim_mode::from_str(vm["mode"].as<std::string>().c_str());
+        prover_mode mode = prover_mode::from_str(vm["mode"].as<std::string>().c_str());
         if (!mode.is_valid()) {
             std::cerr << "error: the option '--mode' has invalid value: " << vm["mode"].as<std::string>() << std::endl
                       << all << std::endl;

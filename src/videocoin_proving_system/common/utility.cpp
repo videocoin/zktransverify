@@ -19,38 +19,45 @@ comp_params parse_params(const char *params_filename) {
     param_file >> num_constraints >> comment >> num_inputs >> comment >> num_outputs >> comment >> num_vars;
     param_file.close();
 
-    return std::move(comp_params{num_constraints, num_inputs, num_outputs, num_vars});
+    return comp_params{num_constraints, num_inputs, num_outputs, num_vars};
 }
 
-std::string ssim_mode::str() const {
+std::string prover_mode::str() const {
     switch (_value) {
         case _ssim   :
             return "ssim";
         case _h264   :
             return "h264";
+        case _h264prover:
+            return "h264prover";
         default:
             return "invalid";
     }
 }
 
-ssim_mode ssim_mode::from_str(const char *v) {
+prover_mode prover_mode::from_str(const char *v) {
     if (!strcmp("ssim", v)) {
-        return ssim_mode(value::_ssim);
+        return prover_mode(value::_ssim);
     }
     if (!strcmp("h264", v)) {
-        return ssim_mode(value::_h264);
+        return prover_mode(value::_h264);
     }
-    return ssim_mode();
+    if (!strcmp("h264prover", v)) {
+        return prover_mode(value::_h264prover);
+    }
+    return prover_mode();
 }
 
-ssim_mode ssim_mode::from_int(const int v) {
+prover_mode prover_mode::from_int(const int v) {
     switch (v) {
         case _ssim:
-            return ssim_mode(_ssim);
+            return prover_mode(_ssim);
         case _h264:
-            return ssim_mode(_h264);
+            return prover_mode(_h264);
+        case _h264prover:
+            return prover_mode(_h264prover);
         default:
-            return ssim_mode();
+            return prover_mode();
     }
 }
 

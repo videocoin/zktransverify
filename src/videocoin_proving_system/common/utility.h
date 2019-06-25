@@ -26,19 +26,20 @@ struct comp_params {
     int n_vars;
 };
 
-class ssim_mode {
+class prover_mode {
 public:
     enum value {
         _invalid,
         _ssim,
-        _h264
+        _h264,
+        _h264prover
     };
 
     std::string str() const;
 
-    bool operator==(ssim_mode a) const { return _value == a._value; }
+    bool operator==(prover_mode a) const { return _value == a._value; }
 
-    bool operator!=(ssim_mode a) const { return _value != a._value; }
+    bool operator!=(prover_mode a) const { return _value != a._value; }
 
     bool is_valid() const { return _value != _invalid; }
 
@@ -48,13 +49,13 @@ public:
 
     int as_int() const { return _value; }
 
-    static ssim_mode from_str(const char *v);
+    static prover_mode from_str(const char *v);
 
-    static ssim_mode from_int(const int v);
+    static prover_mode from_int(const int v);
 
-    constexpr ssim_mode(value v) : _value(v) {}
+    constexpr prover_mode(value v) : _value(v) {}
 
-    constexpr ssim_mode() : _value(value::_invalid) {}
+    constexpr prover_mode() : _value(value::_invalid) {}
 
 private:
     value _value;
