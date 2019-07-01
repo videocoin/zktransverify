@@ -32,7 +32,7 @@ uint32_t compute(struct In *input, struct Out *output) {
     uint32_t dummy[1];
     uint32_t *exo0_inputs[1] = { dummy };
     uint32_t lens[1] = {0};
-    uint8_t decoded_mb[256] = {0};
+    uint8_t decoded_mb[256];
 
     struct exo_input_mb macroblock[1];
     struct exo_h264mb_context mb_context[1];

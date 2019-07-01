@@ -37,6 +37,7 @@ struct H264MBContext {
 #define H264CONTEXT_EXO_NUM (7 + 16*16 + 16 + 15*8 + 2*(8+16+8) + 16)
 
 struct H264MBContext context;
+
 void init_context(int *values) {
     int i = 0, j;
 
@@ -53,7 +54,7 @@ void init_context(int *values) {
     }
 
     for (j = 0; j < 16; ++j) {
-        context.mb_luma_dc[j] = values[i++];
+        context.mb_luma_dc[j] = (int16_t)values[i++];
     }
 
     for (j = 0; j < 15*8; ++j) {
@@ -101,38 +102,12 @@ int block_offset[16] = {
         200, 204
 };
 
-uint32_t PIXEL_SPLAT_X4(uint32_t x)
-{
-    return x * 0x01010101U;
-}
-
-uint32_t u8arr_to_u32(uint8_t *src) {
-    uint32_t v;
-    v = src[0];
-    v |= src[1] << 8;
-    v |= src[2] << 16;
-    v |= src[3] << 24;
-    return v;
-}
-
-void u32_to_u8arr(uint8_t *src, uint32_t v) {
-    src[0] = v & 0xFF;
-    src[1] = (v >> 8) & 0xFF;
-    src[2] = (v >> 16) & 0xFF;
-    src[3] = (v >> 24) & 0xFF;
-}
-
-void u32_to_u8arr2(uint8_t *src, uint32_t v, int stride) {
-    src[0*stride] = v & 0xFF;
-    src[1*stride] = (v >> 8) & 0xFF;
-    src[2*stride] = (v >> 16) & 0xFF;
-    src[3*stride] = (v >> 24) & 0xFF;
-}
-
 uint8_t clip_pixel(int a) {
     int v = a;
-    if (a & (~0xFF))
-        v = (-a) >> 31;
+    if (v > 255)
+        v = 255;
+    else if (v < 0)
+        v = 0;
 
     return v;
 }
@@ -144,19 +119,15 @@ uint8_t clip_pixel(int a) {
  */
 void pred16x16_vertical(uint8_t *top, uint8_t *res)
 {
-    int i, stride = 16;
-    // read luma top row
-    uint32_t a = u8arr_to_u32(top + 0);
-    uint32_t b = u8arr_to_u32(top + 4);
-    uint32_t c = u8arr_to_u32(top + 8);
-    uint32_t d = u8arr_to_u32(top + 12);
+    int i, j;
+
     // propagate top row to all rows
-    for (i=0; i<16; i++) {
-        u32_to_u8arr(res + i * stride + 0, a);
-        u32_to_u8arr(res + i * stride + 4, b);
-        u32_to_u8arr(res + i * stride + 8, c);
-        u32_to_u8arr(res + i * stride + 12, d);
+    for (j=0; j<16; j++) {
+        for (i = 0; i < 16; i++) {
+            res[j * 16 + i] = top[i];
+        }
     }
+
 }
 
 /*
@@ -166,21 +137,14 @@ void pred16x16_vertical(uint8_t *top, uint8_t *res)
  */
 void pred16x16_horizontal(uint8_t *left, uint8_t *res)
 {
-#define stride 16
-    int i;
-    // read column on the left
-    uint32_t a = u8arr_to_u32(left + 0);
-    uint32_t b = u8arr_to_u32(left + 4);
-    uint32_t c = u8arr_to_u32(left + 8);
-    uint32_t d = u8arr_to_u32(left + 12);
+    int i, j;
+
     // copy column on the left to other columns
-    for (i=0; i<16; ++i) {
-        u32_to_u8arr2(res + 0 * stride + i, a, stride);
-        u32_to_u8arr2(res + 4 * stride + i, b, stride);
-        u32_to_u8arr2(res + 8 * stride + i, c, stride);
-        u32_to_u8arr2(res + 12 * stride + i, d, stride);
+    for (j=0; j<16; ++j) {
+        for (i = 0; i < 16; ++i) {
+            res[j * 16 + i] = left[j];
+        }
     }
-#undef stride
 }
 
 /*
@@ -190,23 +154,18 @@ void pred16x16_horizontal(uint8_t *left, uint8_t *res)
  */
 void pred16x16_dc(uint8_t *left, uint8_t *top, uint8_t *res)
 {
-#define stride 16
     int i, dc=0;
-    uint32_t dcsplat;
+    uint8_t dcsplat;
 
     for(i=0;i<16; i++){
         dc+= left[i];
         dc+= top[i];
     }
 
-    dcsplat = PIXEL_SPLAT_X4((dc+16)>>5);
-    for (i=0; i<16; ++i) {
-        u32_to_u8arr2(res + 0 * stride + i, dcsplat, stride);
-        u32_to_u8arr2(res + 4 * stride + i, dcsplat, stride);
-        u32_to_u8arr2(res + 8 * stride + i, dcsplat, stride);
-        u32_to_u8arr2(res + 12 * stride + i, dcsplat, stride);
+    dcsplat = (dc+16)>>5;
+    for (i=0; i<16*16; ++i) {
+        res[i] = dcsplat;
     }
-#undef stride
 }
 
 /*
@@ -216,7 +175,6 @@ void pred16x16_dc(uint8_t *left, uint8_t *top, uint8_t *res)
  */
 void pred16x16_plane(uint8_t *left, uint8_t *top, uint8_t left_top, uint8_t *res)
 {
-#define stride 16
     int a, b, c, H, V;
     int x, y;
 
@@ -233,29 +191,23 @@ void pred16x16_plane(uint8_t *left, uint8_t *top, uint8_t left_top, uint8_t *res
 
     for (x = 0; x < 16; ++x) {
         for (y = 0; y < 16; ++y) {
-            res[x + y*stride] = clip_pixel((a + b * (x - 7) + c * (y - 7) + 16)>>5);
+            res[x + y*16] = clip_pixel((a + b * (x - 7) + c * (y - 7) + 16)>>5);
         }
     }
-#undef stride
 }
 
 void pred16x16_left_dc(uint8_t *left, uint8_t *res)
 {
-#define stride 16
     int i, dc = 0;
-    uint32_t dcsplat;
+    uint8_t dcsplat;
     for (i = 0; i < 16; ++i) {
         dc += left[i];
     }
 
-    dcsplat = PIXEL_SPLAT_X4((dc+8)>>4);
-    for (i=0; i<16; ++i) {
-        u32_to_u8arr2(res + 0 * stride + i, dcsplat, stride);
-        u32_to_u8arr2(res + 4 * stride + i, dcsplat, stride);
-        u32_to_u8arr2(res + 8 * stride + i, dcsplat, stride);
-        u32_to_u8arr2(res + 12 * stride + i, dcsplat, stride);
+    dcsplat = (dc+8)>>4;
+    for (i=0; i<16*16; ++i) {
+        res[i] = dcsplat;
     }
-#undef stride
 }
 
 /*
@@ -265,36 +217,24 @@ void pred16x16_left_dc(uint8_t *left, uint8_t *res)
  */
 void pred16x16_top_dc(uint8_t *src, uint8_t *res)
 {
-#define stride 16
     int i, dc = 0;
-    uint32_t dcsplat;
+    uint8_t dcsplat;
     for (i = 0; i < 16; ++i) {
         dc += src[i];
     }
 
-    dcsplat = PIXEL_SPLAT_X4((dc+8)>>4);
-    for (i=0; i<16; ++i) {
-        u32_to_u8arr(res + i * stride + 0, dcsplat);
-        u32_to_u8arr(res + i * stride + 4, dcsplat);
-        u32_to_u8arr(res + i * stride + 8, dcsplat);
-        u32_to_u8arr(res + i * stride + 12, dcsplat);
+    dcsplat = (dc+8)>>4;
+    for (i=0; i<16*16; ++i) {
+        res[i] = dcsplat;
     }
-#undef stride
 }
 
 void pred16x16_128_dc(uint8_t *res)
 {
-#define stride 16
     int i;
-    uint32_t dcsplat = 0x80808080;
-
-    for (i=0; i<16; ++i) {
-        u32_to_u8arr2(res + 0 * stride + i, dcsplat, stride);
-        u32_to_u8arr2(res + 4 * stride + i, dcsplat, stride);
-        u32_to_u8arr2(res + 8 * stride + i, dcsplat, stride);
-        u32_to_u8arr2(res + 12 * stride + i, dcsplat, stride);
+    for (i=0; i<16*16; ++i) {
+        res[i] = 0x80;
     }
-#undef stride
 }
 
 void pred16x16(struct H264MBContext *in, uint8_t *res)
@@ -302,23 +242,31 @@ void pred16x16(struct H264MBContext *in, uint8_t *res)
     int prediction_mode = in->intra16x16_pred_mode;
     uint8_t *left = in->luma_left;
     uint8_t *top = in->luma_top + 8;
+    uint8_t top_m1 = in->luma_top[7];
+
+    printf("prediction %Zd", prediction_mode);
+
+    if (prediction_mode == DC_128_PRED16x16)
+        pred16x16_128_dc(res);
+
+    if (prediction_mode == PLANE_PRED16x16)
+        pred16x16_plane(left, top, top_m1, res);
 
     if (prediction_mode == VERT_PRED16x16)
         pred16x16_vertical(top, res);
-    else if (prediction_mode == HOR_PRED16x16)
+
+    if (prediction_mode == HOR_PRED16x16)
         pred16x16_horizontal(left, res);
-    else if (prediction_mode == DC_PRED16x16)
+
+    if (prediction_mode == DC_PRED16x16)
         pred16x16_dc(left, top, res);
-    else if (prediction_mode == PLANE_PRED16x16)
-        pred16x16_plane(left, top, top[-1], res);
-    else if (prediction_mode == DC_LEFT_PRED16x16)
+
+    if (prediction_mode == DC_LEFT_PRED16x16)
         pred16x16_left_dc(left, res);
-    else if (prediction_mode == DC_TOP_PRED16x16)
+
+    if (prediction_mode == DC_TOP_PRED16x16)
         pred16x16_top_dc(top, res);
-    else if (prediction_mode == DC_128_PRED16x16)
-        pred16x16_128_dc(res);
-    else
-        printf("Unknown prediction type: %Zd", prediction_mode);
+
 }
 
 void XCHG(uint8_t a[8], uint8_t b[8])
@@ -394,7 +342,7 @@ void luma_dc_dequant_idct(int16_t *output, int16_t *input, int qmul){
 #undef stride
 }
 
-void h264_idct_dc_add(uint8_t *dst, int16_t *block, int stride)
+void h264_idct_dc_add(uint8_t *dst, int16_t *block)
 {
     int i, j;
     int dc = (block[0] + 32) >> 6;
@@ -403,21 +351,22 @@ void h264_idct_dc_add(uint8_t *dst, int16_t *block, int stride)
     {
         for( i = 0; i < 4; i++ )
             dst[i] = clip_pixel( dst[i] + dc );
-        dst += stride;
+        dst += 16;
     }
 }
 
-void h264_idct_add(uint8_t *dst, int16_t *block, int stride)
+void h264_idct_add(uint8_t *dst, int16_t *block)
 {
+#define stride 16
     int i;
 
-    block[0] += 1 << 5;
+    block[0] += 32;
 
     for(i=0; i<4; i++){
-        int z0=  block[i + 4*0]     +  (unsigned int)block[i + 4*2];
-        int z1=  block[i + 4*0]     -  (unsigned int)block[i + 4*2];
-        int z2= (block[i + 4*1]>>1) -  (unsigned int)block[i + 4*3];
-        int z3=  block[i + 4*1]     + (unsigned int)(block[i + 4*3]>>1);
+        int z0=  block[i + 4*0]     +  block[i + 4*2];
+        int z1=  block[i + 4*0]     +  block[i + 4*2] * (-1);
+        int z2 = block[i + 4*1]; z2 = z2 >> 1; z2 += block[i + 4*3] * (-1);
+        int z3=  block[i + 4*3]; z3 = z3 >> 1; z3 += block[i + 4*1];
 
         block[i + 4*0]= z0 + z3;
         block[i + 4*1]= z1 + z2;
@@ -426,26 +375,40 @@ void h264_idct_add(uint8_t *dst, int16_t *block, int stride)
     }
 
     for(i=0; i<4; i++){
-        int z0=  block[0 + 4*i]     +  (int)block[2 + 4*i];
-        int z1=  block[0 + 4*i]     -  (int)block[2 + 4*i];
-        int z2= (block[1 + 4*i]>>1) -  (int)block[3 + 4*i];
-        int z3=  block[1 + 4*i]     + (int)(block[3 + 4*i]>>1);
+        int z0=  block[0 + 4*i]     +  block[2 + 4*i];
+        int z1=  block[0 + 4*i]     +  block[2 + 4*i] * (-1);
+        int z2= (block[1 + 4*i]>>1) +  block[3 + 4*i] * (-1);
+        int z3=  block[1 + 4*i]     + (block[3 + 4*i]>>1);
 
         dst[i + 0*stride]= clip_pixel(dst[i + 0*stride] + ((int)(z0 + z3) >> 6));
         dst[i + 1*stride]= clip_pixel(dst[i + 1*stride] + ((int)(z1 + z2) >> 6));
         dst[i + 2*stride]= clip_pixel(dst[i + 2*stride] + ((int)(z1 - z2) >> 6));
         dst[i + 3*stride]= clip_pixel(dst[i + 3*stride] + ((int)(z0 - z3) >> 6));
     }
+#undef stride
 }
 
 void h264_idct_add16intra(uint8_t *dst, int16_t *block, uint8_t nnzc[15*8]){
-#define stride 16
-    int i;
+    int i, condition;
     for (i=0; i<16; i++) {
-        if (nnzc[ scan8[i] ]) h264_idct_add(dst + block_offset[i], block + i*16, stride);
-        else if (block[i*16]) h264_idct_dc_add(dst + block_offset[i], block + i*16, stride);
+        condition = 0;
+        if (nnzc[ scan8[i] ] != 0) condition = 1;
+        if (condition == 0 && block[i*16] != 0) condition = 2;
+
+        if (condition == 1) h264_idct_add(dst + block_offset[i], block + i*16);
+        if (condition == 2) h264_idct_dc_add(dst + block_offset[i], block + i*16);
     }
-#undef stride
+}
+
+void print_luma(uint8_t *luma) {
+    int i;
+    for (i = 0; i < 16; ++i)
+    {
+        printf("%Zx %Zx %Zx %Zx %Zx %Zx %Zx %Zx",
+                luma[i*16], luma[i*16+1], luma[i*16+2], luma[i*16+3], luma[i*16+4], luma[i*16+5], luma[i*16+6], luma[i*16+7]);
+        printf("%Zx %Zx %Zx %Zx %Zx %Zx %Zx %Zx",
+                luma[i*16+8], luma[i*16+9], luma[i*16+10], luma[i*16+11], luma[i*16+12], luma[i*16+13], luma[i*16+14], luma[i*16+15]);
+    }
 }
 
 void decode_mb(struct H264MBContext *in, uint8_t *luma) {
@@ -453,8 +416,11 @@ void decode_mb(struct H264MBContext *in, uint8_t *luma) {
         xchg_mb_border(in);
     }
     pred16x16(in, luma);
+
     if (in->non_zero_count_cache[0]) {
         luma_dc_dequant_idct(in->mb, in->mb_luma_dc, in->dequant_coeff);
     }
     h264_idct_add16intra(luma, in->mb, in->non_zero_count_cache);
+
+    print_luma(luma);
 }

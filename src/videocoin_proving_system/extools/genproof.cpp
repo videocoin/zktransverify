@@ -16,6 +16,7 @@
 #include "sha256-util.h"
 
 #include "temp-h264-mb-decoder.h"
+#include "h264_ssim.h"
 
 namespace po = boost::program_options;
 
@@ -126,16 +127,44 @@ int main(int argc, const char *argv[]) {
 
     get_mb_from_stream(files.front().c_str(), frame_offset, mb_offset, &mbSrc, verbose);
 
+    compute_ssim(80, mbSrc.luma_decoded, luma);
+
     sha256_bytes(mbSrc.luma_decoded, sizeof(mbSrc.luma_decoded), srcDigest);
 
     initialize_prover();
 
-    generate_h264_proof(
+//    generate_h264_proof(
+//            proving_key_path.c_str(),
+//            ref_ssim,
+//            srcDigest, 32,
+//            mbSrc.luma_decoded, sizeof(mbSrc.luma_decoded),
+//            mbTrans.luma_decoded, sizeof(mbTrans.luma_decoded),
+//            proof.empty() ? nullptr : proof.c_str(),
+//            uncompressed_proof.empty() ? nullptr : uncompressed_proof.c_str(),
+//            json_proof.empty() ? nullptr : json_proof.c_str());
+
+#define COPY_SCALAR(dst, src, field) dst.field = src.field
+#define COPY_ARRAY(dst, src, field) memcpy(dst.field, src.field, sizeof(dst.field))
+    mb_context_t context;
+    COPY_SCALAR(context, mbTrans, mb_x);
+    COPY_SCALAR(context, mbTrans, mb_y);
+    COPY_SCALAR(context, mbTrans, mb_width);
+    COPY_SCALAR(context, mbTrans, dequant_coeff);
+    COPY_SCALAR(context, mbTrans, mb_field_decoding_flag);
+    COPY_SCALAR(context, mbTrans, deblocking_filter);
+    COPY_SCALAR(context, mbTrans, intra16x16_pred_mode);
+    COPY_ARRAY(context, mbTrans, mb);
+    COPY_ARRAY(context, mbTrans, mb_luma_dc);
+    COPY_ARRAY(context, mbTrans, non_zero_count_cache);
+    COPY_ARRAY(context, mbTrans, top_border);
+    COPY_ARRAY(context, mbTrans, luma_top);
+    COPY_ARRAY(context, mbTrans, luma_left);
+
+    generate_h264_proof2(
             proving_key_path.c_str(),
-            ref_ssim,
-            srcDigest, 32,
+            ref_ssim, srcDigest, sizeof(srcDigest),
             mbSrc.luma_decoded, sizeof(mbSrc.luma_decoded),
-            mbTrans.luma_decoded, sizeof(mbTrans.luma_decoded),
+            &context,
             proof.empty() ? nullptr : proof.c_str(),
             uncompressed_proof.empty() ? nullptr : uncompressed_proof.c_str(),
             json_proof.empty() ? nullptr : json_proof.c_str());

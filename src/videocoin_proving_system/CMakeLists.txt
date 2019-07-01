@@ -1,6 +1,6 @@
 cmake_minimum_required(VERSION 3.5)
 project(videocoin_prooving_system
-        VERSION 0.4.2)
+        VERSION 0.5.2)
 
 message(STATUS "Building ${PROJECT_NAME} v${PROJECT_VERSION}")
 
@@ -81,6 +81,7 @@ add_executable(
         extools/genproof.cpp
         extools/decode-h264-mb.cpp
         extools/sha256-util.cpp
+        extools/h264_ssim.cpp
         extools/temp-h264-mb-decoder.cpp)
 
 add_executable(

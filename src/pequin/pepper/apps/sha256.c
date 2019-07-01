@@ -128,7 +128,7 @@ uint32_t sha265_equal(uint8_t *lhs, uint8_t *rhs)
     i = 0;
     counter = 0;
     for (; i < SHA256_LEN; ++i) {
-        printf("Bytes match test %Zd == %Zd", lhs[i], rhs[i]);
+//        printf("Bytes match test %Zd == %Zd", lhs[i], rhs[i]);
         if (lhs[i] == rhs[i]) ++counter;
     }
     return counter == SHA256_LEN;

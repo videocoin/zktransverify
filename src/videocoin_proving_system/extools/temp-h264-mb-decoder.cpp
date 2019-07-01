@@ -43,6 +43,14 @@ int block_offset[16] = {
         200, 204
 };
 
+void print_coeff(int16_t *coeff) {
+    int i;
+    for (i = 0; i < 16 * 16; ++i) {
+        printf("PRINTF in computation_p 1:\n");
+        printf("\"%d\" \n", coeff[i]);
+    }
+}
+
 uint32_t PIXEL_SPLAT_X4(uint32_t x)
 {
     return x * 0x01010101U;
@@ -73,8 +81,10 @@ void u32_to_u8arr2(uint8_t *src, uint32_t v, int stride) {
 
 uint8_t clip_pixel(int a) {
     int v = a;
-    if (a & (~0xFF))
-        v = (-a) >> 31;
+    if (v > 255)
+        v = 255;
+    else if (v < 0)
+        v = 0;
 
     return v;
 }
@@ -244,23 +254,28 @@ void pred16x16(struct In *in, uint8_t *res)
     int prediction_mode = in->intra16x16_pred_mode;
     uint8_t *left = in->luma_left;
     uint8_t *top = in->luma_top + 8;
+    uint8_t top_m1 = in->luma_top[7];
+
+    if (prediction_mode == PLANE_PRED16x16)
+        pred16x16_plane(left, top, top_m1, res);
 
     if (prediction_mode == VERT_PRED16x16)
         pred16x16_vertical(top, res);
-    else if (prediction_mode == HOR_PRED16x16)
+
+    if (prediction_mode == HOR_PRED16x16)
         pred16x16_horizontal(left, res);
-    else if (prediction_mode == DC_PRED16x16)
+
+    if (prediction_mode == DC_PRED16x16)
         pred16x16_dc(left, top, res);
-    else if (prediction_mode == PLANE_PRED16x16)
-        pred16x16_plane(left, top, top[-1], res);
-    else if (prediction_mode == DC_LEFT_PRED16x16)
+
+    if (prediction_mode == DC_LEFT_PRED16x16)
         pred16x16_left_dc(left, res);
-    else if (prediction_mode == DC_TOP_PRED16x16)
+
+    if (prediction_mode == DC_TOP_PRED16x16)
         pred16x16_top_dc(top, res);
-    else if (prediction_mode == DC_128_PRED16x16)
+
+    if (prediction_mode == DC_128_PRED16x16)
         pred16x16_128_dc(res);
-    else
-        printf("Unknown prediction type: %d\n", prediction_mode);
 }
 
 void XCHG(uint8_t a[8], uint8_t b[8])
@@ -353,13 +368,13 @@ void h264_idct_add(uint8_t *dst, int16_t *block, int stride)
 {
     int i;
 
-    block[0] += 1 << 5;
+    block[0] += 32;
 
     for(i=0; i<4; i++){
-        int z0=  block[i + 4*0]     +  (unsigned int)block[i + 4*2];
-        int z1=  block[i + 4*0]     -  (unsigned int)block[i + 4*2];
-        int z2= (block[i + 4*1]>>1) -  (unsigned int)block[i + 4*3];
-        int z3=  block[i + 4*1]     + (unsigned int)(block[i + 4*3]>>1);
+        int z0=  block[i + 4*0]     +  block[i + 4*2];
+        int z1=  block[i + 4*0]     +  block[i + 4*2] * (-1);
+        int z2 = block[i + 4*1]; z2 = z2 >> 1; z2 += block[i + 4*3] * (-1);
+        int z3=  block[i + 4*3]; z3 = z3 >> 1; z3 += block[i + 4*1];
 
         block[i + 4*0]= z0 + z3;
         block[i + 4*1]= z1 + z2;
@@ -368,10 +383,10 @@ void h264_idct_add(uint8_t *dst, int16_t *block, int stride)
     }
 
     for(i=0; i<4; i++){
-        int z0=  block[0 + 4*i]     +  (int)block[2 + 4*i];
-        int z1=  block[0 + 4*i]     -  (int)block[2 + 4*i];
-        int z2= (block[1 + 4*i]>>1) -  (int)block[3 + 4*i];
-        int z3=  block[1 + 4*i]     + (int)(block[3 + 4*i]>>1);
+        int z0=  block[0 + 4*i]     +  block[2 + 4*i];
+        int z1=  block[0 + 4*i]     -  block[2 + 4*i];
+        int z2= (block[1 + 4*i]>>1) -  block[3 + 4*i];
+        int z3=  block[1 + 4*i]     + (block[3 + 4*i]>>1);
 
         dst[i + 0*stride]= clip_pixel(dst[i + 0*stride] + ((int)(z0 + z3) >> 6));
         dst[i + 1*stride]= clip_pixel(dst[i + 1*stride] + ((int)(z1 + z2) >> 6));
@@ -381,13 +396,15 @@ void h264_idct_add(uint8_t *dst, int16_t *block, int stride)
 }
 
 void h264_idct_add16intra(uint8_t *dst, int16_t *block, uint8_t nnzc[15*8]){
-#define stride 16
+    int stride = 16;
     int i;
     for (i=0; i<16; i++) {
-        if (nnzc[ scan8[i] ]) h264_idct_add(dst + block_offset[i], block + i*16, stride);
-        else if (block[i*16]) h264_idct_dc_add(dst + block_offset[i], block + i*16, stride);
+        bool use_idct_add = nnzc[ scan8[i] ];
+        bool use_idct_dc_add = block[i*16];
+
+        if (use_idct_add) h264_idct_add(dst + block_offset[i], block + i*16, stride);
+        if (!use_idct_add && use_idct_dc_add) h264_idct_dc_add(dst + block_offset[i], block + i*16, stride);
     }
-#undef stride
 }
 
 #define DUMP_CHANGE(format, a, b) \
@@ -481,6 +498,17 @@ void dump_coefficients(In *in, int reset_cache)
     }
 }
 
+void print_luma(uint8_t *luma) {
+    int i;
+    for (i = 0; i < 16; ++i)
+    {
+        printf("%x %x %x %x %x %x %x %x\n",
+               luma[i*16], luma[i*16+1], luma[i*16+2], luma[i*16+3], luma[i*16+4], luma[i*16+5], luma[i*16+6], luma[i*16+7]);
+        printf("%x %x %x %x %x %x %x %x\n",
+               luma[i*16+8], luma[i*16+9], luma[i*16+10], luma[i*16+11], luma[i*16+12], luma[i*16+13], luma[i*16+14], luma[i*16+15]);
+    }
+}
+
 void decode_mb(In *in, uint8_t *luma) {
     dump_mb(in, luma, 1);
     if (in->deblocking_filter) {
@@ -495,5 +523,7 @@ void decode_mb(In *in, uint8_t *luma) {
         dump_coefficients(in, 0);
     }
     h264_idct_add16intra(luma, in->mb, in->non_zero_count_cache);
-    dump_mb(in, luma, 0);
+//    dump_coefficients(in, 0);
+    print_luma(luma);
+//    dump_mb(in, luma, 0);
 }

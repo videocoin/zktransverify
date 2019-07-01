@@ -415,36 +415,36 @@ void write_mb_decoder_data_to_auxiliary_input(const char *exo_name, const mb_con
     }
 
     aux << "#!/bin/sh" << std::endl << std::endl << std::endl;
-    aux << "echo " << mb_context->mb_x << std::endl;
-    aux << "echo " << mb_context->mb_y << std::endl;
-    aux << "echo " << mb_context->mb_width << std::endl;
-    aux << "echo " << mb_context->dequant_coeff << std::endl;
-    aux << "echo " << mb_context->mb_field_decoding_flag << std::endl;
-    aux << "echo " << mb_context->deblocking_filter << std::endl;
-    aux << "echo " << mb_context->intra16x16_pred_mode << std::endl;
+    aux << "echo " << (int)mb_context->mb_x << std::endl;
+    aux << "echo " << (int)mb_context->mb_y << std::endl;
+    aux << "echo " << (int)mb_context->mb_width << std::endl;
+    aux << "echo " << (int)mb_context->dequant_coeff << std::endl;
+    aux << "echo " << (int)mb_context->mb_field_decoding_flag << std::endl;
+    aux << "echo " << (int)mb_context->deblocking_filter << std::endl;
+    aux << "echo " << (int)mb_context->intra16x16_pred_mode << std::endl;
 
     for (int j = 0; j < 16*16; ++j) {
-        aux << "echo " << mb_context->mb[j] << std::endl;
+        aux << "echo " << (int)mb_context->mb[j] << std::endl;
     }
 
     for (int j = 0; j < 16; ++j) {
-        aux << "echo " << mb_context->mb_luma_dc[j] << std::endl;
+        aux << "echo " << (int)mb_context->mb_luma_dc[j] << std::endl;
     }
 
     for (int j = 0; j < 15*8; ++j) {
-        aux << "echo " << mb_context->non_zero_count_cache[j] << std::endl;
+        aux << "echo " << (int)mb_context->non_zero_count_cache[j] << std::endl;
     }
 
     for (int j = 0; j < 8+16+8; ++j) {
-        aux << "echo " << mb_context->top_border[j] << std::endl;
+        aux << "echo " << (int)mb_context->top_border[j] << std::endl;
     }
 
     for (int j = 0; j < 8+16+8; ++j) {
-        aux << "echo " << mb_context->luma_top[j] << std::endl;
+        aux << "echo " << (int)mb_context->luma_top[j] << std::endl;
     }
 
     for (int j = 0; j < 16; ++j) {
-        aux << "echo " << mb_context->luma_left[j] << std::endl;
+        aux << "echo " << (int)mb_context->luma_left[j] << std::endl;
     }
 
     aux.close();
