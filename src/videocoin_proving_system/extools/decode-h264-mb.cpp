@@ -193,7 +193,7 @@ int get_mb_from_stream(const char *file_name, int key_frame_num, int mb_num, MB_
                 // Add side_data to AVPacket which will be decoded
                 av_dict_set_int(&frameDict, "req_mb", mb_num, 0);
                 av_dict_set_int(&frameDict, "req_frame", key_frame_num, 0);
-                av_dict_set_int(&frameDict, "debug_dct_coef", 0, 0);
+                av_dict_set_int(&frameDict, "debug_luma", 1, 0);
                 int frameDictSize = 0;
                 uint8_t *frameDictData = av_packet_pack_dictionary(frameDict,
                                                                    &frameDictSize);
@@ -262,17 +262,27 @@ int find_intra16x16_mb_from_stream(const char *file_name, int *key_frame_num, in
 #define MB_TYPE_INTRA16x16 (1 <<  1)
 #define IS_INTRA16x16(a) ((a) & MB_TYPE_INTRA16x16)
 
-    int _key_frame_num = -1, _mb_num = 0;
-    while (!IS_INTRA16x16(pMb->mb_type)) {
+    // _mb_num == 0 - pred mode DC_128_PRED16x16
+    // _mb_num == 1 - pred mode DC_LEFT_PRED16x16
+    // _mb_num == 250 - pred mode DC_PRED16x16
+    // _mb_num == 400 - pred mode PLANE_PRED16x16
+    // _mb_num == 1101 _key_frame_num = 1 - pred mode HOR_PRED16x16
+    // _mb_num == 2169 _key_frame_num = 2 - pred mode DC_TOP_PRED16x16
+    // _mb_num == 2417 _key_frame_num = 2 - pred mode VER_PRED16x16
+
+    int _key_frame_num = 2, _mb_num = 2417;
+    while (true) {
         if (!get_mb_from_stream(file_name, _key_frame_num, _mb_num, pMb, verbose)) {
             if (!IS_INTRA16x16(pMb->mb_type) && pMb->mb_y >= pMb->mb_height) {
                 ++_key_frame_num;
             } else if (!IS_INTRA16x16(pMb->mb_type)) {
                 ++_mb_num;
-            } else if (IS_INTRA16x16(pMb->mb_type)) {
-                *key_frame_num = _key_frame_num + 1;
+            } else if (IS_INTRA16x16(pMb->mb_type) && (pMb->intra16x16_pred_mode == 2)) {
+                *key_frame_num = _key_frame_num;
                 *mb_num = _mb_num;
                 return 0;
+            } else {
+                ++_mb_num;
             }
         }
     }

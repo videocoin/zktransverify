@@ -411,16 +411,37 @@ void print_luma(uint8_t *luma) {
     }
 }
 
+void print_top(uint8_t *luma) {
+    int i = 0;
+    {
+        printf("TOP");
+        printf("%Zx %Zx %Zx %Zx %Zx %Zx %Zx %Zx",
+               luma[i*16], luma[i*16+1], luma[i*16+2], luma[i*16+3], luma[i*16+4], luma[i*16+5], luma[i*16+6], luma[i*16+7]);
+        printf("%Zx %Zx %Zx %Zx %Zx %Zx %Zx %Zx",
+               luma[i*16+8], luma[i*16+9], luma[i*16+10], luma[i*16+11], luma[i*16+12], luma[i*16+13], luma[i*16+14], luma[i*16+15]);
+        i = 1;
+        printf("%Zx %Zx %Zx %Zx %Zx %Zx %Zx %Zx",
+               luma[i*16], luma[i*16+1], luma[i*16+2], luma[i*16+3], luma[i*16+4], luma[i*16+5], luma[i*16+6], luma[i*16+7]);
+        printf("%Zx %Zx %Zx %Zx %Zx %Zx %Zx %Zx",
+               luma[i*16+8], luma[i*16+9], luma[i*16+10], luma[i*16+11], luma[i*16+12], luma[i*16+13], luma[i*16+14], luma[i*16+15]);
+    }
+}
+
 void decode_mb(struct H264MBContext *in, uint8_t *luma) {
+    print_top(in->luma_top);
+
     if (in->deblocking_filter) {
         xchg_mb_border(in);
     }
+
+    print_top(in->luma_top);
+
     pred16x16(in, luma);
+
+    print_luma(luma);
 
     if (in->non_zero_count_cache[0]) {
         luma_dc_dequant_idct(in->mb, in->mb_luma_dc, in->dequant_coeff);
     }
     h264_idct_add16intra(luma, in->mb, in->non_zero_count_cache);
-
-    print_luma(luma);
 }

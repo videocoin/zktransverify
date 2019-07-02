@@ -523,7 +523,6 @@ void decode_mb(In *in, uint8_t *luma) {
         dump_coefficients(in, 0);
     }
     h264_idct_add16intra(luma, in->mb, in->non_zero_count_cache);
-//    dump_coefficients(in, 0);
     print_luma(luma);
-//    dump_mb(in, luma, 0);
+    dump_mb(in, luma, 0);
 }
