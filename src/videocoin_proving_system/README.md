@@ -30,7 +30,7 @@ General options:
   -h [ --help ]                   produce help message
 
 Generator options:
-  -m [ --mode ] arg               set algorithm type <ssim | h264>
+  -m [ --mode ] arg               set algorithm type <ssim | h264 | h264prover>
   -v [ --vkey ] arg               path to verification key
   -p [ --pkey ] arg               path to proving key
   -u [ --uncompressed-vkey ] arg  path to uncompressed verification key
@@ -40,7 +40,7 @@ Generator options:
 Key generation:
 
 ```
-./keygen -m h264 -v v.key -p p.key -u v.key.uncompressed -j v.key.json
+./keygen -m h264prover -v v.key -p p.key -u v.key.uncompressed -j v.key.json
 ```
 
 
@@ -77,7 +77,7 @@ General options:
   -h [ --help ]              produce help message
 
 Verifier options:
-  -m [ --mode ] arg          set algorithm type <ssim | h264>
+  -m [ --mode ] arg          set algorithm type <ssim | h264 | h264prover>
   -v [ --vkey ] arg          path to verification key
   -p [ --proof ] arg         path to proof
   -w [ --witness ] arg       path to witness file
@@ -86,10 +86,12 @@ Verifier options:
 Proof verification:
 
 ```
-./verifier -m h264 -v v.key -p h264.proof -w witness.txt 
+./verifier -m h264prover -v v.key -p h264.proof -w witness.txt 
 ```
 
 ### Verify proof using Truffle Tests
+
+TODO: Update smart-contract to accept macroblock hash as input parameter.
 
 **Pre-requirements**: `node.js`, `truffle` should be installed.
 
@@ -120,9 +122,40 @@ Following proof generations will generate incorrect proofs. Verification using t
 ./genproof --files ../test_vectors/crowd_run_2160p50_40M.ts ../test_vectors/crowd_run_2160p50_40M.ts -p p.key -s 80 -w witness.txt -P h264.proof -u h264.proof.uncompressed
 ```
 
+### `genproof` internals
+
+Generator uses new zkSNARK circuit which consists of three algorithms:
+
+* SHA256 generator
+* Macroblock (INTRA16x16 modes) decoder
+* SSIM calculation
+
+Circuit has two public parameters:
+
+* Reference SSIM value (threshold)
+* SHA265 (32 bytes) digest of source macroblock
+
+Circuit has two auxiliary parameters:
+* Source macroblock (256 bytes) 
+* Macroblock decoder specific data
+
+Circuit has two out parameter:
+* Resulting value (0 or 1)
+* Zaatar leftover (always 0)
+
+Circuit computes next:
+* Generates SHA256 digest for source macroblock
+* Compares calculated digest with supplied one
+* Decodes transcoded macroblock from auxiliary data
+* Calculates SSIM value for supplied macroblock and decoded one
+* Circuit returns `1` result, if supplied digest and calculated are identical and calculated SSIM is in range (ref_SSIM, 100); otherwise - `0`
+
+Circuit implementation [#h264 prover circuit](https://github.com/videocoin/zktransverify/blob/macroblock-circuit/src/pequin/pepper/apps/h264_prover_2.c) 
+
+
 ### Proof generation benchmarking
 
-TBD
+TODO: update benchmarking data accoring to new circuit.
 
 (SSIM only)Google cloud instance, v8CPU:
 
