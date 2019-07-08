@@ -23,7 +23,7 @@ contract('Verifier', function(accounts) {
 		console.log("vk_data:");
 		console.log(vk);
 	});
-	fs.readFile("../build/ssim.proof.uncompressed", function(err, data) {
+	fs.readFile("../build/h264.proof.uncompressed", function(err, data) {
 		if(err) {
 			console.log("Error reading proof_data");
 		}
@@ -134,7 +134,9 @@ contract('Verifier', function(accounts) {
 
 			return verifier.verifyTx.call(A_g, A_h, B_g, B_h, C_g, C_h,
 				H, K,
-				[32, 0, 1]);
+				[80, 160, 221, 9, 117, 25, 213, 31, 237, 104, 15, 63, 159, 1,
+				244, 134, 221, 217, 199, 160, 99, 253, 106, 10, 80, 190, 190, 100, 255, 6, 243, 40, 207,
+				4, 0]);
 		}).then(function(result) {
 			wrongInput = result;
 		}).then(function() {
@@ -142,6 +144,7 @@ contract('Verifier', function(accounts) {
 			assert.equal(wrongInput, false, "The incorrect input was verified");
 		});
 	});
+	
 });
 
 function parseG1Point(data) {

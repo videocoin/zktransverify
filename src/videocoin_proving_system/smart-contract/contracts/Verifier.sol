@@ -145,7 +145,7 @@ contract Verifier {
         Pairing.G1Point gammaBeta1;
         Pairing.G2Point gammaBeta2;
         Pairing.G2Point Z;
-        Pairing.G1Point[5] IC;
+        Pairing.G1Point[36] IC;
         uint IC_length;
     }
     VerifyingKey vk;
@@ -191,7 +191,7 @@ contract Verifier {
             uint[2][2] memory Z,
             uint[2][] memory IC) public {
     	require(!verifyingKeySet);
-        require(IC.length <= 5);
+        require(IC.length <= 36);
         vk.A = Pairing.G2Point([A[0][0], A[0][1]], [A[1][0], A[1][1]]);
         vk.B = Pairing.G1Point(B[0], B[1]);
         vk.C = Pairing.G2Point([C[0][0], C[0][1]], [C[1][0], C[1][1]]);
