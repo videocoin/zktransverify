@@ -91,8 +91,6 @@ Proof verification:
 
 ### Verify proof using Truffle Tests
 
-TODO: Update smart-contract to accept macroblock hash as input parameter.
-
 **Pre-requirements**: `node.js`, `truffle` should be installed.
 
 ```
