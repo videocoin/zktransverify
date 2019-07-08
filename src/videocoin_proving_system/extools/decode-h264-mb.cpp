@@ -270,14 +270,14 @@ int find_intra16x16_mb_from_stream(const char *file_name, int *key_frame_num, in
     // _mb_num == 2169 _key_frame_num = 2 - pred mode DC_TOP_PRED16x16
     // _mb_num == 2417 _key_frame_num = 2 - pred mode VER_PRED16x16
 
-    int _key_frame_num = 2, _mb_num = 2417;
+    int _key_frame_num = 0, _mb_num = 0;
     while (true) {
         if (!get_mb_from_stream(file_name, _key_frame_num, _mb_num, pMb, verbose)) {
             if (!IS_INTRA16x16(pMb->mb_type) && pMb->mb_y >= pMb->mb_height) {
                 ++_key_frame_num;
             } else if (!IS_INTRA16x16(pMb->mb_type)) {
                 ++_mb_num;
-            } else if (IS_INTRA16x16(pMb->mb_type) && (pMb->intra16x16_pred_mode == 2)) {
+            } else if (IS_INTRA16x16(pMb->mb_type)) {
                 *key_frame_num = _key_frame_num;
                 *mb_num = _mb_num;
                 return 0;
