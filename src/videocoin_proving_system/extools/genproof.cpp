@@ -32,7 +32,7 @@ int ref_ssim;
 
 void parse_options(int argc, const char *argv[]);
 
-void save_witness(const char *filename, int refssim);
+void save_witness(const char *filename, int refssim, unsigned char *digest);
 
 void parse_options(int argc, const char *argv[]) {
     try {
@@ -92,10 +92,14 @@ void parse_options(int argc, const char *argv[]) {
     }
 }
 
-void save_witness(const char *filename, int refssim) {
+void save_witness(const char *filename, int refssim, unsigned char *digest) {
     FILE *f = fopen(filename, "w+");
     if (f != nullptr) {
-        fprintf(f, "%d\n%d\n%d\n", refssim, 1, 0);
+        fprintf(f, "%d\n", refssim);
+        for (int i = 0; i < 32; ++i)
+            fprintf(f, "%d\n", digest[i]);
+        fprintf(f, "%d\n%d\n", 1, 0);
+
         fclose(f);
     }
 }
@@ -169,5 +173,5 @@ int main(int argc, const char *argv[]) {
             uncompressed_proof.empty() ? nullptr : uncompressed_proof.c_str(),
             json_proof.empty() ? nullptr : json_proof.c_str());
 
-    save_witness(witness.c_str(), ref_ssim);
+    save_witness(witness.c_str(), ref_ssim, srcDigest);
 }
