@@ -121,31 +121,25 @@ int main(int argc, const char *argv[]) {
     uint8_t luma[256] = {0};
     In in;
 
-    if (find_intra16x16_mb_from_stream(files.back().c_str(), &frame_offset, &mb_offset, &mbTrans, verbose) == -1) {
-        printf("No Intra16x16 macroblock found\n");
-        return 0;
-    }
+    int *idxs, size = 0;
+    find_intra16x16_mb_idxs(files.back().c_str(), 0, &idxs, &size);
+
+    int mb_num = idxs[1];
+
+    get_mb_from_stream(files.front().c_str(), 0, mb_num, &mbSrc, verbose);
+    get_mb_from_stream(files.back().c_str(), 0, mb_num, &mbTrans, verbose);
+
+    free(idxs);
 
     memcpy(&in, &mbTrans, sizeof(in));
     decode_mb(&in, luma);
 
-    get_mb_from_stream(files.front().c_str(), frame_offset, mb_offset, &mbSrc, verbose);
-
     compute_ssim(80, mbSrc.luma_decoded, luma);
+    compute_ssim(80, mbSrc.luma_from_pic, mbTrans.luma_from_pic);
 
     sha256_bytes(mbSrc.luma_decoded, sizeof(mbSrc.luma_decoded), srcDigest);
 
     initialize_prover();
-
-//    generate_h264_proof(
-//            proving_key_path.c_str(),
-//            ref_ssim,
-//            srcDigest, 32,
-//            mbSrc.luma_decoded, sizeof(mbSrc.luma_decoded),
-//            mbTrans.luma_decoded, sizeof(mbTrans.luma_decoded),
-//            proof.empty() ? nullptr : proof.c_str(),
-//            uncompressed_proof.empty() ? nullptr : uncompressed_proof.c_str(),
-//            json_proof.empty() ? nullptr : json_proof.c_str());
 
 #define COPY_SCALAR(dst, src, field) dst.field = src.field
 #define COPY_ARRAY(dst, src, field) memcpy(dst.field, src.field, sizeof(dst.field))
