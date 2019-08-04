@@ -157,7 +157,7 @@ bool process_mb(AVFrame *frame, void *data) {
 
 void search_req(AVDictionary **frameDict, void *) {
     av_dict_set_int(frameDict, "search_mb", 1, 0);
-    av_dict_set_int(frameDict, "debug", H264MB_DEBUG_LUMA, 0);
+    av_dict_set_int(frameDict, "debug", 0, 0);
 }
 
 bool process_search(AVFrame *frame, void *data) {
@@ -186,8 +186,6 @@ int get_frame(const char *file_name, int key_frame_num, void (*req_cb)(AVDiction
 
     int idr_frame = -1;
 
-    //if (video_decode_example(argv[1]) != 0)
-    //    return 1;
     AVCodec *codec = avcodec_find_decoder(AV_CODEC_ID_H4MB);
     if (!codec) {
         fprintf(stderr, "Codec not found\n");
@@ -289,8 +287,8 @@ int get_frame(const char *file_name, int key_frame_num, void (*req_cb)(AVDiction
                         }
                         key_frame_count++;
                     }
+                    frame_count++;
                 }
-                frame_count++;
             }
 
 
