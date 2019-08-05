@@ -121,21 +121,14 @@ int main(int argc, const char *argv[]) {
     uint8_t luma[256] = {0};
     In in;
 
-    int *idxs, size = 0;
-    find_intra16x16_mb_idxs(files.back().c_str(), 0, &idxs, &size);
-
-    int mb_num = idxs[1];
-
-    get_mb_from_stream(files.front().c_str(), 0, mb_num, &mbSrc, verbose);
-    get_mb_from_stream(files.back().c_str(), 0, mb_num, &mbTrans, verbose);
-
-    free(idxs);
+    get_mb_from_stream(files.front().c_str(), 0, 0, &mbSrc, verbose);
+    get_mb_from_stream(files.back().c_str(), 0, 0, &mbTrans, verbose);
 
     memcpy(&in, &mbTrans, sizeof(in));
     decode_mb(&in, luma);
 
+    compute_ssim(80, mbSrc.luma_decoded, mbTrans.luma_decoded);
     compute_ssim(80, mbSrc.luma_decoded, luma);
-    compute_ssim(80, mbSrc.luma_from_pic, mbTrans.luma_from_pic);
 
     sha256_bytes(mbSrc.luma_decoded, sizeof(mbSrc.luma_decoded), srcDigest);
 

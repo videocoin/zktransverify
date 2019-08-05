@@ -47,16 +47,8 @@ extern "C" {
 
 #include "decode-h264-mb.h"
 
-typedef struct {
-    int *mb_idx;
-    int size;
-} SearchResults;
-
 void mb_req(AVDictionary **frameDict, void *data);
 bool process_mb(AVFrame *frame, void *data);
-
-void search_req(AVDictionary **frameDict, void *);
-bool process_search(AVFrame *frame, void *data);
 
 static int get_frame(const char *file_name, int key_frame_num, void (*req_cb)(AVDictionary **, void *), void *req_cb_data, bool (*process_cb)(AVFrame *, void *), void *process_cd_data);
 
@@ -106,15 +98,6 @@ int get_mb_from_stream(const char *file_name, int key_frame_num, int mb_num, MB_
     return get_frame(file_name, key_frame_num, mb_req, &mb_num, process_mb, pMb);
 }
 
-int find_intra16x16_mb_idxs(const char *file_name, int key_frame_num, int **idxs, int *size) {
-    SearchResults results;
-
-    int ret = get_frame(file_name, key_frame_num, search_req, nullptr, process_search, &results);
-    *idxs = results.mb_idx;
-    *size = results.size;
-    return ret;
-}
-
 void mb_req(AVDictionary **frameDict, void *data) {
     int mb_num = *(int *)data;
     av_dict_set_int(frameDict, "req_mb", mb_num, 0);
@@ -143,29 +126,6 @@ bool process_mb(AVFrame *frame, void *data) {
 
     getParam(frame, "mb", (uint8_t *)pMb->mb, sizeof(pMb->mb));
     getParam(frame, "luma_decoded", pMb->luma_decoded, sizeof(pMb->luma_decoded));
-
-    unsigned char *pDst = pMb->luma_from_pic;
-    for (int v=0; v < 16; v++){
-        unsigned char *pSrc = frame->data[0] + (pMb->mb_y + v)  * frame->linesize[0] + pMb->mb_x;
-        for (int h=0; h < 16; h++){
-            *pDst++ = *pSrc++;
-        }
-    }
-
-    return true;
-}
-
-void search_req(AVDictionary **frameDict, void *) {
-    av_dict_set_int(frameDict, "search_mb", 1, 0);
-    av_dict_set_int(frameDict, "debug", 0, 0);
-}
-
-bool process_search(AVFrame *frame, void *data) {
-    auto *results = (SearchResults *)data;
-    results->size = getParam(frame, "search_mb_result_index");
-    int alloc_size = sizeof(int) * results->size;
-    results->mb_idx = (int *)malloc(alloc_size);
-    getParam(frame, "search_mb_result", (uint8_t *)results->mb_idx, alloc_size);
 
     return true;
 }
