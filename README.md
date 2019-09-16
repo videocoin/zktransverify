@@ -195,14 +195,14 @@ Implementing simplified version of CABAC coding protocol basically breaks the en
 
 #### Alternative: vnTinyRAM
 
-Prior developed circuit for SHA256, Macroblock decoding, SSIM calculation is developed on Pepper timyRAM without significant limitations, because circuit's input variables and number of required operations defined beforehand.
+Prior developed circuit for SHA256, Macroblock decoding, SSIM calculation is developed on Pepper tinyRAM without significant limitations, because circuit's input variables and number of required operations defined beforehand.
 
-CABAC decoder requires another type of tinyRAM architecture. Architecture that has jump operations (asm: JMP) to support dynamic ranged types and dynamic loops. vnTinyRAM mimics traditional RISC machines and contains very basic subset of operations like: add, sub, mul, div, jmp, cmp. The disadvantage of using such machine is performance overhead. The advantage is that prover/verifier key does not relly on data size.
+CABAC decoder requires another type of tinyRAM architecture. Architecture that has jump operations (asm: JMP) to support dynamic ranged types and dynamic loops. vnTinyRAM mimics traditional RISC machines and contains very basic subset of operations like: add, sub, mul, div, jmp, cmp. The disadvantage of using such machine is performance overhead. The advantage - prover/verifier key does not rely on data size.
 
 Initially tinyRAM research was started from vnTinyRAM but was suspended due to lack of frontend compiler. Implementing complex algorithms using provided assembly
 is impractical, as RISC machine lacks of different memory types and operations, like support of stack and stack operations; and number of available registers (32bit max) is in range 16-32.
 
-The most optional way to resume vnTinyRAM research is to work on frontend compiler for provided subset of operations. Despite feasibility question is still open, the positive outcome could be a tool that can be patented somewhere in a future.
+The most optional way to resume vnTinyRAM research is to work on frontend compiler for provided subset of operations. Despite of feasibility question which is open, the positive outcome could be a tool that can be patented somewhere in a future.
 
 ## Status
 
