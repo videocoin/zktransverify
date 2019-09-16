@@ -123,12 +123,15 @@ A random macroblock for verification is selected based on a hash generated from 
 Note-1: Automated(Smart Contract based) dispute resolution:
 Using hashes of input and output macrobocks in the proof allows automated resolution if there is a dispute between Wallet/Storage and Miner.
 
+### TinyRAM
 
-### TinyRAM 
 TinyRAM [23] is used to support general computations written in high level languages. So, we can apply macro-block decoding as timyRAM program to get computational proofs.
 To achieve this we have to go though few steps:
-* Macro-block decoding algorithm should be converted into tinyRAM assembly code. 
+
+* Macro-block decoding algorithm should be converted into tinyRAM assembly code.
+
 * Assembly code should be generated into small circuits that checks correct execution.
+
 * After feeds those circuits into zkSNARK to generate the proofs.
 
 On of the key challenges right now to find the way to generate tinyRAM assembly code from hight level C program due to lack of tinyRAM compiler.
@@ -137,6 +140,7 @@ Alternative way to implement circuits for macro-block decoding is to use pepper 
 ![TinyRAM flow](./documents/zkproof_tinyram.png)
 
 ### SSIM calculation using Pepper [24]
+
 Core implementation of SSIM was taken from https://github.com/mirror/x264/blob/master/common/pixel.c#L688 and adapted for Pepper compiler https://github.com/VideoCoin/zktransverify/blob/pepper/src/pequin/pepper/apps/x264_ssim_16x16.c.
 Three separate SSIM calculation were implemented for frame sizes 16x16, 32x32 and 64x64 respectively (Pepper doesn't support dynamic parameters this is the reason to have three SSIM calculations).
 
@@ -146,12 +150,60 @@ Algorithm works with frames in YUV format. Luma component (Y) is used for SSIM c
 |-------|:---------------:|:----------------:|:---------------------:|:--------------------------------:|:----------------------------------------:|
 | 16x16 |             512 |            57 MB |                121 kB |                         2.6691 s |           2.3168 s |
 | 32x32 |            2048 |         277.4 MB |                180 kB |                        11.6607 s |         11.3058 s |
-| 64x64 |            8192 |           1.3 GB |                420 kB |                       58.8939s s |    52.7337 s                      |           
+| 64x64 |            8192 |           1.3 GB |                420 kB |                       58.8939s s |    52.7337 s                      |
 
 Verification time for all cases ~5 ms.
 
+### Implementing CABAC entropy decoder using Pepper [25]
+
+#### Pepper tinyRAM
+
+To build valid circuit the quantity of input variables (primary and auxiliary) and output variables should be defined beforehand. Same rule is applied to loops in the code, iteration number should be defined before hand. Circuit consists of enormous number of variables, which has to be fixed quantity. For that, compiler  unwinds all loops and for each iteration state creates a set of variables. Each new set of variables will have direct dependecy to previous set of variables.
+This property imposes limitations in implementing circuits for algorithms that depends on data or context.
+
+Shift operations are way slower than arithmetic on tinyRAM. Complex logic that relays on shift logic will increase circuit size and reduce performance.
+
+#### CABAC
+
+CABAC is context based algorithm, where data is encoded in a bitstream. Firs syntax elements like macroblock type, prediction mode, etc. are binarised in a bins. Bin is a data structure that consists of variable length bits. After binarization - arithmetic encoding applied. Arithmetic coder encodes each bit using probabilstic context model and sequentually updates context model with new probabilities. This leads us to two properties:
+
+* encoded bitstream has variable length
+
+* to get particular syntax element, first decoder has to decode every systax element prior to particular one
+
+![CABAC coding](./documents/zkproof_cabac_coding.png)
+
+#### Feasibility
+
+So, to implement CABAC decoder circuit "as is" using pepper compiler is not feasible for two reasons:
+
+* first, variable length and sequential decoding properties
+
+* second, for our purposes we need only subset of syntax elements to be decoded; other elements are redundant like chroma data
+
+As a solution, we can create a simplified version CABAC coder, which will work in next way:
+
+* during data decoding, CABAC coder besiders data decoding will encode this data in a new simplified format
+
+* data format should be defined and should take into account limitations for shift operations
+
+#### Concept concerns
+
+Implementing simplified version of CABAC coding protocol basically breaks the entire concept. In order to generate the proof, cirtuit reads encoded "as-is" bitstream from the disc and decodes it to compare with original source. So the question is open. Will pseudo-cabac provide any benefits?
+
+#### Alternative: vnTinyRAM
+
+Prior developed circuit for SHA256, Macroblock decoding, SSIM calculation is developed on Pepper timyRAM without significant limitations, because circuit's input variables and number of required operations defined beforehand.
+
+CABAC decoder requires another type of tinyRAM architecture. Architecture that has jump operations (asm: JMP) to support dynamic ranged types and dynamic loops. vnTinyRAM mimics traditional RISC machines and contains very basic subset of operations like: add, sub, mul, div, jmp, cmp. The disadvantage of using such machine is performance overhead. The advantage is that prover/verifier key does not relly on data size.
+
+Initially tinyRAM research was started from vnTinyRAM but was suspended due to lack of frontend compiler. Implementing complex algorithms using provided assembly
+is impractical, as RISC machine lacks of different memory types and operations, like support of stack and stack operations; and number of available registers (32bit max) is in range 16-32.
+
+The most optional way to resume vnTinyRAM research is to work on frontend compiler for provided subset of operations. Despite feasibility question is still open, the positive outcome could be a tool that can be patented somewhere in a future.
 
 ## Status
+
 The current implementation is only tested in a simulated environment. The zkSNARKs proof libraries needs to be split and integrated with the transcode miner and VideoCoin client libraries.
 
 
