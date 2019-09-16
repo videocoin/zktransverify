@@ -165,11 +165,11 @@ Shift operations are way slower than arithmetic on tinyRAM. Complex logic that r
 
 #### CABAC
 
-CABAC is context based algorithm, where data is encoded in a bitstream. Firs syntax elements like macroblock type, prediction mode, etc. are binarised in a bins. Bin is a data structure that consists of variable length bits. After binarization - arithmetic encoding applied. Arithmetic coder encodes each bit using probabilstic context model and sequentually updates context model with new probabilities. This leads us to two properties:
+CABAC is context based algorithm, where data is encoded in a bitstream. First, syntax elements like macroblock type, prediction mode, etc. are binarised in a bins. Bin is a data structure that consists of variable length bits. After binarization - arithmetic encoding applied. Arithmetic coder encodes each bit using probabilstic context model and sequentually updates context model with new probabilities. This leads us to two properties:
 
 * encoded bitstream has variable length
 
-* to get particular syntax element, first decoder has to decode every systax element prior to particular one
+* to get particular syntax element, decoder has to decode every systax element prior to particular one
 
 ![CABAC coding](./documents/zkproof_cabac_coding.png)
 
@@ -186,6 +186,8 @@ As a solution, we can create a simplified version CABAC coder, which will work i
 * during data decoding, CABAC coder besiders data decoding will encode this data in a new simplified format
 
 * data format should be defined and should take into account limitations for shift operations
+
+* CABAC circuit will use this "re-encoded" data 
 
 #### Concept concerns
 
