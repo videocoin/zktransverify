@@ -199,10 +199,32 @@ Prior developed circuit for SHA256, Macroblock decoding, SSIM calculation is dev
 
 CABAC decoder requires another type of tinyRAM architecture. Architecture that has jump operations (asm: JMP) to support dynamic ranged types and dynamic loops. vnTinyRAM mimics traditional RISC machines and contains very basic subset of operations like: add, sub, mul, div, jmp, cmp. The disadvantage of using such machine is performance overhead. The advantage - prover/verifier key does not rely on data size.
 
-Initially tinyRAM research was started from vnTinyRAM but was suspended due to lack of frontend compiler. Implementing complex algorithms using provided assembly
+Initially tinyRAM research was started from vnTinyRAM but was suspended due to lack of backend compiler. Implementing complex algorithms using provided assembly
 is impractical, as RISC machine lacks of different memory types and operations, like support of stack and stack operations; and number of available registers (32bit max) is in range 16-32.
 
-The most optional way to resume vnTinyRAM research is to work on frontend compiler for provided subset of operations. Despite of feasibility question which is open, the positive outcome could be a tool that can be patented somewhere in a future.
+The most optional way to resume vnTinyRAM research is to work on backend compiler for provided subset of operations. Despite feasibility question is still open, the positive outcome could be a tool that can be patented somewhere in a future.
+
+#### Analysis of implementing compiler backed using GCC and LLVM [27]
+
+Modern compilers like LLVM and GCC work in three steps: front end, optimizer and backend. But those steps are achieved two different models.
+
+![Compiler moder](./documents/compiler_models.png)
+
+Model for LLVM focuses on having a target-independent intermediate representation (IR) language for a bulk of the optimization before the backend which allows the instruction selection process to use a cost-based approach.
+
+GCC model focuses on transforming the IR into a type of target-independent register transfer language (RTL). The RTL then undergoes an expansion process followed by a recognizer which selects the instructions based on the expanded representation.
+
+Each step of LLVM modeled compiler is responsible for translating the input program into a different representation, which brings the program closer to the target language. There is an extreme benefit of having a compiler architected using this model; because of the modularity and the defined boundaries of each step, new source languages, target architectures, and optimization passes can be added or modified mostly independent of each other. A new source language implementation only needs to consider the design of the front end such that the output conforms to the IR, optimization passes are largely language-agnostic so long as they only operate on IR and preserve the program function, and lastly, generating code for a new target architecture only requires designing a backend that accepts IR and outputs the target code (in our case TinyRAM assembly).
+
+#### Qustions that needs to be addressed
+
+As vnTinyRAM mimics Von Neuman architecture, unlike in Harvard architecure, we have single memory unit, where address space serves for both data and program instuction. We have to define address space and size for stack memory or rewrite code that uses global memory only, no local variables.
+
+Another question, whether we need the support of floating point registers. Exiting vnTinyRAM doesnt have such. So far we have some kind of implementation for fixed point arithmetic in SSIM calculation, which can be achieved using integer registeres available in vnTinyRAM.
+
+Another question will be enough to have 32-bit registers. My previous tries to get 64-bit registers were unsuccessfull. So far didn't spent enough time to understand the issue.
+
+Purpose registers. Do we need anything else than general puprose registers? Or, it is possible use some of the available integer registers to work in specific way, like stack pointer register, return value register, etc.
 
 ## Status
 
@@ -262,3 +284,4 @@ The current implementation is only tested in a simulated environment. The zkSNAR
 
 [26. On Deploying Succinct Zero-Knowledge Proofs, by Madars Vizra ](https://madars.org/phd-thesis/Madars-Virza-thesis-20170831.pdf)
 
+[27. The Design of a Custom 32-bit RISC CPU and LLVM Compiler Backend](https://pdfs.semanticscholar.org/2298/9c214aedc3c58af857d6edc29770c544848c.pdf)
