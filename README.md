@@ -228,6 +228,10 @@ Another question will be enough to have 32-bit registers. My previous tries to g
 
 Purpose registers. Do we need anything else than general purpose registers? Or, it is possible use some of the available integer registers to work in specific way, like stack pointer register, return value register, etc.
 
+Intel 8085 <https://en.wikipedia.org/wiki/Intel_8085> maybe a good example of real von Neumann CPU, with a small mount of registers.
+
+ZipCPU <https://github.com/ZipCPU/zipcpu> - another von Neumann CPU. 
+
 ## Status
 
 The current implementation is only tested in a simulated environment. The zkSNARKs proof libraries needs to be split and integrated with the transcode miner and VideoCoin client libraries.
