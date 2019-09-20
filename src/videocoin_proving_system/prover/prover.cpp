@@ -22,9 +22,10 @@ void generate_proof_internal(const comp_params &p,
                             const char *pws_fn,
                             libsnark::r1cs_ppzksnark_proving_key<ppT> &pk,
                             int ref_ssim,
+                            const unsigned char *src1, size_t len,
                             libsnark::r1cs_ppzksnark_proof<ppT> &proof);
 
-static void write_to_auxiliary_input(const unsigned char *src1, size_t len1, const unsigned char *src2, size_t len2);
+static void write_to_auxiliary_input(const unsigned char *src, size_t len);
 
 static void clear_auxiliary_input();
 
@@ -50,9 +51,7 @@ void generate_ssim_proof(const char *pk_fn,
         exit(-1);
     }
 
-    auto mode = ssim_mode::from_int(sqrt(src1_len));
-
-    std::string app_path = application_dir + mode.str() + "/";
+    std::string app_path = application_dir + "ssim/";
     std::string params = app_path + "params";
     std::string pws = app_path + "pws";
     comp_params p = parse_params(params.c_str());
@@ -70,11 +69,11 @@ void generate_ssim_proof(const char *pk_fn,
     libff::leave_block("Reading proving key from file");
 
     libff::enter_block("Call to write_to_auxiliary_input");
-    write_to_auxiliary_input(src1, src1_len, src2, src2_len);
+    write_to_auxiliary_input(src2, src2_len);
     libff::leave_block("Call to write_to_auxiliary_input");
 
     libsnark::r1cs_ppzksnark_proof<libsnark::default_r1cs_ppzksnark_pp> proof;
-    generate_proof_internal(p, pws.c_str(), pk, ref_ssim, proof);
+    generate_proof_internal(p, pws.c_str(), pk, ref_ssim, src1, src1_len, proof);
 
     clear_auxiliary_input();
 
@@ -102,12 +101,16 @@ void generate_proof_internal(const comp_params &p,
                             const char *pws_fn,
                             libsnark::r1cs_ppzksnark_proving_key<ppT> &pk,
                             int ref_ssim,
+                            const unsigned char *src, size_t len,
                             libsnark::r1cs_ppzksnark_proof<ppT> &proof) {
     mpz_t prime;
     mpz_init_set_str(prime, prime_str, 10);
 
     std::vector<double> input;
     input.emplace_back(ref_ssim);
+    for (int i = 0; i < len; ++i) {
+        input.emplace_back(src[i]);
+    }
 
     libff::start_profiling();
     libff::enter_block("Compute algorithm");
@@ -146,8 +149,8 @@ void generate_proof_internal(const comp_params &p,
     proof = libsnark::r1cs_ppzksnark_prover<ppT>(pk, primary_input, aux_input);
 }
 
-void write_to_auxiliary_input(const unsigned char *src1, size_t len1, const unsigned char *src2, size_t len2) {
-    std::string file = exo_dir + "exo3";
+void write_to_auxiliary_input(const unsigned char *src, size_t len) {
+    std::string file = exo_dir + "exo0";
     std::ofstream aux(file);
     if (!aux.is_open()) {
         std::cerr << "ERROR: can't create file " << file << "." << std::endl;
@@ -155,11 +158,8 @@ void write_to_auxiliary_input(const unsigned char *src1, size_t len1, const unsi
     }
 
     aux << "#!/bin/sh" << std::endl << std::endl << std::endl;
-    for (size_t i = 0; i < len1; ++i) {
-        aux << "echo " << (int) src1[i] << std::endl;
-    }
-    for (size_t i = 0; i < len2; ++i) {
-        aux << "echo " << (int) src2[i] << std::endl;
+    for (size_t i = 0; i < len; ++i) {
+        aux << "echo " << (int) src[i] << std::endl;
     }
 
     aux.close();
@@ -167,5 +167,5 @@ void write_to_auxiliary_input(const unsigned char *src1, size_t len1, const unsi
 }
 
 void clear_auxiliary_input() {
-    remove((exo_dir + "exo3").c_str());
+    remove((exo_dir + "exo0").c_str());
 }
