@@ -74,8 +74,6 @@ int main(int argc, char *argv[]) {
                 ("help,h", "produce help message");
 
         verifier.add_options()
-                ("mode,m", po::value<std::string>(),
-                 "set algorithm type <ssim16x16 | ssim32x32 | ssim64x64>")
                 ("vkey,v", po::value<std::string>(), "path to verification key")
                 ("proof,p", po::value<std::string>(), "path to proof")
                 ("witness,w", po::value<std::string>(), "path to witness file");
@@ -91,22 +89,15 @@ int main(int argc, char *argv[]) {
         }
 
         // check mandatory options
-        for (auto &e: {"mode", "vkey", "proof", "witness"}) {
+        for (auto &e: {"vkey", "proof", "witness"}) {
             if (!vm.count(e)) {
                 std::cerr << "error: the option '--" << e << "' is required but missing\n" << all << std::endl;
                 exit(1);
             }
         }
 
-        ssim_mode mode = ssim_mode::from_str(vm["mode"].as<std::string>().c_str());
-        if (!mode.is_valid()) {
-            std::cerr << "error: the option '--mode' has invalid value: " << vm["mode"].as<std::string>() << std::endl
-                      << all << std::endl;
-            exit(1);
-        }
-
         initialize_env();
-        std::string params = application_dir + mode.str() + "/params";
+        std::string params = application_dir + "ssim/params";
         struct comp_params p = parse_params(params.c_str());
 
         mpz_t prime;
