@@ -201,8 +201,6 @@ int main(int argc, char *argv[]) {
                 ("help,h", "produce help message");
 
         generator.add_options()
-                ("mode,m", po::value<std::string>(),
-                 "set algorithm type <ssim16x16 | ssim32x32 | ssim64x64>")
                 ("vkey,v", po::value<std::string>(), "path to verification key")
                 ("pkey,p", po::value<std::string>(), "path to proving key")
                 ("uncompressed-vkey,u", po::value<std::string>(), "path to uncompressed verification key")
@@ -219,29 +217,22 @@ int main(int argc, char *argv[]) {
         }
 
         // check mandatory options
-        for (auto &e: {"mode", "vkey", "pkey"}) {
+        for (auto &e: {"vkey", "pkey"}) {
             if (!vm.count(e)) {
                 std::cerr << "error: the option '--" << e << "' is required but missing\n" << all << std::endl;
                 exit(1);
             }
         }
 
-        ssim_mode mode = ssim_mode::from_str(vm["mode"].as<std::string>().c_str());
-        if (!mode.is_valid()) {
-            std::cerr << "error: the option '--mode' has invalid value: " << vm["mode"].as<std::string>() << std::endl
-                      << all << std::endl;
-            exit(1);
-        }
-
         initialize_env();
-        std::string app_path = application_dir + mode.str() + "/";
+        std::string app_path = application_dir + "ssim/";
         std::string params = app_path + "params";
         comp_params p = parse_params(params.c_str());
 
         mpz_t prime;
         mpz_init_set_str(prime, prime_str, 10);
 
-        std::cout << "Creating proving/verification keys\n";
+        std::cout << "Creating prover/verifier keys\n";
         generate_keys(app_path, p.n_constraints, p.n_inputs, p.n_outputs, p.n_vars, prime, vm);
     }
     catch (std::exception &e) {
