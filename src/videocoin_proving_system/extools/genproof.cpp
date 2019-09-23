@@ -1,10 +1,6 @@
-#include <stdio.h>
-#include <assert.h>
-#include <stdlib.h>
-#include <time.h>
-#include <stdint.h>
-#include <stdbool.h>
-#include <string.h>
+#include <cstdio>
+#include <cstdlib>
+#include <cstring>
 #include <exception>
 #include <iostream>
 
@@ -20,8 +16,6 @@ namespace po = boost::program_options;
 std::vector<std::string> files;
 std::string proving_key_path;
 std::string proof;
-std::string uncompressed_proof;
-std::string json_proof;
 std::string witness;
 bool verbose = false;
 int ref_ssim;
@@ -29,7 +23,7 @@ int ref_ssim;
 
 void parse_options(int argc, const char *argv[]);
 
-void save_witness(const char *filename, int refssim);
+void save_witness(const char *filename, int ref_ssim);
 
 void parse_options(int argc, const char *argv[]) {
     try {
@@ -46,8 +40,6 @@ void parse_options(int argc, const char *argv[]) {
                 ("pkey,p", po::value<std::string>(&proving_key_path), "path to proving key")
                 ("files,f", po::value<std::vector<std::string>>(&files)->multitoken(), "list of %file1, %file2")
                 ("proof,P", po::value<std::string>(&proof), "path to proof file")
-                ("uncompressed-proof,u", po::value<std::string>(&uncompressed_proof), "path to uncompressed proof file")
-                ("json-proof,j", po::value<std::string>(&json_proof), "path to json proof file")
                 ("witness,w", po::value<std::string>(&witness), "path to witness file")
                 ("ssim-level,s", po::value<int>(&ref_ssim), "threshold ssim level [0-100]");
 
@@ -110,6 +102,9 @@ int main(int argc, const char *argv[]) {
     // Generate hash of hashes from input stream and transcoded stream
     //      and pick random keyframe and macroblock number
     getRandomOffsets(files.front().c_str(), files.back().c_str(), &frame_offset, 10, &mb_offset, 1);
+    frame_offset = 1;
+    mb_offset = 0;
+
     printf("frame_offset=%d macroblock_offset=%d\n", frame_offset, mb_offset);
 
     memset(srcRawY, 0x00, 256);

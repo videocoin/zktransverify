@@ -87,8 +87,6 @@ int getMbFromStream(const char *file_name, int key_frame_num, int mb_num, MB_T *
 {
 
 	AVFormatContext* fmt_ctx;
-	int frame_offset = 0;
-	int macroblock_offset = 0;
 	int ffmpeg_videoStreamIndex;
 	AVBitStreamFilterContext* h264bsfc = NULL;
 
@@ -97,11 +95,10 @@ int getMbFromStream(const char *file_name, int key_frame_num, int mb_num, MB_T *
 
 	AVFrame *frame = NULL;
 	AVPacket *pkt;
-	uint8_t inbuf[1024];
 	int frame_count = 0;
 	int key_frame_count = 0;
 
-	pkt = (AVPacket *) av_malloc(sizeof(AVPacket));
+	pkt = (AVPacket *)av_malloc(sizeof(AVPacket));
 
 	int idr_frame = -1;
 
@@ -183,10 +180,6 @@ int getMbFromStream(const char *file_name, int key_frame_num, int mb_num, MB_T *
 						fmt_ctx->streams[ffmpeg_videoStreamIndex]->codec, NULL,
 						&pkt->data, &pkt->size, pkt->data, pkt->size, 0);
 				hexDump(pkt->data, 16);
-				//read_debug_nal_unit(h, pkt->data + 4, pkt->size - 4);
-				uint8_t* p = pkt->data;
-				size_t sz = pkt->size;
-				int nal_start, nal_end, nalu_type;
 
 				av_frame_unref(frame);
 				int got_frame = 0;
@@ -222,7 +215,6 @@ int getMbFromStream(const char *file_name, int key_frame_num, int mb_num, MB_T *
 						if (ent) {
 							char *macroblock = ent->value;
 							if (macroblock) {
-								//printf("macroblockd=%s\n", macroblock);
 								if (verbose)
 								    printf("macroblock=");
 
