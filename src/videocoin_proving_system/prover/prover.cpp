@@ -38,9 +38,7 @@ void generate_ssim_proof(const char *pk_fn,
                         int ref_ssim,
                         const unsigned char *src1, unsigned long src1_len,
                         const unsigned char *src2, unsigned long src2_len,
-                        const char *proof_bin_fn,
-                        const char *proof_uncompressed_fn,
-                        const char *proof_json_fn) {
+                        const char *proof_fn) {
     if (src1 == nullptr || src2 == nullptr) {
         std::cerr << "ERROR: invalid source." << std::endl;
         exit(-1);
@@ -77,22 +75,14 @@ void generate_ssim_proof(const char *pk_fn,
 
     clear_auxiliary_input();
 
-    if (proof_bin_fn != nullptr) {
-        std::ofstream proof_file(proof_bin_fn);
+    if (proof_fn != nullptr) {
+        std::ofstream proof_file(proof_fn);
         if (proof_file.is_open()) {
             proof_file << proof;
             proof_file.close();
         } else {
-            std::cerr << "WARNING: unable to open file at path: " << proof_bin_fn << std::endl;
+            std::cerr << "WARNING: unable to open file at path: " << proof_fn << std::endl;
         }
-    }
-
-    if (proof_uncompressed_fn != nullptr) {
-        print_proof_to_file(proof, proof_uncompressed_fn);
-    }
-
-    if (proof_json_fn != nullptr) {
-        print_proof_to_json(proof, proof_json_fn);
     }
 }
 

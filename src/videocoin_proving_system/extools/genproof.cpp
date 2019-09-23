@@ -66,7 +66,7 @@ void parse_options(int argc, const char *argv[]) {
         }
 
         // check mandatory options
-        for (auto &e: {"files", "pkey", "ssim-level", "witness"}) {
+        for (auto &e: {"files", "pkey", "ssim-level", "witness", "proof"}) {
             if (!vm.count(e)) {
                 std::cerr << "error: the option '--" << e << "' is required but missing\n" << all << std::endl;
                 exit(1);
@@ -125,9 +125,7 @@ int main(int argc, const char *argv[]) {
             ref_ssim,
             srcRawY, sizeof(srcRawY),
             transRawY, sizeof(transRawY),
-            proof.empty() ? nullptr : proof.c_str(),
-            uncompressed_proof.empty() ? nullptr : uncompressed_proof.c_str(),
-            json_proof.empty() ? nullptr : json_proof.c_str());
+            proof.c_str());
 
     save_witness(witness.c_str(), ref_ssim);
 }
