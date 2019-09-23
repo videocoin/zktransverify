@@ -89,6 +89,14 @@ add_executable(
 )
 
 add_executable(
+        verifyproof
+
+        extools/verifyproof.cpp
+        extools/decode-h264-mb.cpp
+        common/utility.cpp
+)
+
+add_executable(
         genwitness
 
         extools/genwitness.cpp
@@ -133,6 +141,17 @@ target_link_libraries(
 target_link_libraries(
         genproof
 
+        -lprover -lff -lleveldb -lkyotocabinet -lpapi -lgmp
+        -lavfilter -lswscale -lpostproc -lavformat -lavcodec -lswresample -lavutil
+        -lcrypto -lm -ldl -lbz2 -lpthread -lX11 -lvpx -lx264 -lx265
+        -lz -laom -lvorbis -lvorbisenc -lopus -lmp3lame -lfdk-aac
+        -lboost_program_options
+)
+
+target_link_libraries(
+        verifyproof
+
+        -lgmp -lgmpxx -lff -lboost_program_options
         -lprover -lff -lleveldb -lkyotocabinet -lpapi -lgmp
         -lavfilter -lswscale -lpostproc -lavformat -lavcodec -lswresample -lavutil
         -lcrypto -lm -ldl -lbz2 -lpthread -lX11 -lvpx -lx264 -lx265

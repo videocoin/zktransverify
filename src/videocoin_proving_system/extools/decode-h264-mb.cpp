@@ -201,8 +201,6 @@ int getMbFromStream(const char *file_name, int key_frame_num, int mb_num, MB_T *
 					fprintf(stderr, "Frame decoded\n");
 				}
 
-
-
 				if (got_frame) {
 					if (frame->key_frame)
 						key_frame_count++;
