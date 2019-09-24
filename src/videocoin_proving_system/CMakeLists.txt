@@ -85,14 +85,6 @@ add_executable(
         common/utility.cpp
 )
 
-add_executable(
-        genwitness
-
-        extools/genwitness.cpp
-        extools/decode-h264-mb.cpp
-        extools/sha256-util.cpp
-)
-
 target_compile_definitions(
         prover
         PRIVATE
@@ -140,14 +132,6 @@ target_link_libraries(
         -lcrypto -lm -ldl -lbz2 -lpthread -lX11 -lvpx -lx264 -lx265
         -lz -laom -lvorbis -lvorbisenc -lopus -lmp3lame -lfdk-aac
         -lboost_program_options
-)
-
-target_link_libraries(
-        genwitness
-
-        -lavfilter -lswscale -lpostproc -lavformat -lavcodec -lswresample -lavutil
-        -lcrypto -lm -ldl -lbz2 -lpthread -lX11 -lvpx -lx264 -lx265
-        -lz -laom -lvorbis -lvorbisenc -lopus -lmp3lame -lfdk-aac
 )
 
 add_dependencies(genproof prover)

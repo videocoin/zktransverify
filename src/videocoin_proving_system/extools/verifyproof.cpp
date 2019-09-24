@@ -15,9 +15,9 @@
 namespace po = boost::program_options;
 using namespace std;
 
-void verify(const string &verification_key_fn, const string &proof_fn,
-            const string &video_fn, int ref_ssim, int num_inputs, mpz_t prime) {
-    unsigned char srcRawY[256];
+bool verify(const string &verification_key_fn, const string &proof_fn,
+            const string &video_fn, int ref_ssim, int num_inputs, mpz_t prime, bool verbose) {
+    unsigned char src_raw_y[256];
 
     libsnark::default_r1cs_ppzksnark_pp::init_public_params();
 
@@ -36,11 +36,11 @@ void verify(const string &verification_key_fn, const string &proof_fn,
     cout << "loading inputs from file: " << video_fn << endl;
     stringstream inputs;
 
-    memset(srcRawY, 0x00, 256);
-    get_mb_from_stream(video_fn.c_str(), 1, 0, srcRawY, sizeof(srcRawY));
+    memset(src_raw_y, 0x00, 256);
+    get_mb_from_stream(video_fn.c_str(), 1, 0, src_raw_y, verbose);
     inputs << ref_ssim << endl;
-    for (unsigned char i : srcRawY) {
-        inputs << (int)i << endl;
+    for (unsigned char i : src_raw_y) {
+        inputs << (int) i << endl;
     }
     // constant values for SSIM circuit
     inputs << 1 << endl << 0 << endl;
@@ -61,7 +61,7 @@ void verify(const string &verification_key_fn, const string &proof_fn,
     mpq_clear(tmp);
     mpz_clear(tmp_z);
 
-    cout << "loading vk from file: " << verification_key_fn << endl;
+    cout << "loading verifier key from file: " << verification_key_fn << endl;
     ifstream vkey(verification_key_fn);
     libsnark::r1cs_ppzksnark_processed_verification_key<libsnark::default_r1cs_ppzksnark_pp> pvk;
     vkey >> pvk;
@@ -69,9 +69,11 @@ void verify(const string &verification_key_fn, const string &proof_fn,
 
     cout << "verifying..." << endl;
     libff::start_profiling();
-    bool result = libsnark::r1cs_ppzksnark_online_verifier_strong_IC<libsnark::default_r1cs_ppzksnark_pp>(pvk, input_vec,
+    bool result = libsnark::r1cs_ppzksnark_online_verifier_strong_IC<libsnark::default_r1cs_ppzksnark_pp>(pvk,
+                                                                                                          input_vec,
                                                                                                           proof);
     cout << "VERIFICATION " << (result ? "SUCCESSFUL" : "FAILED") << endl;
+    return result;
 }
 
 int main(int argc, char *argv[]) {
@@ -88,7 +90,8 @@ int main(int argc, char *argv[]) {
                 ("file,f", po::value<string>(), "path to video file")
                 ("vkey,v", po::value<string>(), "path to verification key")
                 ("proof,p", po::value<string>(), "path to proof")
-                ("ssim-level,s", po::value<int>()->default_value(80), "threshold SSIM level [0-100]");
+                ("ssim-level,s", po::value<int>()->default_value(80), "threshold SSIM level [0-100]")
+                ("verbose,V", "verbose mode");
 
         all.add(general).add(verifier);
 
@@ -118,9 +121,10 @@ int main(int argc, char *argv[]) {
         string verification_key_fn = argv[2];
         string inputs_fn = argv[3];
         string proof_fn = argv[4];
-        verify(vm["vkey"].as<string>(), vm["proof"].as<string>(),
-               vm["file"].as<string>(), vm["ssim-level"].as<int>(),
-               p.n_inputs + p.n_outputs, prime);
+        bool result = verify(vm["vkey"].as<string>(), vm["proof"].as<string>(),
+                             vm["file"].as<string>(), vm["ssim-level"].as<int>(),
+                             p.n_inputs + p.n_outputs, prime, vm.count("verbose") > 0);
+        return result ? 0 : -1;
     }
     catch (exception &e) {
         cerr << "error: " << e.what() << "\n";
@@ -131,5 +135,5 @@ int main(int argc, char *argv[]) {
         exit(1);
     }
 
-    return 0;
+    return -1;
 }

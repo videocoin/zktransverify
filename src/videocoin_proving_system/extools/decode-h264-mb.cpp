@@ -23,11 +23,10 @@
 /**
  * H264 codec test.
  */
-#include <stdio.h>
+#include <cstdio>
 #include <cassert>
-#include <stdlib.h>
-#include <stdint.h>
-#include <string.h>
+#include <cstdlib>
+#include <cstring>
 
 extern "C" {
 #include <libavutil/adler32.h>
@@ -39,7 +38,6 @@ extern "C" {
 }
 
 #include "decode-h264-mb.h"
-
 
 void hexDump (unsigned char *pData, int n);
 static char* itoa(int val, int base);
@@ -102,7 +100,7 @@ int get_mb_from_stream(const char *file_name, int key_frame_num, int mb_num, uns
 		fprintf(stderr, "Codec not found\n");
 		exit(1);
 	} else {
-		fprintf(stderr, "Codec found\n");
+		fprintf(stderr, "Codec [%s] found\n", codec->long_name);
 	}
     if (!(frame = av_frame_alloc())) {
         fprintf(stderr, "Could not allocate frame\n");
@@ -157,15 +155,18 @@ int get_mb_from_stream(const char *file_name, int key_frame_num, int mb_num, uns
 
 	while (av_read_frame(fmt_ctx, pkt) >= 0) {
 		// decode packet and other stuff
-		printf("Stream=%d frame=%d idr_frame=%d size=0x%x\n", pkt->stream_index,
-				frame_count, idr_frame, pkt->size);
-		hexDump(pkt->data, 16);
-		if (pkt && pkt->size && ffmpeg_videoStreamIndex == pkt->stream_index) {
+		if (verbose) {
+            printf("Stream=%d frame=%d idr_frame=%d size=0x%x\n", pkt->stream_index,
+                   frame_count, idr_frame, pkt->size);
+            hexDump(pkt->data, 16);
+        }
+		if (pkt->size && ffmpeg_videoStreamIndex == pkt->stream_index) {
 			if (h264bsfc) {
 				av_bitstream_filter_filter(h264bsfc,
 						fmt_ctx->streams[ffmpeg_videoStreamIndex]->codec, nullptr,
 						&pkt->data, &pkt->size, pkt->data, pkt->size, 0);
-				hexDump(pkt->data, 16);
+				if (verbose)
+				    hexDump(pkt->data, 16);
 
 				av_frame_unref(frame);
 				int got_frame = 0;
@@ -183,7 +184,7 @@ int get_mb_from_stream(const char *file_name, int key_frame_num, int mb_num, uns
 				if (ret < 0) {
 					fprintf(stderr, "Failed to decode\n");
 					exit(1);
-				} else {
+				} else if (verbose) {
 					fprintf(stderr, "Frame decoded\n");
 				}
 

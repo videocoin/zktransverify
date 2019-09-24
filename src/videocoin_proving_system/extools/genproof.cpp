@@ -16,9 +16,8 @@ namespace po = boost::program_options;
 std::vector<std::string> files;
 std::string proving_key_path;
 std::string proof;
-bool verbose = false;
 int ref_ssim;
-
+bool verbose = false;
 
 void parse_options(int argc, const char *argv[]);
 
@@ -39,7 +38,8 @@ void parse_options(int argc, const char *argv[]) {
                 ("pkey,p", po::value<std::string>(&proving_key_path), "path to proving key")
                 ("files,f", po::value<std::vector<std::string>>(&files)->multitoken(), "list of %file1, %file2")
                 ("proof,P", po::value<std::string>(&proof), "path to proof file")
-                ("ssim-level,s", po::value<int>(&ref_ssim)->default_value(80), "threshold ssim level [0-100]");
+                ("ssim-level,s", po::value<int>(&ref_ssim)->default_value(80), "threshold ssim level [0-100]")
+                ("verbose,v", "verbose mode");
 
         all.add(general).add(prover);
 
@@ -96,8 +96,8 @@ void save_witness(const char *filename, int refssim, unsigned char *src, size_t 
 */
 
 int main(int argc, const char *argv[]) {
-    unsigned char srcRawY[256];
-    unsigned char transRawY[256];
+    unsigned char src_raw_y[256];
+    unsigned char trans_raw_y[256];
     int frame_offset = 0;
     int mb_offset = 0;
 
@@ -111,18 +111,18 @@ int main(int argc, const char *argv[]) {
 
     printf("frame_offset=%d macroblock_offset=%d\n", frame_offset, mb_offset);
 
-    memset(srcRawY, 0x00, 256);
-    memset(transRawY, 0x00, 256);
-    get_mb_from_stream(files.front().c_str(), frame_offset, mb_offset, srcRawY, verbose);
-    get_mb_from_stream(files.back().c_str(), frame_offset, mb_offset, transRawY, verbose);
+    memset(src_raw_y, 0x00, 256);
+    memset(trans_raw_y, 0x00, 256);
+    get_mb_from_stream(files.front().c_str(), frame_offset, mb_offset, src_raw_y, verbose);
+    get_mb_from_stream(files.back().c_str(), frame_offset, mb_offset, trans_raw_y, verbose);
 
     initialize_prover();
     generate_ssim_proof(
             proving_key_path.c_str(),
             ref_ssim,
-            srcRawY, sizeof(srcRawY),
-            transRawY, sizeof(transRawY),
+            src_raw_y, sizeof(src_raw_y),
+            trans_raw_y, sizeof(trans_raw_y),
             proof.c_str());
 
-//    save_witness(witness.c_str(), ref_ssim, srcRawY, sizeof(srcRawY));
+//    save_witness(witness.c_str(), ref_ssim, src_raw_y, sizeof(src_raw_y));
 }
