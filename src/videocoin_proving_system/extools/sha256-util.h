@@ -1,4 +1,3 @@
-
 #ifndef EXTOOLS_SHA256_UTIL_H_
 #define EXTOOLS_SHA256_UTIL_H_
 

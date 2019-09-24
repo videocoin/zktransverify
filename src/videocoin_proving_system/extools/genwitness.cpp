@@ -1,17 +1,13 @@
-#include <stdio.h>
-#include <assert.h>
-#include <stdlib.h>
-#include <time.h>
-#include <stdint.h>
-#include <stdbool.h>
-#include <string.h>
+#include <cstdio>
+#include <cstdlib>
+#include <cstring>
 
 #include "decode-h264-mb.h"
 #include "sha256-util.h"
 
 bool ARG_HELP;
-const char* ARG_VIDEO_PATH1 = NULL;
-const char* ARG_VIDEO_PATH2 = NULL;
+const char* ARG_VIDEO_PATH1 = nullptr;
+const char* ARG_VIDEO_PATH2 = nullptr;
 
 
 void parse_options(int argc, const char* argv[]);
@@ -33,7 +29,7 @@ void parse_options(int argc, const char* argv[])
 		}
 		i++;
 	}
-	if (ARG_HELP || ARG_VIDEO_PATH1 == NULL || ARG_VIDEO_PATH2 == NULL) {
+	if (ARG_HELP || ARG_VIDEO_PATH1 == nullptr || ARG_VIDEO_PATH2 == nullptr) {
 		fprintf(stderr,
 				"Usage: genproof videoPath1 videoPath2\n  --help and -h will output this help message.\n");
 		exit(1);
@@ -42,7 +38,6 @@ void parse_options(int argc, const char* argv[])
 
 int main(int argc, const char **argv)
 {
-	MB_T mb = {0};
 	unsigned char outputBuffer[65];
 	parse_options(argc, argv);
 	int frame_offset = 0;
@@ -55,10 +50,8 @@ int main(int argc, const char **argv)
 
 	printf("frame_offset=%d macroblock_offset=%d\n",frame_offset, mb_offset);
 	// Get the macroblock
-	getMbFromStream(ARG_VIDEO_PATH1, frame_offset, mb_offset, &mb, NULL, false);
+    get_mb_from_stream(ARG_VIDEO_PATH1, frame_offset, mb_offset, nullptr, false);
 
 	// Calculate hash of macroblock
-	sha256_string((unsigned char *)mb.mb_data, mb.mb_size, outputBuffer);
 	printf("Hash of macroblock=%s\n", outputBuffer);
-	if(mb.mb_data) free(mb.mb_data);
 }

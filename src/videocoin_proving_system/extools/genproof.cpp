@@ -16,14 +16,13 @@ namespace po = boost::program_options;
 std::vector<std::string> files;
 std::string proving_key_path;
 std::string proof;
-std::string witness;
 bool verbose = false;
 int ref_ssim;
 
 
 void parse_options(int argc, const char *argv[]);
 
-void save_witness(const char *filename, int ref_ssim);
+//void save_witness(const char *filename, int ref_ssim, unsigned char *src, size_t len);
 
 void parse_options(int argc, const char *argv[]) {
     try {
@@ -40,8 +39,7 @@ void parse_options(int argc, const char *argv[]) {
                 ("pkey,p", po::value<std::string>(&proving_key_path), "path to proving key")
                 ("files,f", po::value<std::vector<std::string>>(&files)->multitoken(), "list of %file1, %file2")
                 ("proof,P", po::value<std::string>(&proof), "path to proof file")
-                ("witness,w", po::value<std::string>(&witness), "path to witness file")
-                ("ssim-level,s", po::value<int>(&ref_ssim), "threshold ssim level [0-100]");
+                ("ssim-level,s", po::value<int>(&ref_ssim)->default_value(80), "threshold ssim level [0-100]");
 
         all.add(general).add(prover);
 
@@ -58,7 +56,7 @@ void parse_options(int argc, const char *argv[]) {
         }
 
         // check mandatory options
-        for (auto &e: {"files", "pkey", "ssim-level", "witness", "proof"}) {
+        for (auto &e: {"files", "pkey", "ssim-level", "proof"}) {
             if (!vm.count(e)) {
                 std::cerr << "error: the option '--" << e << "' is required but missing\n" << all << std::endl;
                 exit(1);
@@ -81,17 +79,23 @@ void parse_options(int argc, const char *argv[]) {
     }
 }
 
-void save_witness(const char *filename, int refssim) {
+/*
+void save_witness(const char *filename, int refssim, unsigned char *src, size_t len) {
+    if (!filename) return;
     FILE *f = fopen(filename, "w+");
     if (f != nullptr) {
-        fprintf(f, "%d\n%d\n%d\n", refssim, 1, 0);
+        fprintf(f, "%d\n", refssim);
+        for (int i = 0; i < len; ++i) {
+            fprintf(f, "%d\n", src[i]);
+        }
+        fprintf(f, "%d\n%d\n", 1, 0);
+//        fprintf(f, "%d\n%d\n%d\n", refssim, 1, 0);
         fclose(f);
     }
 }
+*/
 
 int main(int argc, const char *argv[]) {
-    MB_T mbSrc = {0};
-    MB_T mbTrans = {0};
     unsigned char srcRawY[256];
     unsigned char transRawY[256];
     int frame_offset = 0;
@@ -109,10 +113,8 @@ int main(int argc, const char *argv[]) {
 
     memset(srcRawY, 0x00, 256);
     memset(transRawY, 0x00, 256);
-    getMbFromStream(files.front().c_str(), frame_offset, mb_offset, &mbSrc, srcRawY, verbose);
-    getMbFromStream(files.back().c_str(), frame_offset, mb_offset, &mbTrans, transRawY, verbose);
-    if (mbSrc.mb_data) free(mbSrc.mb_data);
-    if (mbTrans.mb_data) free(mbTrans.mb_data);
+    get_mb_from_stream(files.front().c_str(), frame_offset, mb_offset, srcRawY, verbose);
+    get_mb_from_stream(files.back().c_str(), frame_offset, mb_offset, transRawY, verbose);
 
     initialize_prover();
     generate_ssim_proof(
@@ -122,5 +124,5 @@ int main(int argc, const char *argv[]) {
             transRawY, sizeof(transRawY),
             proof.c_str());
 
-    save_witness(witness.c_str(), ref_ssim);
+//    save_witness(witness.c_str(), ref_ssim, srcRawY, sizeof(srcRawY));
 }

@@ -1,5 +1,4 @@
 #include <iostream>
-#include <fstream>
 #include <exception>
 
 #include <boost/program_options.hpp>
@@ -11,27 +10,40 @@
 #include <common/utility.h>
 #include <common/defs.h>
 
-namespace po = boost::program_options;
+#include "decode-h264-mb.h"
 
-void verify(const std::string &verification_key_fn, const std::string &inputs_fn,
-            const std::string &proof_fn, int num_inputs, mpz_t prime) {
+namespace po = boost::program_options;
+using namespace std;
+
+void verify(const string &verification_key_fn, const string &proof_fn,
+            const string &video_fn, int ref_ssim, int num_inputs, mpz_t prime) {
+    unsigned char srcRawY[256];
 
     libsnark::default_r1cs_ppzksnark_pp::init_public_params();
 
-    libsnark::r1cs_variable_assignment<FieldT> inputvec;
+    libsnark::r1cs_variable_assignment<FieldT> input_vec;
     libsnark::r1cs_ppzksnark_proof<libsnark::default_r1cs_ppzksnark_pp> proof;
 
-    std::cout << "loading proof from file: " << proof_fn << std::endl;
-    std::ifstream proof_file(proof_fn);
+    cout << "loading proof from file: " << proof_fn << endl;
+    ifstream proof_file(proof_fn);
     if (!proof_file.good()) {
-        std::cerr << "ERROR: " << proof_fn << " not found. " << std::endl;
+        cerr << "ERROR: " << proof_fn << " not found. " << endl;
         exit(1);
     }
     proof_file >> proof;
     proof_file.close();
 
-    std::cout << "loading inputs from file: " << inputs_fn << std::endl;
-    std::ifstream inputs_file(inputs_fn);
+    cout << "loading inputs from file: " << video_fn << endl;
+    stringstream inputs;
+
+    memset(srcRawY, 0x00, 256);
+    get_mb_from_stream(video_fn.c_str(), 1, 0, srcRawY, sizeof(srcRawY));
+    inputs << ref_ssim << endl;
+    for (unsigned char i : srcRawY) {
+        inputs << (int)i << endl;
+    }
+    // constant values for SSIM circuit
+    inputs << 1 << endl << 0 << endl;
 
     mpq_t tmp;
     mpq_init(tmp);
@@ -39,28 +51,27 @@ void verify(const std::string &verification_key_fn, const std::string &inputs_fn
     mpz_init(tmp_z);
 
     for (int i = 0; i < num_inputs; i++) {
-        inputs_file >> tmp;
+        inputs >> tmp;
+
         convert_to_z(tmp_z, tmp, prime);
         FieldT currentVar(tmp_z);
-        inputvec.push_back(currentVar);
+        input_vec.push_back(currentVar);
     }
 
     mpq_clear(tmp);
     mpz_clear(tmp_z);
 
-    inputs_file.close();
-
-    std::cout << "loading vk from file: " << verification_key_fn << std::endl;
-    std::ifstream vkey(verification_key_fn);
+    cout << "loading vk from file: " << verification_key_fn << endl;
+    ifstream vkey(verification_key_fn);
     libsnark::r1cs_ppzksnark_processed_verification_key<libsnark::default_r1cs_ppzksnark_pp> pvk;
     vkey >> pvk;
     vkey.close();
 
-    std::cout << "verifying..." << std::endl;
+    cout << "verifying..." << endl;
     libff::start_profiling();
-    bool result = libsnark::r1cs_ppzksnark_online_verifier_strong_IC<libsnark::default_r1cs_ppzksnark_pp>(pvk, inputvec,
+    bool result = libsnark::r1cs_ppzksnark_online_verifier_strong_IC<libsnark::default_r1cs_ppzksnark_pp>(pvk, input_vec,
                                                                                                           proof);
-    std::cout << "VERIFICATION " << (result ? "SUCCESSFUL" : "FAILED") << std::endl;
+    cout << "VERIFICATION " << (result ? "SUCCESSFUL" : "FAILED") << endl;
 }
 
 int main(int argc, char *argv[]) {
@@ -74,10 +85,10 @@ int main(int argc, char *argv[]) {
                 ("help,h", "produce help message");
 
         verifier.add_options()
-                ("file,f", po::value<std::string>(), "path to videofile")
-                ("vkey,v", po::value<std::string>(), "path to verification key")
-                ("proof,p", po::value<std::string>(), "path to proof")
-                ("witness,w", po::value<std::string>(), "path to witness file");
+                ("file,f", po::value<string>(), "path to video file")
+                ("vkey,v", po::value<string>(), "path to verification key")
+                ("proof,p", po::value<string>(), "path to proof")
+                ("ssim-level,s", po::value<int>()->default_value(80), "threshold SSIM level [0-100]");
 
         all.add(general).add(verifier);
 
@@ -85,37 +96,38 @@ int main(int argc, char *argv[]) {
         po::notify(vm);
 
         if (vm.count("help")) {
-            std::cout << all << std::endl;
+            cout << all << endl;
             exit(0);
         }
 
         // check mandatory options
-        for (auto &e: {"vkey", "proof", "witness", "file"}) {
+        for (auto &e: {"vkey", "proof", "file"}) {
             if (!vm.count(e)) {
-                std::cerr << "error: the option '--" << e << "' is required but missing\n" << all << std::endl;
+                cerr << "error: the option '--" << e << "' is required but missing\n" << all << endl;
                 exit(1);
             }
         }
 
         initialize_env();
-        std::string params = application_dir + "ssim/params";
+        string params = application_dir + "ssim/params";
         struct comp_params p = parse_params(params.c_str());
 
         mpz_t prime;
         mpz_init_set_str(prime, prime_str, 10);
 
-        std::string verification_key_fn = argv[2];
-        std::string inputs_fn = argv[3];
-        std::string proof_fn = argv[4];
-        verify(vm["vkey"].as<std::string>(), vm["witness"].as<std::string>(), vm["proof"].as<std::string>(),
+        string verification_key_fn = argv[2];
+        string inputs_fn = argv[3];
+        string proof_fn = argv[4];
+        verify(vm["vkey"].as<string>(), vm["proof"].as<string>(),
+               vm["file"].as<string>(), vm["ssim-level"].as<int>(),
                p.n_inputs + p.n_outputs, prime);
     }
-    catch (std::exception &e) {
-        std::cerr << "error: " << e.what() << "\n";
+    catch (exception &e) {
+        cerr << "error: " << e.what() << "\n";
         exit(1);
     }
     catch (...) {
-        std::cerr << "Exception of unknown type!\n";
+        cerr << "Exception of unknown type!\n";
         exit(1);
     }
 
