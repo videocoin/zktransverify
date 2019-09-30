@@ -1,6 +1,20 @@
 cmake_minimum_required(VERSION 3.5)
 project(videocoin_prooving_system)
 
+# Version variables
+set(MAJOR_VERSION 0)
+set(MINOR_VERSION 1)
+set(PATCH_VERSION 0)
+set(PROJECT_VERSION ${MAJOR_VERSION}.${MINOR_VERSION}.${PATCH_VERSION})
+
+configure_file(common/version.in.h ${PROJECT_SOURCE_DIR}/common/version.h @ONLY)
+
+# INSTALL_BIN_DIR
+set(INSTALL_BIN_DIR /usr/local/bin
+        CACHE PATH "Relative instalation path for executables")
+
+message("${PROJECT_NAME} ${PROJECT_VERSION}")
+
 # according to libsnark's documentation, we need to use the same conditional defines libsnark was compiled with, as found in
 # thirdparty/libsnark/build/libsnark/CMakeFiles/snark.dir/flags.make
 set(CMAKE_CXX_STANDARD 11)
@@ -53,37 +67,34 @@ add_library(
         storage/ggh_hash.cpp
         storage/exo.cpp
         storage/hasher.cpp
-)
+        common/version.h)
 
 add_executable(
         keygen
 
         key_generator/main.cpp
         common/utility.cpp
-)
+        common/version.h)
 
 add_executable(
         verifier
 
         verifier/main.cpp
-        common/utility.cpp
-)
+        common/utility.cpp)
 
 add_executable(
         genproof
 
         extools/genproof.cpp
         extools/decode-h264-mb.cpp
-        extools/sha256-util.cpp
-)
+        extools/sha256-util.cpp)
 
 add_executable(
         verifyproof
 
         extools/verifyproof.cpp
         extools/decode-h264-mb.cpp
-        common/utility.cpp
-)
+        common/utility.cpp)
 
 target_compile_definitions(
         prover

@@ -10,6 +10,7 @@
 
 #include <common/utility.h>
 #include <common/defs.h>
+#include <common/version.h>
 
 namespace po = boost::program_options;
 
@@ -71,7 +72,8 @@ int main(int argc, char *argv[]) {
         po::variables_map vm;
 
         general.add_options()
-                ("help,h", "produce help message");
+                ("help,h", "produce help message")
+                ("version", "version");
 
         verifier.add_options()
                 ("vkey,v", po::value<std::string>(), "path to verification key")
@@ -85,6 +87,11 @@ int main(int argc, char *argv[]) {
 
         if (vm.count("help")) {
             std::cout << all << std::endl;
+            exit(0);
+        }
+
+        if (vm.count("version")) {
+            std::cout << VERSION << std::endl;
             exit(0);
         }
 

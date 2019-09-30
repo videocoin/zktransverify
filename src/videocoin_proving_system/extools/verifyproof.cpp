@@ -9,6 +9,7 @@
 
 #include <common/utility.h>
 #include <common/defs.h>
+#include <common/version.h>
 
 #include "decode-h264-mb.h"
 
@@ -84,7 +85,8 @@ int main(int argc, char *argv[]) {
         po::variables_map vm;
 
         general.add_options()
-                ("help,h", "produce help message");
+                ("help,h", "produce help message")
+                ("version", "version");
 
         verifier.add_options()
                 ("file,f", po::value<string>(), "path to video file")
@@ -100,6 +102,11 @@ int main(int argc, char *argv[]) {
 
         if (vm.count("help")) {
             cout << all << endl;
+            exit(0);
+        }
+
+        if (vm.count("version")) {
+            cout << VERSION << endl;
             exit(0);
         }
 

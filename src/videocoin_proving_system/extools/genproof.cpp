@@ -7,6 +7,7 @@
 #include <boost/program_options.hpp>
 
 #include <prover/prover.h>
+#include <common/version.h>
 
 #include "decode-h264-mb.h"
 #include "sha256-util.h"
@@ -32,7 +33,8 @@ void parse_options(int argc, const char *argv[]) {
 
         general.add_options()
                 ("help,h", "produce help message")
-                ("verbose,v", "print additional information");
+                ("verbose,v", "print additional information")
+                ("version", "version");
 
         prover.add_options()
                 ("pkey,p", po::value<std::string>(&proving_key_path), "path to proving key")
@@ -48,6 +50,11 @@ void parse_options(int argc, const char *argv[]) {
 
         if (vm.count("help")) {
             std::cout << all << std::endl;
+            exit(0);
+        }
+
+        if (vm.count("version")) {
+            std::cout << VERSION << std::endl;
             exit(0);
         }
 
