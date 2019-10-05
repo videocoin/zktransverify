@@ -9,10 +9,6 @@ set(PROJECT_VERSION ${MAJOR_VERSION}.${MINOR_VERSION}.${PATCH_VERSION})
 
 configure_file(common/version.in.h ${PROJECT_SOURCE_DIR}/common/version.h @ONLY)
 
-# INSTALL_BIN_DIR
-set(INSTALL_BIN_DIR /usr/local/bin
-        CACHE PATH "Relative instalation path for executables")
-
 message("${PROJECT_NAME} ${PROJECT_VERSION}")
 
 # according to libsnark's documentation, we need to use the same conditional defines libsnark was compiled with, as found in
@@ -70,7 +66,7 @@ add_library(
         common/version.h)
 
 add_executable(
-        keygen
+        pot-keygen
 
         key_generator/main.cpp
         common/utility.cpp
@@ -83,14 +79,14 @@ add_executable(
         common/utility.cpp)
 
 add_executable(
-        genproof
+        pot-genproof
 
         extools/genproof.cpp
         extools/decode-h264-mb.cpp
         extools/sha256-util.cpp)
 
 add_executable(
-        verifyproof
+        pot-verifyproof
 
         extools/verifyproof.cpp
         extools/decode-h264-mb.cpp
@@ -107,7 +103,7 @@ target_compile_definitions(
 )
 
 target_link_libraries(
-        keygen
+        pot-keygen
 
         -lgmp -lgmpxx -lff -lboost_program_options
 )
@@ -125,7 +121,7 @@ target_link_libraries(
 )
 
 target_link_libraries(
-        genproof
+        pot-genproof
 
         -lprover -lff -lleveldb -lkyotocabinet -lpapi -lgmp
         -lavfilter -lswscale -lpostproc -lavformat -lavcodec -lswresample -lavutil
@@ -135,7 +131,7 @@ target_link_libraries(
 )
 
 target_link_libraries(
-        verifyproof
+        pot-verifyproof
 
         -lgmp -lgmpxx -lff -lboost_program_options
         -lff -lleveldb -lkyotocabinet -lpapi -lgmp
@@ -145,4 +141,7 @@ target_link_libraries(
         -lboost_program_options
 )
 
-add_dependencies(genproof prover)
+add_dependencies(pot-genproof prover)
+
+install(TARGETS pot-keygen pot-genproof pot-verifyproof
+        RUNTIME DESTINATION /usr/local/bin)
