@@ -17,6 +17,7 @@ namespace po = boost::program_options;
 std::vector<std::string> files;
 std::string proving_key_path;
 std::string proof;
+std::string json_proof;
 int ref_ssim;
 bool verbose = false;
 
@@ -40,6 +41,7 @@ void parse_options(int argc, const char *argv[]) {
                 ("pkey,p", po::value<std::string>(&proving_key_path), "path to proving key")
                 ("files,f", po::value<std::vector<std::string>>(&files)->multitoken(), "list of %file1, %file2")
                 ("proof,P", po::value<std::string>(&proof), "path to proof file")
+                ("json-proof,j", po::value<std::string>(&json_proof), "path to proof json file")
                 ("ssim-level,s", po::value<int>(&ref_ssim)->default_value(80), "threshold ssim level [0-100]")
                 ("verbose,v", "verbose mode");
 
@@ -62,8 +64,13 @@ void parse_options(int argc, const char *argv[]) {
             verbose = true;
         }
 
+        if (!vm.count("proof") && !vm.count("json-proof")) {
+            std::cerr << "error: at least one of the following options '--proof' or '--json-proof' is required but missing\n" << all << std::endl;
+            exit(1);
+        }
+
         // check mandatory options
-        for (auto &e: {"files", "pkey", "ssim-level", "proof"}) {
+        for (auto &e: {"files", "pkey", "ssim-level", }) {
             if (!vm.count(e)) {
                 std::cerr << "error: the option '--" << e << "' is required but missing\n" << all << std::endl;
                 exit(1);
@@ -129,7 +136,8 @@ int main(int argc, const char *argv[]) {
             ref_ssim,
             src_raw_y, sizeof(src_raw_y),
             trans_raw_y, sizeof(trans_raw_y),
-            proof.c_str());
+            proof.empty() ? nullptr : proof.c_str(),
+            json_proof.empty() ? nullptr : json_proof.c_str());
 
 //    save_witness(witness.c_str(), ref_ssim, src_raw_y, sizeof(src_raw_y));
 }

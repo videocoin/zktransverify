@@ -26,48 +26,11 @@ struct comp_params {
     int n_vars;
 };
 
-class ssim_mode {
-public:
-    enum value {
-        _invalid,
-        _x16 = 16,
-        _x32 = 32,
-        _x64 = 64
-    };
-
-    std::string str() const;
-
-    bool operator==(ssim_mode a) const { return _value == a._value; }
-
-    bool operator!=(ssim_mode a) const { return _value != a._value; }
-
-    bool is_valid() const { return _value != _invalid; }
-
-    bool is_16() const { return _value == _x16; }
-
-    bool is_32() const { return _value == _x32; }
-
-    bool is_64() const { return _value == _x64; }
-
-    int as_int() const { return _value; }
-
-    static ssim_mode from_str(const char *v);
-
-    static ssim_mode from_int(const int v);
-
-    constexpr ssim_mode(value v) : _value(v) {}
-
-    constexpr ssim_mode() : _value(value::_invalid) {}
-
-private:
-    value _value;
-};
-
 comp_params parse_params(const char *params_filename);
 
 void convert_to_z(mpz_t z, const mpq_t q, const mpz_t prime);
 
-void convert_to_z(const int size, mpz_t *z, const mpq_t *q, const mpz_t prime);
+void convert_to_z(int size, mpz_t *z, const mpq_t *q, const mpz_t prime);
 
 void alloc_init_scalar(mpz_t s);
 
@@ -81,15 +44,18 @@ void clear_scalar(mpz_t);
 
 void clear_scalar(mpq_t);
 
-void clear_del_vec(mpz_t *vec, const uint32_t n);
+void clear_del_vec(mpz_t *vec, uint32_t n);
 
-void clear_del_vec(mpq_t *vec, const uint32_t n);
+void clear_del_vec(mpq_t *vec, uint32_t n);
 
 void assert_zero(int value);
 
 #ifdef CURVE_ALT_BN128
 std::string coord_to_string(libff::alt_bn128_Fq2 &coord);
 std::string coord_to_string(libff::alt_bn128_Fq &coord);
+
+libff::alt_bn128_Fq string_to_coord(const char *str);
+libff::alt_bn128_Fq2 string_to_coord(const char *c0, const char *c1);
 #endif
 
 template<typename ppt>
@@ -111,7 +77,44 @@ pt::ptree point_to_ptree(libff::G1<ppt> &point) {
     node.push_back(std::make_pair("", x_node));
     node.push_back(std::make_pair("", y_node));
 
-    return std::move(node);
+    return node;
+}
+
+template<typename ppT>
+libff::G1<ppT> ptree_to_point(pt::ptree &root) {
+    std::string point_str[2];
+    int i = 0;
+    for (pt::ptree::value_type &coord : root) {
+        point_str[i] = coord.second.data();
+        std::cout << point_str[i] << std::endl;
+        i++;
+    }
+
+#ifdef CURVE_ALT_BN128
+    libff::G1<ppT> point(string_to_coord(point_str[0].c_str()), string_to_coord(point_str[1].c_str()), libff::alt_bn128_Fq::one());
+#endif
+    return point;
+}
+
+template<typename ppT>
+libff::G2<ppT> ptree_to_point2(pt::ptree &root) {
+    std::string point_str[2][2];
+    int i = 0;
+    for (pt::ptree::value_type &point : root) {
+        int j = 0;
+        for (auto &coord: point.second) {
+            point_str[i][j] = coord.second.data();
+            std::cout << point_str[i][j] << std::endl;
+            j++;
+        }
+        i++;
+    }
+
+#ifdef CURVE_ALT_BN128
+    libff::G2<ppT> point(string_to_coord(point_str[0][0].c_str(), point_str[0][1].c_str()),
+                        string_to_coord(point_str[1][0].c_str(), point_str[1][1].c_str()), libff::alt_bn128_Fq2::one());
+#endif
+    return point;
 }
 
 template<typename ppt>
@@ -172,6 +175,24 @@ void knowledge_commitment_to_ptree(pt::ptree &root, const char *prefix,
 
 }
 
+template <typename ppT>
+void ptree_to_knowledge_commitment(pt::ptree &g, pt::ptree &h, libsnark::knowledge_commitment<libff::G1<ppT>, libff::G1<ppT>> &commitment) {
+    auto point_g = ptree_to_point<ppT>(g);
+    auto point_h = ptree_to_point<ppT>(h);
+
+    commitment.g = point_g;
+    commitment.h = point_h;
+}
+
+template <typename ppT>
+void ptree_to_knowledge_commitment(pt::ptree &g, pt::ptree &h, libsnark::knowledge_commitment<libff::G2<ppT>, libff::G1<ppT>> &commitment) {
+    auto point_g = ptree_to_point2<ppT>(g);
+    auto point_h = ptree_to_point<ppT>(h);
+
+    commitment.g = point_g;
+    commitment.h = point_h;
+}
+
 template<typename ppT>
 pt::ptree proof_to_ptree(libsnark::r1cs_ppzksnark_proof<ppT> &proof) {
 
@@ -199,6 +220,30 @@ void print_proof_to_json(libsnark::r1cs_ppzksnark_proof<ppT> &proof, const std::
 
     pt::write_json(proof_data, node);
     proof_data.close();
+}
+
+template <typename ppT>
+void read_proof_from_json(const std::string &file_path, libsnark::r1cs_ppzksnark_proof<ppT> &proof) {
+    pt::ptree root;
+    pt::read_json(file_path, root);
+
+    auto a_g = root.get_child("A_g");
+    auto a_h = root.get_child("A_h");
+    ptree_to_knowledge_commitment<ppT>(a_g, a_h, proof.g_A);
+
+    auto b_g = root.get_child("B_g");
+    auto b_h = root.get_child("B_h");
+    ptree_to_knowledge_commitment<ppT>(b_g, a_g, proof.g_B);
+
+    auto c_g = root.get_child("C_g");
+    auto c_h = root.get_child("C_h");
+    ptree_to_knowledge_commitment<ppT>(c_g, c_h, proof.g_C);
+
+    auto g_h = root.get_child("H");
+    proof.g_H = ptree_to_point<ppT>(g_h);
+
+    auto g_K = root.get_child("K");
+    proof.g_K = ptree_to_point<ppT>(g_K);
 }
 
 template<typename ppT>

@@ -16,7 +16,10 @@
 namespace po = boost::program_options;
 using namespace std;
 
-bool verify(const string &verification_key_fn, const string &proof_fn,
+string proof_fn;
+string json_proof_fn;
+
+bool verify(const string &verification_key_fn,
             const string &video_fn, int ref_ssim, int num_inputs, mpz_t prime, bool verbose) {
     unsigned char src_raw_y[256];
 
@@ -26,13 +29,17 @@ bool verify(const string &verification_key_fn, const string &proof_fn,
     libsnark::r1cs_ppzksnark_proof<libsnark::default_r1cs_ppzksnark_pp> proof;
 
     cout << "loading proof from file: " << proof_fn << endl;
-    ifstream proof_file(proof_fn);
-    if (!proof_file.good()) {
-        cerr << "ERROR: " << proof_fn << " not found. " << endl;
-        exit(1);
+    if (!proof_fn.empty()) {
+        ifstream proof_file(proof_fn);
+        if (!proof_file.good()) {
+            cerr << "ERROR: " << proof_fn << " not found. " << endl;
+            exit(1);
+        }
+        proof_file >> proof;
+        proof_file.close();
+    } else if (!json_proof_fn.empty()) {
+        read_proof_from_json(json_proof_fn, proof);
     }
-    proof_file >> proof;
-    proof_file.close();
 
     cout << "loading inputs from file: " << video_fn << endl;
     stringstream inputs;
@@ -91,9 +98,10 @@ int main(int argc, char *argv[]) {
         verifier.add_options()
                 ("file,f", po::value<string>(), "path to video file")
                 ("vkey,v", po::value<string>(), "path to verification key")
-                ("proof,p", po::value<string>(), "path to proof")
+                ("proof,p", po::value<string>(&proof_fn), "path to proof")
+                ("json-proof,j", po::value<string>(&json_proof_fn), "path to proof in json format")
                 ("ssim-level,s", po::value<int>()->default_value(80), "threshold SSIM level [0-100]")
-                ("verbose,V", "verbose mode");
+                ("verbose", "verbose mode");
 
         all.add(general).add(verifier);
 
@@ -110,8 +118,15 @@ int main(int argc, char *argv[]) {
             exit(0);
         }
 
+        if ((!proof_fn.empty() && !json_proof_fn.empty()) || (proof_fn.empty() && json_proof_fn.empty())) {
+            std::cerr
+                    << "error: only one of the following options '--proof' or '--json-proof' is required but missing\n"
+                    << all << std::endl;
+            exit(1);
+        }
+
         // check mandatory options
-        for (auto &e: {"vkey", "proof", "file"}) {
+        for (auto &e: {"vkey", "file"}) {
             if (!vm.count(e)) {
                 cerr << "error: the option '--" << e << "' is required but missing\n" << all << endl;
                 exit(1);
@@ -128,7 +143,7 @@ int main(int argc, char *argv[]) {
         string verification_key_fn = argv[2];
         string inputs_fn = argv[3];
         string proof_fn = argv[4];
-        bool result = verify(vm["vkey"].as<string>(), vm["proof"].as<string>(),
+        bool result = verify(vm["vkey"].as<string>(),
                              vm["file"].as<string>(), vm["ssim-level"].as<int>(),
                              p.n_inputs + p.n_outputs, prime, vm.count("verbose") > 0);
         return result ? 0 : -1;
