@@ -86,13 +86,11 @@ libff::G1<ppT> ptree_to_point(pt::ptree &root) {
     int i = 0;
     for (pt::ptree::value_type &coord : root) {
         point_str[i] = coord.second.data();
-        std::cout << point_str[i] << std::endl;
         i++;
     }
 
-#ifdef CURVE_ALT_BN128
     libff::G1<ppT> point(string_to_coord(point_str[0].c_str()), string_to_coord(point_str[1].c_str()), libff::alt_bn128_Fq::one());
-#endif
+
     return point;
 }
 
@@ -104,16 +102,13 @@ libff::G2<ppT> ptree_to_point2(pt::ptree &root) {
         int j = 0;
         for (auto &coord: point.second) {
             point_str[i][j] = coord.second.data();
-            std::cout << point_str[i][j] << std::endl;
             j++;
         }
         i++;
     }
 
-#ifdef CURVE_ALT_BN128
     libff::G2<ppT> point(string_to_coord(point_str[0][0].c_str(), point_str[0][1].c_str()),
                         string_to_coord(point_str[1][0].c_str(), point_str[1][1].c_str()), libff::alt_bn128_Fq2::one());
-#endif
     return point;
 }
 
@@ -176,7 +171,10 @@ void knowledge_commitment_to_ptree(pt::ptree &root, const char *prefix,
 }
 
 template <typename ppT>
-void ptree_to_knowledge_commitment(pt::ptree &g, pt::ptree &h, libsnark::knowledge_commitment<libff::G1<ppT>, libff::G1<ppT>> &commitment) {
+void ptree_to_knowledge_commitment(const char *prefix, pt::ptree &root, libsnark::knowledge_commitment<libff::G1<ppT>, libff::G1<ppT>> &commitment) {
+    auto g = root.get_child(std::string(prefix) + "_g");
+    auto h = root.get_child(std::string(prefix) + "_h");
+
     auto point_g = ptree_to_point<ppT>(g);
     auto point_h = ptree_to_point<ppT>(h);
 
@@ -185,7 +183,10 @@ void ptree_to_knowledge_commitment(pt::ptree &g, pt::ptree &h, libsnark::knowled
 }
 
 template <typename ppT>
-void ptree_to_knowledge_commitment(pt::ptree &g, pt::ptree &h, libsnark::knowledge_commitment<libff::G2<ppT>, libff::G1<ppT>> &commitment) {
+void ptree_to_knowledge_commitment(const char *prefix, pt::ptree &root, libsnark::knowledge_commitment<libff::G2<ppT>, libff::G1<ppT>> &commitment) {
+    auto g = root.get_child(std::string(prefix) + "_g");
+    auto h = root.get_child(std::string(prefix) + "_h");
+
     auto point_g = ptree_to_point2<ppT>(g);
     auto point_h = ptree_to_point<ppT>(h);
 
@@ -227,17 +228,9 @@ void read_proof_from_json(const std::string &file_path, libsnark::r1cs_ppzksnark
     pt::ptree root;
     pt::read_json(file_path, root);
 
-    auto a_g = root.get_child("A_g");
-    auto a_h = root.get_child("A_h");
-    ptree_to_knowledge_commitment<ppT>(a_g, a_h, proof.g_A);
-
-    auto b_g = root.get_child("B_g");
-    auto b_h = root.get_child("B_h");
-    ptree_to_knowledge_commitment<ppT>(b_g, a_g, proof.g_B);
-
-    auto c_g = root.get_child("C_g");
-    auto c_h = root.get_child("C_h");
-    ptree_to_knowledge_commitment<ppT>(c_g, c_h, proof.g_C);
+    ptree_to_knowledge_commitment<ppT>("A", root, proof.g_A);
+    ptree_to_knowledge_commitment<ppT>("B", root, proof.g_B);
+    ptree_to_knowledge_commitment<ppT>("C", root, proof.g_C);
 
     auto g_h = root.get_child("H");
     proof.g_H = ptree_to_point<ppT>(g_h);
