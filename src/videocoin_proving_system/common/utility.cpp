@@ -94,12 +94,13 @@ std::string coord_to_string(libff::alt_bn128_Fq2 &coord) {
 }
 
 std::string coord_to_string(libff::alt_bn128_Fq &coord) {
-    char buf[70];
+    char buf[256];
 
     mpz_t temp;
     mpz_init(temp);
     coord.as_bigint().to_mpz(temp);
-    gmp_sprintf(buf, "0x%Zx", temp);
+    gmp_sprintf(buf, "%Zd", temp);
+    //gmp_sprintf(buf, "0x%Zx", temp);
 
     return std::move(std::string(buf));
 }
@@ -112,7 +113,8 @@ libff::alt_bn128_Fq string_to_coord(const char *str) {
 
     mpz_t temp;
     mpz_init(temp);
-    gmp_sscanf(str, "0x%Zx", temp);
+    //gmp_sscanf(str, "0x%Zx", temp);
+    gmp_sscanf(str, "%Zd", temp);
 
     return libff::alt_bn128_Fq{temp};
 }
