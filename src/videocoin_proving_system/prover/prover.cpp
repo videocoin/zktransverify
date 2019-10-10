@@ -4,8 +4,9 @@
 
 #include <string>
 #include <iostream>
-#include <fstream>
 #include <sys/stat.h>
+
+#include <boost/filesystem.hpp>
 
 #include <libsnark/relations/constraint_satisfaction_problems/r1cs/r1cs.hpp>
 #include <libsnark/common/default_types/r1cs_ppzksnark_pp.hpp>
@@ -15,7 +16,10 @@
 #include <common/utility.h>
 
 #include "computation_prover.h"
-#include "prover.h"
+
+using namespace boost::filesystem;
+
+std::string exo_dir;
 
 template<typename ppT>
 void generate_proof_internal(const comp_params &p,
@@ -27,10 +31,19 @@ void generate_proof_internal(const comp_params &p,
 
 static void write_to_auxiliary_input(const unsigned char *src, size_t len);
 
-static void clear_auxiliary_input();
+void initialize_prover_directory() {
+    path ph = unique_path();
+    create_directory(ph);
+    exo_dir = ph.string();
+}
+
+void remove_prover_directory() {
+    remove_all(exo_dir);
+}
 
 void initialize_prover() {
     initialize_env();
+    initialize_prover_directory();
     libsnark::default_r1cs_ppzksnark_pp::init_public_params();
 }
 
@@ -73,8 +86,6 @@ void generate_ssim_proof(const char *pk_fn,
     libsnark::r1cs_ppzksnark_proof<libsnark::default_r1cs_ppzksnark_pp> proof;
     generate_proof_internal(p, pws.c_str(), pk, ref_ssim, src1, src1_len, proof);
 
-    clear_auxiliary_input();
-
     if (proof_fn != nullptr) {
         std::ofstream proof_file(proof_fn);
         if (proof_file.is_open()) {
@@ -88,6 +99,8 @@ void generate_ssim_proof(const char *pk_fn,
     if (json_proof_fn != nullptr) {
         print_proof_to_json(proof, json_proof_fn);
     }
+
+    remove_prover_directory();
 }
 
 template<typename ppT>
@@ -108,7 +121,7 @@ void generate_proof_internal(const comp_params &p,
 
     libff::start_profiling();
     libff::enter_block("Compute algorithm");
-    ComputationProver prover(p.n_vars, p.n_constraints, p.n_inputs, p.n_outputs, prime, input);
+    ComputationProver prover(p.n_vars, p.n_constraints, p.n_inputs, p.n_outputs, prime, input, exo_dir);
     prover.compute_from_pws(pws_fn);
     libff::leave_block("Compute algorithm");
 
@@ -144,7 +157,7 @@ void generate_proof_internal(const comp_params &p,
 }
 
 void write_to_auxiliary_input(const unsigned char *src, size_t len) {
-    std::string file = exo_dir + "exo0";
+    std::string file = exo_dir + "/exo0";
     std::ofstream aux(file);
     if (!aux.is_open()) {
         std::cerr << "ERROR: can't create file " << file << "." << std::endl;
@@ -158,8 +171,4 @@ void write_to_auxiliary_input(const unsigned char *src, size_t len) {
 
     aux.close();
     chmod(file.c_str(), ALLPERMS);
-}
-
-void clear_auxiliary_input() {
-    remove((exo_dir + "exo0").c_str());
 }

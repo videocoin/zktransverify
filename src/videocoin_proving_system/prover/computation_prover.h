@@ -35,8 +35,8 @@ protected:
     int size_input, size_output, size_f1_vec;
 
     MerkleRAM *_ram;
-    HashBlockStore *_blockStore;
-    std::string _blockStorePath;
+    HashBlockStore *_block_store;
+    std::string _temp_directory;
 
     void init_block_store();
 
@@ -89,7 +89,7 @@ protected:
 public:
 
     ComputationProver(int _num_vars, int _num_cons, int _size_input, int _size_output,
-                      mpz_t _prime, const std::vector<double> &input_vector);
+                      mpz_t _prime, const std::vector<double> &input_vector, std::string &temp_dir);
 
     ~ComputationProver();
 

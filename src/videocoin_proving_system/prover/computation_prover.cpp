@@ -9,7 +9,6 @@
 #include <iterator>
 #include <boost/dynamic_bitset.hpp>
 #include <boost/unordered_map.hpp>
-#include <boost/filesystem.hpp>
 
 #include <common/utility.h>
 #include <common/waksman_router.h>
@@ -23,15 +22,16 @@
 const int NUM_COMMITMENT_BITS = NUM_COMMITMENT_CHUNKS * 8;
 
 using namespace std;
-using namespace boost::filesystem;
 
 ComputationProver::ComputationProver(
         int _num_vars, int _num_cons, int _size_input, int _size_output,
-        mpz_t _prime, const std::vector<double> &input_vector)
+        mpz_t _prime, const std::vector<double> &input_vector,
+        std::string &temp_dir)
         : size_input(_size_input),
           size_output(_size_output),
           num_vars(_num_vars),
-          num_cons(_num_cons) {
+          num_cons(_num_cons),
+          _temp_directory(temp_dir) {
 
     init_block_store();
 
@@ -66,15 +66,9 @@ ComputationProver::ComputationProver(
 
 
 ComputationProver::~ComputationProver() {
-    if (_ram != nullptr) {
-        delete _ram;
-    }
-    if (_blockStore != nullptr) {
-        delete _blockStore;
-    }
-    if (F1_index != nullptr) {
-        delete[] F1_index;
-    }
+    delete _ram;
+    delete _block_store;
+    delete[] F1_index;
 
     clear_del_vec(F1, size_f1_vec);
     clear_del_vec(F1_q, size_f1_vec);
@@ -85,11 +79,6 @@ ComputationProver::~ComputationProver() {
     clear_scalar(temp2);
     clear_scalar(temp_q);
     clear_scalar(temp_q2);
-
-    path ph(_blockStorePath);
-    if (is_directory(ph)) {
-        remove_all(ph);
-    }
 }
 
 static void zcomp_assert(const char *a, const char *b,
@@ -212,12 +201,8 @@ static std::vector<std::string> execute_command(char *cmd, const char *arg, std:
 }
 
 void ComputationProver::init_block_store() {
-    path ph = unique_path();
-    create_directory(ph);
-
-    _blockStorePath = ph.string();
-    _blockStore = new ConfigurableBlockStore(_blockStorePath);
-    _ram = new RAMImpl(_blockStore);
+    _block_store = new ConfigurableBlockStore(_temp_directory);
+    _ram = new RAMImpl(_block_store);
 }
 
 void ComputationProver::compute_poly(FILE *pws_file, int tempNum) {
@@ -258,11 +243,11 @@ void ComputationProver::compute_poly(FILE *pws_file, int tempNum) {
         if (strcmp(tok, "(") == 0) {
             //Recurse
             compute_poly(pws_file, tempNum + 2);
-            mpq_t &subresult = temp_qs[tempNum + 2];
+            mpq_t &sub_result = temp_qs[tempNum + 2];
             if (!hasFactors) {
-                mpq_set(termTarget, subresult);
+                mpq_set(termTarget, sub_result);
             } else {
-                mpq_mul(termTarget, termTarget, subresult);
+                mpq_mul(termTarget, termTarget, sub_result);
             }
             hasFactors = true;
         } else if (strcmp(tok, ")") == 0) {
@@ -641,10 +626,10 @@ void ComputationProver::compute_exo_compute(FILE *pws_file) {
 
     // now prepare the string we will send to stdin of the process
     std::stringstream procIn;
-    for (auto it = inVarsStr.begin(); it != inVarsStr.end(); it++) {
+    for (auto & it : inVarsStr) {
         procIn << "[ ";
-        for (auto jt = (*it).begin(); jt != (*it).end(); jt++) {
-            mpq_t &vval = voc((*jt).c_str(), temp_q);
+        for (auto & jt : it) {
+            mpq_t &vval = voc(jt.c_str(), temp_q);
             procIn << mpz_get_str(cmds, 10, mpq_numref(vval)) << '%';
             procIn << mpz_get_str(cmds, 10, mpq_denref(vval)) << ' ';
         }
@@ -661,7 +646,7 @@ void ComputationProver::compute_exo_compute(FILE *pws_file) {
     }
 
     // build up the arguments to the command and run it
-    sprintf(cmds, "%s/exo/exo%d", exo_dir.c_str(), exoId);
+    sprintf(cmds, "%s/exo%d", _temp_directory.c_str(), exoId);
 
     // buffer is totally big enough that this is acceptable. tee hee
     char *outLenStr = cmds + strlen(cmds) + 2;
@@ -713,8 +698,8 @@ void ComputationProver::compute_ext_gadget(FILE *pws_file) {
 
     // now prepare the string we will send to stdin of the process
     std::stringstream procIn;
-    for (auto it = inVarsStr.begin(); it != inVarsStr.end(); it++) {
-        mpq_t &vval = voc((*it).c_str(), temp_q);
+    for (auto & it : inVarsStr) {
+        mpq_t &vval = voc(it.c_str(), temp_q);
         procIn << mpq_get_str(cmds, 10, vval) << " ";
     }
     std::string procInStr = procIn.str();
@@ -726,10 +711,10 @@ void ComputationProver::compute_ext_gadget(FILE *pws_file) {
     // walk through the tokens from the child process and the variable lists, assigning the latter to the former
     // First inputs, they should be the same as what we passed in
     auto outTokIt = pOutTok.cbegin();
-    for (auto it = inVarsStr.cbegin(); it != inVarsStr.cend(); it++) {
-        mpq_t &vval = voc((*it).c_str(), temp_q);
+    for (const auto & it : inVarsStr) {
+        mpq_t &vval = voc(it.c_str(), temp_q);
         if (&vval == &temp_q) {
-            gmp_printf("ERROR: ext_gadget trying to write output to a const value, %s.\n", (*it).c_str());
+            gmp_printf("ERROR: ext_gadget trying to write output to a const value, %s.\n", it.c_str());
         }
         char value[BUFLEN];
         mpq_get_str(value, 10, vval);
@@ -738,11 +723,11 @@ void ComputationProver::compute_ext_gadget(FILE *pws_file) {
     }
 
     // Then assing outputs
-    for (auto it = outVarsStr.cbegin(); it != outVarsStr.cend(); it++) {
-        mpq_t &vval = voc((*it).c_str(), temp_q);
+    for (const auto & it : outVarsStr) {
+        mpq_t &vval = voc(it.c_str(), temp_q);
         assert(outTokIt != pOutTok.cend());
         if (&vval == &temp_q) {
-            gmp_printf("ERROR: ext_gadget trying to write output to a const value, %s.\n", (*it).c_str());
+            gmp_printf("ERROR: ext_gadget trying to write output to a const value, %s.\n", it.c_str());
         } else if (mpq_set_str(vval, outTokIt->c_str(), 0) < 0) {
             gmp_printf("ERROR: ext_gadget failed to convert child process output to mpq_t: %s\n", outTokIt->c_str());
         }
@@ -750,12 +735,11 @@ void ComputationProver::compute_ext_gadget(FILE *pws_file) {
     }
 
     // Last but not least assing intermediate
-    for (auto it = intermediateVarsStr.cbegin();
-         it != intermediateVarsStr.cend(); it++) {
-        mpq_t &vval = voc((*it).c_str(), temp_q);
+    for (const auto & it : intermediateVarsStr) {
+        mpq_t &vval = voc(it.c_str(), temp_q);
         assert(outTokIt != pOutTok.cend());
         if (&vval == &temp_q) {
-            gmp_printf("ERROR: ext_gadget trying to write output to a const value, %s.\n", (*it).c_str());
+            gmp_printf("ERROR: ext_gadget trying to write output to a const value, %s.\n", it.c_str());
         } else if (mpq_set_str(vval, outTokIt->c_str(), 0) < 0) {
             gmp_printf("ERROR: ext_gadget failed to convert child process output to mpq_t: %s\n", outTokIt->c_str());
         }
@@ -952,7 +936,7 @@ void ComputationProver::compute_get_block_by_hash(FILE *pws_file) {
 
     // Special case: if the key == 0, don't fail. Just return zeroes.
     if (key.any()) {
-        bool found = _blockStore->get(key, block);
+        bool found = _block_store->get(key, block);
         if (!found) {
             int numHashBits = _ram->getNumHashBits();
 
@@ -1027,14 +1011,14 @@ void ComputationProver::compute_put_block_by_hash(FILE *pws_file) {
 
     // Special case: if the key == 0, dont't store the block.
     if (key.any()) {
-        _blockStore->put(key, block);
+        _block_store->put(key, block);
     }
 }
 
 void ComputationProver::compute_free_block_by_hash(FILE *pws_file) {
     HashBlockStore::Key key;
     parse_hash(pws_file, key, _ram->getNumHashBits());
-    _blockStore->free(key);
+    _block_store->free(key);
 }
 
 void ComputationProver::compute_printf(FILE *pws_file) {
@@ -1092,7 +1076,7 @@ void ComputationProver::compute_genericget(FILE *pws_file) {
 
     // Special case: if the key == 0, don't fail. Just return zeroes.
     if (key.any()) {
-        bool found = _blockStore->get(key, block);
+        bool found = _block_store->get(key, block);
         if (!found) {
             int numHashBits = NUM_COMMITMENT_BITS;
 
@@ -1240,10 +1224,10 @@ void ComputationProver::compute_waksman_network(FILE *pws_file) {
     }
     int num_intermediate = num_switches * 2 - width;
     //cout << num_switches << endl;
-    data_t *input = new data_t[width];
-    data_t *intermediate = new data_t[num_intermediate];
-    data_t *output = new data_t[width];
-    switch_t *switches = new switch_t[num_switches];
+    auto *input = new data_t[width];
+    auto *intermediate = new data_t[num_intermediate];
+    auto *output = new data_t[width];
+    auto *switches = new switch_t[num_switches];
 
     const int num_elements = 4;
 
