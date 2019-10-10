@@ -6,12 +6,10 @@
 #include <cstring>
 #include <cassert>
 #include <iostream>
-#include <sstream>
-#include <fstream>
 #include <iterator>
 #include <boost/dynamic_bitset.hpp>
 #include <boost/unordered_map.hpp>
-#include <sys/stat.h>
+#include <boost/filesystem.hpp>
 
 #include <common/utility.h>
 #include <common/waksman_router.h>
@@ -25,6 +23,7 @@
 const int NUM_COMMITMENT_BITS = NUM_COMMITMENT_CHUNKS * 8;
 
 using namespace std;
+using namespace boost::filesystem;
 
 ComputationProver::ComputationProver(
         int _num_vars, int _num_cons, int _size_input, int _size_output,
@@ -86,6 +85,11 @@ ComputationProver::~ComputationProver() {
     clear_scalar(temp2);
     clear_scalar(temp_q);
     clear_scalar(temp_q2);
+
+    path ph(_blockStorePath);
+    if (is_directory(ph)) {
+        remove_all(ph);
+    }
 }
 
 static void zcomp_assert(const char *a, const char *b,
@@ -208,22 +212,12 @@ static std::vector<std::string> execute_command(char *cmd, const char *arg, std:
 }
 
 void ComputationProver::init_block_store() {
-    if (const char *env_p = std::getenv("VIDEOCOIN_ENV")) {
-        std::string store_dir(env_p);
-        store_dir += "/block_store";
+    path ph = unique_path();
+    create_directory(ph);
 
-        mkdir(store_dir.c_str(), S_IRWXU);
-        // the name of the block store is shared between the verifier and the prover.
-        std::string bstore_file_path_priv(store_dir);
-        bstore_file_path_priv += "/prover_";
-        bstore_file_path_priv += SHARED_BSTORE_FN;
-
-        _blockStore = new ConfigurableBlockStore(bstore_file_path_priv);
-        _ram = new RAMImpl(_blockStore);
-    } else {
-        std::cerr << "Environment variable VIDEOCOIN_ENV is not set" << std::endl;
-        exit(-1);
-    }
+    _blockStorePath = ph.string();
+    _blockStore = new ConfigurableBlockStore(_blockStorePath);
+    _ram = new RAMImpl(_blockStore);
 }
 
 void ComputationProver::compute_poly(FILE *pws_file, int tempNum) {

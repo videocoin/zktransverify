@@ -36,6 +36,7 @@ protected:
 
     MerkleRAM *_ram;
     HashBlockStore *_blockStore;
+    std::string _blockStorePath;
 
     void init_block_store();
 

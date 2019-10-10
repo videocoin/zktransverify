@@ -4,7 +4,7 @@ project(videocoin_prooving_system)
 # Version variables
 set(MAJOR_VERSION 0)
 set(MINOR_VERSION 1)
-set(PATCH_VERSION 2)
+set(PATCH_VERSION 3)
 set(PROJECT_VERSION ${MAJOR_VERSION}.${MINOR_VERSION}.${PATCH_VERSION})
 
 configure_file(common/version.in.h ${PROJECT_SOURCE_DIR}/common/version.h @ONLY)
@@ -127,7 +127,7 @@ target_link_libraries(
         -lavfilter -lswscale -lpostproc -lavformat -lavcodec -lswresample -lavutil
         -lcrypto -lm -ldl -lbz2 -lpthread -lX11 -lvpx -lx264 -lx265
         -lz -laom -lvorbis -lvorbisenc -lopus -lmp3lame -lfdk-aac
-        -lboost_program_options
+        -lboost_program_options -lboost_filesystem -lboost_system
 )
 
 target_link_libraries(
