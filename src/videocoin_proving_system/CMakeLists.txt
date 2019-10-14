@@ -4,7 +4,7 @@ project(videocoin_prooving_system)
 # Version variables
 set(MAJOR_VERSION 0)
 set(MINOR_VERSION 1)
-set(PATCH_VERSION 4)
+set(PATCH_VERSION 5)
 set(PROJECT_VERSION ${MAJOR_VERSION}.${MINOR_VERSION}.${PATCH_VERSION})
 
 configure_file(common/version.in.h ${PROJECT_SOURCE_DIR}/common/version.h @ONLY)
@@ -145,3 +145,9 @@ add_dependencies(pot-genproof prover)
 
 install(TARGETS pot-keygen pot-genproof pot-verifyproof
         RUNTIME DESTINATION /usr/local/bin)
+
+install(FILES
+        ${THIRDPARTY_DIR}/dependencies/lib/libleveldb.so.1
+        ${THIRDPARTY_DIR}/dependencies/lib/libpapi.so.5.4.1.0
+        ${THIRDPARTY_DIR}/dependencies/lib/libkyotocabinet.so.16
+        DESTINATION /usr/lib)
