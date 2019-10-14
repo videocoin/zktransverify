@@ -150,4 +150,5 @@ install(FILES
         ${THIRDPARTY_DIR}/dependencies/lib/libleveldb.so.1
         ${THIRDPARTY_DIR}/dependencies/lib/libpapi.so.5.4.1.0
         ${THIRDPARTY_DIR}/dependencies/lib/libkyotocabinet.so.16
+        ${THIRDPARTY_DIR}/dependencies/lib/libkyotocabinet.so.16.13.0
         DESTINATION /usr/lib)
